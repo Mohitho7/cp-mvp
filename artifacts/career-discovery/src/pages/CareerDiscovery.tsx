@@ -131,10 +131,10 @@ const QUESTIONS = [
     ],
   },
   {
-    id: 10, type: "single", section: "Your Direction",
+    id: 10, type: "multi3", section: "Your Direction",
     label: "Most interesting area",
-    question: "If you had to pick ONE area, which sounds most interesting?",
-    subtext: "This is where hidden career paths start to appear.",
+    question: "Which areas sound most interesting to you?",
+    subtext: "Pick up to 3 — this is where hidden career paths start to appear.",
     options: [
       { emoji: "📱", label: "Creating apps or websites" },
       { emoji: "🤖", label: "Working with AI or automation tools" },
@@ -320,7 +320,12 @@ export default function CareerDiscovery() {
         next[currentQ] = label;
       } else {
         const cur = Array.isArray(next[currentQ]) ? [...next[currentQ]] : [];
-        next[currentQ] = cur.includes(label) ? cur.filter((x) => x !== label) : [...cur, label];
+        if (cur.includes(label)) {
+          next[currentQ] = cur.filter((x) => x !== label);
+        } else {
+          const limit = q.type === "multi3" ? 3 : Infinity;
+          if (cur.length < limit) next[currentQ] = [...cur, label];
+        }
       }
       return next;
     });
@@ -334,7 +339,7 @@ export default function CareerDiscovery() {
   function canProceed() {
     if (q.type === "text") return true;
     if (q.type === "single") return !!currentAnswer;
-    if (q.type === "multi") return Array.isArray(currentAnswer) && currentAnswer.length > 0;
+    if (q.type === "multi" || q.type === "multi3") return Array.isArray(currentAnswer) && currentAnswer.length > 0;
     return false;
   }
 
@@ -486,22 +491,32 @@ export default function CareerDiscovery() {
                   <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(1.1rem, 3.8vw, 1.45rem)", fontWeight: 700, lineHeight: 1.3, marginBottom: "0.4rem", letterSpacing: "-0.01em" }}>{q.question}</h2>
                   {q.subtext && <p style={{ color: "#3a3020", fontSize: "0.78rem", fontStyle: "italic" }}>{q.subtext}</p>}
                   {q.type === "multi" && <p className="tag" style={{ marginTop: "0.5rem" }}>SELECT ALL THAT APPLY</p>}
+                  {q.type === "multi3" && (
+                    <p className="tag" style={{ marginTop: "0.5rem", color: Array.isArray(currentAnswer) && currentAnswer.length === 3 ? accentColor : "#3a3020" }}>
+                      PICK UP TO 3 — {Array.isArray(currentAnswer) ? currentAnswer.length : 0}/3 SELECTED
+                    </p>
+                  )}
                 </div>
 
                 {q.type !== "text" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.42rem" }}>
-                    {q.options!.map((opt) => (
+                    {q.options!.map((opt) => {
+                      const atLimit = q.type === "multi3" && Array.isArray(currentAnswer) && currentAnswer.length >= 3 && !isSelected(opt.label);
+                      return (
                       <button
                         key={opt.label}
                         className="option-btn"
                         onClick={() => selectOption(opt.label)}
-                        style={isSelected(opt.label) ? { borderColor: `${accentColor}65`, background: `${accentColor}12`, color: "#f0e8c0" } : {}}
+                        style={isSelected(opt.label)
+                          ? { borderColor: `${accentColor}65`, background: `${accentColor}12`, color: "#f0e8c0" }
+                          : atLimit ? { opacity: 0.3, cursor: "not-allowed" } : {}}
                       >
                         <span style={{ fontSize: "0.98rem", flexShrink: 0 }}>{opt.emoji}</span>
                         <span>{opt.label}</span>
                         {isSelected(opt.label) && <span style={{ marginLeft: "auto", color: accentColor, fontSize: "0.72rem", fontWeight: 700 }}>✓</span>}
                       </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
