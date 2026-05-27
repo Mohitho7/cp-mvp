@@ -179,26 +179,20 @@ const QUESTIONS = [
     subtext: "No parental pressure. No salary pressure. No trend pressure. Just you.",
     placeholder: "e.g. build AI tools, run a YouTube channel, design games, manage a startup team...",
   },
-  {
-    id: 14, type: "single", section: "Your Field",
-    label: "Target engineering or tech field",
-    question: "Which of these fields are you most drawn to or considering?",
-    subtext: "We'll tailor career recommendations specifically within this domain.",
-    options: [
-      { emoji: "💻", label: "Software Engineering / Software Development" },
-      { emoji: "☁️", label: "Cloud / DevOps / Security Engineering" },
-      { emoji: "📊", label: "Data Analyst / Scientist / AI & ML Engineering" },
-      { emoji: "🌐", label: "Full Stack Development" },
-      { emoji: "🔬", label: "VLSI / Semiconductor Engineering" },
-      { emoji: "🔌", label: "Embedded Systems / IoT Design Engineering" },
-      { emoji: "⚡", label: "EV / Power Systems / Automation Engineering" },
-      { emoji: "🏗️", label: "Design / CAE / Manufacturing Engineering" },
-      { emoji: "🤷", label: "I'm open — suggest based on my profile" },
-    ],
-  },
 ];
 
-const SECTIONS = ["Who You Are", "Your Work Style", "Life & Environment", "Your Direction", "The Real You", "Your Field"];
+const SECTIONS = ["Who You Are", "Your Work Style", "Life & Environment", "Your Direction", "The Real You"];
+
+const FIELDS = [
+  "Software Engineer / Software Developer",
+  "Cloud / DevOps / Security Engineer",
+  "Data Analyst / Scientist / AI & ML Engineer",
+  "Full Stack Developer",
+  "VLSI / Semiconductor Engineer",
+  "Embedded Systems / IoT Design Engineer",
+  "EV / Power Systems / Automation Engineer",
+  "Design / CAE / Manufacturing Engineer",
+];
 
 function buildMasterPrompt(answers: (string | string[] | null)[], userType: string | null) {
   const role = userType === "student" ? "student" : userType === "employee" ? "working professional" : userType === "switcher" ? "career switcher" : "person";
@@ -208,12 +202,7 @@ function buildMasterPrompt(answers: (string | string[] | null)[], userType: stri
     return Array.isArray(ans) ? ans.join(" | ") : ans;
   };
 
-  const chosenField = fmt(answers[13]);
-  const fieldContext = chosenField !== "(not answered)"
-    ? `\nTARGET FIELD SELECTED: ${chosenField}\n→ Prioritize career recommendations within or adjacent to this field. If the field doesn't perfectly match their other signals, be honest about the fit — but still give 2-3 roles within this domain alongside any better-fit alternatives.`
-    : "";
-
-  return `You are a senior career strategist and futurist. A ${role} has completed a 14-question career discovery assessment. Analyze their complete profile carefully and generate a structured, honest career report.
+  return `You are a senior career strategist and futurist. A ${role} has completed a 13-question career discovery assessment. Analyze their complete profile carefully and generate a structured, honest career report.
 
 ━━━ THEIR COMPLETE PROFILE ━━━
 
@@ -240,16 +229,12 @@ Continuous learning comfort → ${fmt(answers[11])}
 [ THE REAL THEM ]
 Dream work with no judgment → ${fmt(answers[12])}
 
-[ TARGET FIELD ]
-Field they are drawn to → ${chosenField}
-${fieldContext}
-
 ━━━ GENERATE THIS EXACT REPORT ━━━
 
 ## SECTION 1 — PROFILE SNAPSHOT
 **Archetype:** Give them a 2-3 word title (e.g. "The Curious Builder", "The Strategic Communicator")
 **Summary:** 2 sentences on who they are professionally, based strictly on their answers.
-**Clarity Level:** Clear / Mixed / Exploratory — one sentence explaining WHY (e.g. "Mixed — your answers pull between technical work and people-facing roles, which actually opens some interesting paths").
+**Clarity Level:** Clear / Mixed / Exploratory — one sentence explaining WHY.
 
 ## SECTION 2 — TRAIT RATINGS
 Rate each trait 1-5 based strictly on their answers. Use filled blocks █ and empty blocks ░ out of 5. Add a Low/Medium/High label and one sentence pulled from their actual answers explaining the rating.
@@ -262,11 +247,11 @@ Rate each trait 1-5 based strictly on their answers. Use filled blocks █ and e
 
 ## SECTION 3 — SIGNAL READING
 ✅ **Strong signals** → What shows up consistently across multiple answers (be specific, name the answers)
-⚠️ **Mixed signals** → Where answers conflict or create tension — be honest, not diplomatic. If signals are genuinely mixed, say so clearly and explain what that means for them.
+⚠️ **Mixed signals** → Where answers conflict or create tension — be honest, not diplomatic.
 🔍 **Worth exploring** → Areas their answers hint at but they haven't consciously considered yet
 
-## SECTION 4 — FIELD-ALIGNED CAREER RECOMMENDATIONS
-Give 4-6 career recommendations. Prioritize roles within or adjacent to their chosen field (${chosenField}). For each:
+## SECTION 4 — CAREER RECOMMENDATIONS
+Give 4-6 career recommendations. For each:
 
 **[Career Title]**
 → **What they do:** 1-2 sentences, zero jargon, day-to-day reality only
@@ -275,23 +260,32 @@ Give 4-6 career recommendations. Prioritize roles within or adjacent to their ch
 → **Start here:** Specific 3-month action plan with actual tools, platforms, or first steps
 
 CRITICAL RULES:
-- Within the chosen field (${chosenField}), surface lesser-known, specific, and emerging roles first — not just the obvious title
-- For Software Engineering: consider AI Engineer, Developer Advocate, Platform Engineer, SDK Engineer, Backend Infra Engineer — not just "software developer"
-- For Cloud/DevOps/Security: consider Site Reliability Engineer, SecOps Analyst, Cloud FinOps Analyst, Platform Engineer
-- For Data/AI/ML: consider ML Ops Engineer, AI Evaluator, Data Engineer, Analytics Engineer, Prompt Engineer
-- For Full Stack: consider Solutions Engineer, Technical Consultant, Product Engineer, Growth Engineer
-- For VLSI/Semiconductor: consider RTL Design Engineer, DFT Engineer, Physical Design Engineer, Verification Engineer
-- For Embedded/IoT: consider Firmware Engineer, RTOS Developer, IoT Solutions Architect, Edge AI Engineer
-- For EV/Power/Automation: consider Battery Management Systems Engineer, Power Electronics Engineer, SCADA/PLC Engineer, EV Charging Infrastructure Engineer
-- For Design/CAE/Manufacturing: consider FEA Analyst, Product Design Engineer, CAD/CAM Specialist, Digital Twin Engineer
-- If their profile doesn't strongly fit the chosen field, be honest — give 2-3 field roles anyway but clearly note the fit gap and offer 1-2 better-fit alternatives
-- Every recommendation must feel personally written for this person — not copy-pasted from a generic career guide
+- Prioritize emerging and lesser-known roles first: AI Workflow Engineer, RevOps Specialist, Solutions Engineer, CRM Consultant, Technical Consultant, Product Analyst, Business Systems Analyst, Growth Analyst, Customer Success Engineer, SOC Analyst, ERP Consultant, Prompt Engineer, AI Evaluator, Data Engineer, DevOps Engineer, Cloud Engineer, Technical Writer, AI Automation Consultant
+- Only recommend commonly suggested careers if MULTIPLE answers clearly and consistently point to it.
+- Every recommendation must feel personally written for this person — not copy-pasted from a generic career guide.
 
 ## SECTION 5 — ONE CAREER TO AVOID
 **[Career Title]**
-**Why:** Connect directly to their specific drain triggers and answers — not generic reasons. Make it feel like you actually read their profile.
+**Why:** Connect directly to their specific drain triggers and answers — not generic reasons.
 
-## SECTION 6 — HONEST MENTOR MESSAGE
+## SECTION 6 — YOUR BEST-FIT ENGINEERING / TECH DOMAIN
+
+Based strictly on everything in their profile above, pick exactly ONE domain from this list that fits them best:
+${FIELDS.map((f, i) => `${i + 1}. ${f}`).join("\n")}
+
+**Recommended Domain:** [Pick exactly one from the list above]
+
+**Why this domain fits you:**
+Write 3-4 sentences that directly connect their answers to this domain. Name the specific answers that point here. Be honest — if it's a moderate fit rather than a perfect fit, say so clearly.
+
+**As a fresher, here are the entry-level jobs you can get:**
+List 5-7 specific job titles a fresher can realistically get hired for in this domain immediately after completing relevant courses or a degree. For each role:
+→ **[Job Title]** — What you actually do on day 1, typical starting salary range (India / global), and one platform or company type where freshers commonly get hired.
+
+**What to learn to get there:**
+List 4-6 specific skills, tools, or certifications a fresher should focus on to break into this domain (be specific — name the exact tool, language, or cert, not just "programming skills").
+
+## SECTION 7 — HONEST MENTOR MESSAGE
 2-3 sentences. Real talk — like a mentor who genuinely cares, not a motivational poster. Address their specific clarity level, the tension in their answers if any, and what they should actually do in the next 30 days.
 
 ━━━ STYLE RULES ━━━
@@ -316,7 +310,7 @@ export default function CareerDiscovery() {
   const progress = ((currentQ + 1) / QUESTIONS.length) * 100;
   const currentAnswer = answers[currentQ];
   const sectionIndex = SECTIONS.indexOf(q?.section);
-  const sectionColors = ["#f5c842", "#5bc4a0", "#7eb8f7", "#e07af5", "#f0806a", "#ff9f43"];
+  const sectionColors = ["#f5c842", "#5bc4a0", "#7eb8f7", "#e07af5", "#f0806a"];
   const accentColor = sectionColors[Math.max(0, sectionIndex)] || "#f5c842";
 
   function selectOption(label: string) {
@@ -414,7 +408,6 @@ export default function CareerDiscovery() {
         .chip.active{background:rgba(245,200,66,0.1);border-color:rgba(245,200,66,0.35);color:#f0e080;}
         .step-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.68rem;flex-shrink:0;}
         .tag{font-family:'DM Mono',monospace;font-size:0.62rem;color:#3a3020;letter-spacing:0.1em;}
-        .field-badge{display:inline-flex;align-items:center;gap:0.4rem;padding:0.28rem 0.8rem;border-radius:50px;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;}
       `}</style>
 
       <div className="root">
@@ -437,7 +430,7 @@ export default function CareerDiscovery() {
               </h1>
 
               <p style={{ color: "#4a4030", fontSize: "0.88rem", lineHeight: 1.85, marginBottom: "2rem" }}>
-                14 questions about who you actually are. We build a detailed profile and generate a prompt — paste it into Claude.ai for your full personalized career report with trait ratings, signal analysis, and field-specific recommendations.
+                13 questions about who you actually are. We build a detailed profile and generate a prompt — paste it into Claude.ai for your full personalized report including your best-fit engineering domain, why it suits you, and which jobs you can get as a fresher.
               </p>
 
               <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "2.2rem" }}>
@@ -450,12 +443,12 @@ export default function CareerDiscovery() {
                 Start Discovery →
               </button>
 
-              <p className="tag" style={{ marginTop: "1.1rem" }}>~6 MIN · 14 QUESTIONS · FREE · NO ACCOUNT NEEDED</p>
+              <p className="tag" style={{ marginTop: "1.1rem" }}>~5 MIN · 13 QUESTIONS · FREE · NO ACCOUNT NEEDED</p>
 
               <div style={{ marginTop: "2.5rem" }}>
-                <p className="tag" style={{ marginBottom: "0.75rem", color: "#2a2010" }}>INCLUDES FIELD-SPECIFIC RECOMMENDATIONS FOR</p>
+                <p className="tag" style={{ marginBottom: "0.75rem", color: "#2a2010" }}>AI WILL MATCH YOU TO ONE OF THESE DOMAINS</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", justifyContent: "center" }}>
-                  {["Software Engineering", "Cloud / DevOps", "AI & ML", "Full Stack", "VLSI / Semiconductor", "Embedded / IoT", "EV / Power Systems", "Design / CAE / Manufacturing"].map((f) => (
+                  {["Software Engineering", "Cloud / DevOps", "Data / AI & ML", "Full Stack", "VLSI / Semiconductor", "Embedded / IoT", "EV / Power Systems", "Design / CAE / Mfg"].map((f) => (
                     <span key={f} style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.62rem", color: "#2a2010", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "50px", padding: "0.22rem 0.65rem" }}>{f}</span>
                   ))}
                 </div>
@@ -483,14 +476,6 @@ export default function CareerDiscovery() {
             <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "5.2rem 1rem 6.5rem", overflowY: "auto" }}>
               <div key={currentQ} style={{ maxWidth: 530, width: "100%", animation: "slideIn 0.28s ease forwards" }}>
                 <style>{`@keyframes slideIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}`}</style>
-
-                {/* Special callout for field question */}
-                {q.id === 14 && (
-                  <div style={{ marginBottom: "1rem", padding: "0.75rem 1rem", borderRadius: "10px", background: "rgba(255,159,67,0.06)", border: "1px solid rgba(255,159,67,0.18)" }}>
-                    <span className="tag" style={{ color: "#ff9f43" }}>NEW — FIELD-SPECIFIC MODE</span>
-                    <p style={{ color: "#6a5a40", fontSize: "0.79rem", marginTop: "0.35rem", lineHeight: 1.6 }}>Your selection unlocks targeted role recommendations within your chosen engineering or tech domain.</p>
-                  </div>
-                )}
 
                 <div style={{ marginBottom: "1.7rem" }}>
                   <div style={{ display: "flex", gap: "0.35rem", marginBottom: "1rem" }}>
@@ -551,17 +536,8 @@ export default function CareerDiscovery() {
                   <span className="tag" style={{ color: "#5bc4a0" }}>PROFILE PROMPT READY</span>
                 </div>
                 <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(1.4rem, 4.5vw, 1.9rem)", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: "0.55rem" }}>Your career profile is built.</h1>
-
-                {/* Show selected field */}
-                {answers[13] && answers[13] !== "(skipped)" && (
-                  <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(255,159,67,0.07)", border: "1px solid rgba(255,159,67,0.2)", borderRadius: "50px", padding: "0.32rem 0.9rem", marginBottom: "0.9rem" }}>
-                    <span style={{ fontSize: "0.72rem" }}>⚡</span>
-                    <span className="tag" style={{ color: "#ff9f43" }}>FIELD: {(answers[13] as string).toUpperCase()}</span>
-                  </div>
-                )}
-
                 <p style={{ color: "#4a4030", fontSize: "0.85rem", lineHeight: 1.75, maxWidth: 500, margin: "0 auto" }}>
-                  Copy the prompt and paste it into Claude.ai. You'll get a full field-specific report — archetype, trait ratings, signal analysis, targeted career recommendations, and an honest mentor message.
+                  Copy the prompt and paste it into Claude.ai. The AI will read your full profile and recommend your best-fit engineering domain, explain why, and list the exact fresher jobs you can land.
                 </p>
               </div>
 
@@ -607,7 +583,8 @@ export default function CareerDiscovery() {
                     ["🏷️", "Career Archetype + Clarity Level", "Your professional identity and how clear your signals are"],
                     ["📊", "Trait Ratings", "5 dimensions rated from your actual answers with █░ bars"],
                     ["🔍", "Signal Reading", "Strong signals, mixed signals, and unexplored areas — honestly"],
-                    ["⚡", "Field-Aligned Career Recommendations", `Roles within ${answers[13] && answers[13] !== "(skipped)" ? answers[13] as string : "your chosen field"} + adjacent paths`],
+                    ["🗺️", "Career Recommendations", "4-6 roles, each justified by your specific answers"],
+                    ["⚡", "Your Best-Fit Engineering Domain", "AI picks one domain from 8, explains why it fits, and lists fresher jobs you can get"],
                     ["⚠️", "One Career to Avoid", "Based directly on your drain triggers"],
                     ["💬", "Honest Mentor Message", "Real talk — not a motivational poster"],
                   ].map(([emoji, title, desc]) => (
