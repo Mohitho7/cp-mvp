@@ -202,7 +202,24 @@ function buildMasterPrompt(answers: (string | string[] | null)[], userType: stri
     return Array.isArray(ans) ? ans.join(" | ") : ans;
   };
 
-  return `You are a senior career strategist and futurist. A ${role} has completed a 13-question career discovery assessment. Analyze their complete profile carefully and generate a structured, honest career report.
+  return `You are a brutally honest senior career strategist who understands the REAL fresher hiring market in India and globally. A ${role} has completed a 13-question career discovery assessment.
+
+Your job is NOT to give trendy internet career advice or motivational suggestions. Your job is to determine:
+1. Which careers ACTUALLY hire undergraduate freshers today
+2. Which roles match the person's psychology and work style
+3. Which paths are realistically achievable within 6–18 months
+4. Which careers are oversaturated, unrealistic, or socially hyped
+5. Which roles lead to strong long-term leverage, income, and freedom
+
+━━━ MARKET REALISM RULES (apply throughout) ━━━
+- Separate "future potential roles" from "realistic fresher jobs"
+- Do NOT recommend fantasy startup titles unless freshers genuinely get hired into them
+- Do NOT over-recommend AI roles unless the profile strongly supports deep technical ability
+- Be extremely realistic about the Indian job market
+- Prioritize careers with actual hiring demand
+- For every career, label: Easy to enter / Moderately difficult / Highly competitive
+- For every career, label: Stable / Fast-growth / High burnout / Oversaturated / High leverage
+- Be honest about salary progression and difficulty — do NOT inflate salaries unrealistically
 
 ━━━ THEIR COMPLETE PROFILE ━━━
 
@@ -222,7 +239,7 @@ Things that drain them quickly → ${fmt(answers[7])}
 What success in their 20s looks like → ${fmt(answers[8])}
 
 [ DIRECTION ]
-Most interesting area → ${fmt(answers[9])}
+Most interesting areas → ${fmt(answers[9])}
 Life vision after 30s → ${fmt(answers[10])}
 Continuous learning comfort → ${fmt(answers[11])}
 
@@ -231,69 +248,88 @@ Dream work with no judgment → ${fmt(answers[12])}
 
 ━━━ GENERATE THIS EXACT REPORT ━━━
 
-## SECTION 1 — PROFILE SNAPSHOT
-**Archetype:** Give them a 2-3 word title (e.g. "The Curious Builder", "The Strategic Communicator")
+## SECTION 1 — PROFILE SNAPSHOT & CORE PERSONALITY ANALYSIS
+**Archetype:** A 2-3 word title (e.g. "The Systematic Operator", "The Curious Builder")
+**Worker Type:** Identify which ONE best fits — Specialist / Operator / Builder / Analyst / Communicator / Entrepreneur / Manager — and explain why in one sentence using their actual answers.
 **Summary:** 2 sentences on who they are professionally, based strictly on their answers.
-**Clarity Level:** Clear / Mixed / Exploratory — one sentence explaining WHY.
+**Clarity Level:** Clear / Mixed / Exploratory — one sentence explaining why.
+**Biggest Strengths:** 2-3 bullet points pulled from their actual answers.
+**Biggest Risks:** 2-3 honest risks — what could derail them if they don't address it.
+**Realistic Survival Environment:** What kind of workplace would this person NOT quit within 6 months, based on their answers.
 
 ## SECTION 2 — TRAIT RATINGS
-Rate each trait 1-5 based strictly on their answers. Use filled blocks █ and empty blocks ░ out of 5. Add a Low/Medium/High label and one sentence pulled from their actual answers explaining the rating.
+Rate each trait 1-5 based strictly on their answers. Use filled blocks █ and empty blocks ░ out of 5. Add a Low/Medium/High label and one sentence from their actual answers explaining the rating.
 
-**Technical Inclination** [█░ blocks] Low/Medium/High — reason from their answers
-**Creative Drive** [█░ blocks] Low/Medium/High — reason from their answers
-**People Orientation** [█░ blocks] Low/Medium/High — reason from their answers
-**Risk Appetite** [█░ blocks] Low/Medium/High — reason from their answers
-**Learning Agility** [█░ blocks] Low/Medium/High — reason from their answers
+**Technical Inclination** [█░ blocks] Low/Medium/High — reason
+**Creative Drive** [█░ blocks] Low/Medium/High — reason
+**People Orientation** [█░ blocks] Low/Medium/High — reason
+**Risk Appetite** [█░ blocks] Low/Medium/High — reason
+**Learning Agility** [█░ blocks] Low/Medium/High — reason
 
 ## SECTION 3 — SIGNAL READING
-✅ **Strong signals** → What shows up consistently across multiple answers (be specific, name the answers)
-⚠️ **Mixed signals** → Where answers conflict or create tension — be honest, not diplomatic.
+✅ **Strong signals** → What shows up consistently across multiple answers — be specific, name the answers
+⚠️ **Mixed signals** → Where answers conflict or create tension — be honest, not diplomatic
 🔍 **Worth exploring** → Areas their answers hint at but they haven't consciously considered yet
 
-## SECTION 4 — CAREER RECOMMENDATIONS
-Give 4-6 career recommendations. For each:
+## SECTION 4 — REALISTIC FRESHER CAREER FITS
+Give ONLY 4-5 careers that: (a) regularly hire undergraduate freshers, (b) can realistically be entered within 6–18 months, (c) match their psychology. For each:
 
 **[Career Title]**
-→ **What they do:** 1-2 sentences, zero jargon, day-to-day reality only
-→ **Why it fits you:** Directly reference 2-3 of their specific answers — make the connection explicit
-→ **Automation risk:** Low / Medium / High — one line reason
-→ **Start here:** Specific 3-month action plan with actual tools, platforms, or first steps
+→ **What freshers actually do daily:** Specific day-to-day reality — talk like someone who has seen people work in this job
+→ **Why it fits this person:** Directly reference 2-3 of their specific answers — make the connection explicit
+→ **Real fresher salary in India:** Honest range (e.g. ₹3–5 LPA), not inflated
+→ **Entry difficulty:** Easy / Moderately difficult / Highly competitive
+→ **Career health:** Stable / Fast-growth / High burnout / Oversaturated / High leverage
+→ **AI/automation threat:** Low / Medium / High — one line reason
+→ **5-year growth:** Where does this role realistically lead after 5 years
+→ **Natural fit or forced:** Is this person naturally wired for it, or would they be pushing against their grain
 
-CRITICAL RULES:
-- Prioritize emerging and lesser-known roles first: AI Workflow Engineer, RevOps Specialist, Solutions Engineer, CRM Consultant, Technical Consultant, Product Analyst, Business Systems Analyst, Growth Analyst, Customer Success Engineer, SOC Analyst, ERP Consultant, Prompt Engineer, AI Evaluator, Data Engineer, DevOps Engineer, Cloud Engineer, Technical Writer, AI Automation Consultant
-- Only recommend commonly suggested careers if MULTIPLE answers clearly and consistently point to it.
-- Every recommendation must feel personally written for this person — not copy-pasted from a generic career guide.
+## SECTION 5 — CAREERS THEY SHOULD AVOID
+Give 2-3 careers. For each:
 
-## SECTION 5 — ONE CAREER TO AVOID
 **[Career Title]**
-**Why:** Connect directly to their specific drain triggers and answers — not generic reasons.
+**Why avoid:** Name the specific answers that reveal this mismatch — careers they may be romantically attracted to but are realistically unsuited for, careers that conflict with their energy, or careers likely to burn them out based on what they said
 
-## SECTION 6 — YOUR BEST-FIT ENGINEERING / TECH DOMAIN
-
-Based strictly on everything in their profile above, pick exactly ONE domain from this list that fits them best:
+## SECTION 6 — BEST-FIT ENGINEERING / TECH DOMAIN
+Pick exactly ONE from this list based strictly on their full profile:
 ${FIELDS.map((f, i) => `${i + 1}. ${f}`).join("\n")}
 
-**Recommended Domain:** [Pick exactly one from the list above]
+**Recommended Domain:** [Exactly one from above]
+**Natural alignment or forced discipline:** Be honest — does this person have genuine pull toward this domain, or will they need to override themselves to stick with it?
+**Market demand:** Is fresher hiring strong, moderate, or weak in India right now for this domain?
+**Why it fits:** 3-4 sentences directly referencing their answers. If it's a moderate fit, say so.
 
-**Why this domain fits you:**
-Write 3-4 sentences that directly connect their answers to this domain. Name the specific answers that point here. Be honest — if it's a moderate fit rather than a perfect fit, say so clearly.
+**Entry-level jobs freshers actually get hired for:**
+List 5-7 real job titles. For each:
+→ **[Job Title]** — What you actually do on day 1 | Realistic salary range India/global | Where freshers typically get hired (company type / platform)
 
-**As a fresher, here are the entry-level jobs you can get:**
-List 5-7 specific job titles a fresher can realistically get hired for in this domain immediately after completing relevant courses or a degree. For each role:
-→ **[Job Title]** — What you actually do on day 1, typical starting salary range (India / global), and one platform or company type where freshers commonly get hired.
+**What to actually learn (specific, not vague):**
+List 4-6 exact tools, languages, or certifications — name them precisely (e.g. "Python + Pandas", "AWS Cloud Practitioner cert", "Figma", not just "programming skills")
 
-**What to learn to get there:**
-List 4-6 specific skills, tools, or certifications a fresher should focus on to break into this domain (be specific — name the exact tool, language, or cert, not just "programming skills").
+## SECTION 7 — REALISTIC 12-MONTH ROADMAP
+Month-by-month plan. IMPORTANT: No fake productivity advice. No endless course lists. Focus on projects, internships, networking, practical skills, portfolio, interview readiness. Name exact tools and technologies.
 
-## SECTION 7 — HONEST MENTOR MESSAGE
-2-3 sentences. Real talk — like a mentor who genuinely cares, not a motivational poster. Address their specific clarity level, the tension in their answers if any, and what they should actually do in the next 30 days.
+**Months 1-2:** Foundation
+**Months 3-4:** First project + visibility
+**Months 5-6:** Internship hunting / freelance / open source
+**Months 7-9:** Portfolio + networking
+**Months 10-12:** Interview prep + job applications
+
+## SECTION 8 — THE BRUTAL TRUTH
+3-4 sentences. No motivational poster language. Tell them:
+- What they are specifically underestimating based on their answers
+- Where they are likely wasting time right now
+- What will realistically happen if they stay unfocused for another year
+- What specific type of discipline this person needs — not generic "be consistent", but tailored to their actual work style answers
+
+Talk like a mentor who genuinely wants them to avoid wasting 5 years.
 
 ━━━ STYLE RULES ━━━
-- Write like a sharp mentor, not an HR document or career website
-- Be specific — reference their actual answers throughout, not vague generalizations
+- Write like a sharp mentor who has actually seen people succeed and fail in these jobs
+- Be specific — reference their actual answers throughout, never vague generalizations
 - Be honest about mixed signals — confusion is useful data, not a problem to hide
-- Zero corporate buzzwords or motivational fluff
-- Every section must feel written for THIS specific person`;
+- Zero corporate buzzwords, zero motivational fluff, zero inflated salaries
+- Every section must feel written for THIS specific person, not a template`;
 }
 
 export default function CareerDiscovery() {
@@ -595,13 +631,14 @@ export default function CareerDiscovery() {
                 <p className="tag" style={{ marginBottom: "0.9rem" }}>WHAT YOUR REPORT WILL INCLUDE</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
                   {[
-                    ["🏷️", "Career Archetype + Clarity Level", "Your professional identity and how clear your signals are"],
+                    ["🏷️", "Profile Snapshot & Core Personality Analysis", "Archetype, worker type, strengths, risks, and realistic survival environment"],
                     ["📊", "Trait Ratings", "5 dimensions rated from your actual answers with █░ bars"],
                     ["🔍", "Signal Reading", "Strong signals, mixed signals, and unexplored areas — honestly"],
-                    ["🗺️", "Career Recommendations", "4-6 roles, each justified by your specific answers"],
-                    ["⚡", "Your Best-Fit Engineering Domain", "AI picks one domain from 8, explains why it fits, and lists fresher jobs you can get"],
-                    ["⚠️", "One Career to Avoid", "Based directly on your drain triggers"],
-                    ["💬", "Honest Mentor Message", "Real talk — not a motivational poster"],
+                    ["💼", "Realistic Fresher Career Fits", "Only roles that actually hire freshers — with real India salaries, entry difficulty, and 5-year growth"],
+                    ["🚫", "Careers to Avoid", "2-3 roles you may be attracted to but are realistically unsuited for, with evidence from your answers"],
+                    ["⚡", "Best-Fit Engineering / Tech Domain", "One domain picked from 8 — with fresher jobs, what to learn, and market demand honesty"],
+                    ["🗓️", "Realistic 12-Month Roadmap", "Month-by-month plan: projects, internships, portfolio, interviews — no fluff"],
+                    ["💬", "The Brutal Truth", "What you're underestimating, where you're wasting time, and what happens if you stay unfocused"],
                   ].map(([emoji, title, desc]) => (
                     <div key={title} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
                       <span style={{ fontSize: "0.9rem", flexShrink: 0, marginTop: "0.1rem" }}>{emoji}</span>
