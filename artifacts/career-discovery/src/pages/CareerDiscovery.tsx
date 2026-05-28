@@ -471,7 +471,7 @@ export default function CareerDiscovery() {
               </h1>
 
               <p style={{ color: "#4a4030", fontSize: "0.88rem", lineHeight: 1.85, marginBottom: "2rem" }}>
-                13 questions about who you actually are. We build a detailed profile and generate a prompt — paste it into Claude.ai for your full personalized report including your best-fit engineering domain, why it suits you, and which jobs you can get as a fresher.
+                13 questions about who you actually are. We build a detailed profile and generate a prompt — paste it into ChatGPT for your full personalized report including your best-fit engineering domain, why it suits you, and which jobs you can get as a fresher.
               </p>
 
               <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "2.2rem" }}>
@@ -588,7 +588,7 @@ export default function CareerDiscovery() {
                 </div>
                 <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(1.4rem, 4.5vw, 1.9rem)", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: "0.55rem" }}>Your career profile is built.</h1>
                 <p style={{ color: "#4a4030", fontSize: "0.85rem", lineHeight: 1.75, maxWidth: 500, margin: "0 auto" }}>
-                  Copy the prompt and paste it into Claude.ai. The AI will read your full profile and recommend your best-fit engineering domain, explain why, and list the exact fresher jobs you can land.
+                  Copy the prompt and paste it into ChatGPT. The AI will read your full profile and recommend your best-fit engineering domain, explain why, and list the exact fresher jobs you can land.
                 </p>
               </div>
 
@@ -598,7 +598,7 @@ export default function CareerDiscovery() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.7rem" }}>
                   {[
                     { n: "01", text: "Copy the prompt below", color: "#f5c842" },
-                    { n: "02", text: "Open Claude.ai in a new tab", color: "#5bc4a0" },
+                    { n: "02", text: "Open ChatGPT in a new tab", color: "#5bc4a0" },
                     { n: "03", text: "Start a new chat and paste it", color: "#7eb8f7" },
                     { n: "04", text: "Read your full personalized career report", color: "#e07af5" },
                   ].map(({ n, text, color }) => (
@@ -621,8 +621,8 @@ export default function CareerDiscovery() {
                 <button className="action-btn" onClick={handleCopy} style={{ background: copied ? "#5bc4a0" : "#f5c842", color: "#0e0c09", flex: 1, justifyContent: "center", minWidth: 140 }}>
                   {copied ? "✓ Copied!" : "📋 Copy Prompt"}
                 </button>
-                <button className="action-btn" onClick={() => window.open("https://claude.ai", "_blank")} style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.09)", color: "#b0a890", flex: 1, justifyContent: "center", minWidth: 140 }}>
-                  Open Claude.ai ↗
+                <button className="action-btn" onClick={() => window.open("https://chatgpt.com", "_blank")} style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.09)", color: "#b0a890", flex: 1, justifyContent: "center", minWidth: 140 }}>
+                  Open ChatGPT ↗
                 </button>
               </div>
 
