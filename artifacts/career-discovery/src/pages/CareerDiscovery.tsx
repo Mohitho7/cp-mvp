@@ -220,6 +220,24 @@ Your job is NOT to give trendy internet career advice or motivational suggestion
 - For every career, label: Easy to enter / Moderately difficult / Highly competitive
 - For every career, label: Stable / Fast-growth / High burnout / Oversaturated / High leverage
 - Be honest about salary progression and difficulty — do NOT inflate salaries unrealistically
+- Do NOT assume interest in startups, AI, apps, or technology automatically means the person should become a software engineer
+- Distinguish between: (a) people who enjoy deep engineering work daily, and (b) people who enjoy using technology to build businesses, systems, products, or leverage
+- If the person prefers low-code/no-code, automation, or avoiding deep coding, treat that as a MAJOR signal — not a minor detail
+- Do NOT recommend software engineering, AI/ML, or full-stack development solely because the person likes AI tools, startups, or apps
+- Only recommend engineering-heavy careers if the person shows: tolerance for deep technical work, enjoyment of coding itself, long attention span for debugging, and willingness to spend years mastering technical depth
+- Before recommending careers, determine whether the person is primarily: a technical engineer, a business operator, a product builder, a creative strategist, or a hybrid generalist
+- The report MUST also consider realistic non-engineering tech careers — Product Operations, Startup Operations, Founder's Office, Automation Specialist, Technical Product Support, No-Code Builder, Product Management track, Growth/Systems roles — if they better match the person's psychology
+
+━━━ CAREER CALIBER VS ENTRY REALITY RULES ━━━
+The report MUST clearly separate:
+1. The person's NATURAL LONG-TERM CALIBER — what they are psychologically best suited for long-term
+2. The REALISTIC FRESHER ENTRY PATH — the actual jobs undergraduate freshers are realistically hired into today
+
+Many people are naturally suited for higher-leverage roles (Product Management, Startup Operations, Founder's Office, Entrepreneurship, Automation Consulting, Strategy, Product Building) but freshers are usually NOT directly hired into these. If this mismatch exists: explicitly explain it, do NOT hide it, and create a bridge path.
+
+The report must explain: "Your real caliber appears to be X" → "But companies require experience before hiring for X" → "So your realistic starting point is Y" → "While working in Y, build deliberately toward X"
+
+Distinguish between: survival jobs, stepping-stone jobs, and true long-term fit. Do NOT pretend the first job and long-term career identity are always the same.
 
 ━━━ THEIR COMPLETE PROFILE ━━━
 
@@ -271,10 +289,26 @@ Rate each trait 1-5 based strictly on their answers. Use filled blocks █ and e
 ⚠️ **Mixed signals** → Where answers conflict or create tension — be honest, not diplomatic
 🔍 **Worth exploring** → Areas their answers hint at but they haven't consciously considered yet
 
-## SECTION 4 — REALISTIC FRESHER CAREER FITS
+## SECTION 4 — LONG-TERM CALIBER VS ENTRY REALITY
+This section MUST be brutally honest about the gap between what this person is naturally wired for and what the market will actually hire them for as a fresher.
+
+**Their real long-term caliber:**
+Based strictly on their answers, what kind of role is this person psychologically best suited for long-term? (Be specific — e.g. "You are wired to be a product builder / operator / systems thinker / founder-type / strategist — not a line-level engineer.")
+
+**Why the market won't hand them that immediately:**
+Explain plainly which experience barriers, credibility barriers, or seniority requirements prevent freshers from entering that role directly. Do not sugarcoat it.
+
+**Their realistic first-entry job:**
+Name the specific job title(s) a fresh graduate with their profile can actually get hired for today — not what sounds good, what hiring managers actually post and select freshers for.
+
+**The bridge path:**
+Explain how they should use that first job as a deliberate stepping stone. What skills, projects, networks, or proof points should they be building while in that role so they can transition to their real caliber within 3-5 years?
+
+## SECTION 5 — REALISTIC FRESHER CAREER FITS
 Give ONLY 4-5 careers that: (a) regularly hire undergraduate freshers, (b) can realistically be entered within 6–18 months, (c) match their psychology. For each:
 
 **[Career Title]**
+→ **Role type:** Long-term fit / Stepping-stone role / Realistic market-entry only — one line explanation
 → **What freshers actually do daily:** Specific day-to-day reality — talk like someone who has seen people work in this job
 → **Why it fits this person:** Directly reference 2-3 of their specific answers — make the connection explicit
 → **Real fresher salary in India:** Honest range (e.g. ₹3–5 LPA), not inflated
@@ -284,29 +318,38 @@ Give ONLY 4-5 careers that: (a) regularly hire undergraduate freshers, (b) can r
 → **5-year growth:** Where does this role realistically lead after 5 years
 → **Natural fit or forced:** Is this person naturally wired for it, or would they be pushing against their grain
 
-## SECTION 5 — CAREERS THEY SHOULD AVOID
+## SECTION 6 — CAREERS THEY SHOULD AVOID
 Give 2-3 careers. For each:
 
 **[Career Title]**
 **Why avoid:** Name the specific answers that reveal this mismatch — careers they may be romantically attracted to but are realistically unsuited for, careers that conflict with their energy, or careers likely to burn them out based on what they said
 
-## SECTION 6 — BEST-FIT ENGINEERING / TECH DOMAIN
-Pick exactly ONE from this list based strictly on their full profile:
-${FIELDS.map((f, i) => `${i + 1}. ${f}`).join("\n")}
+## SECTION 7 — BEST-FIT TECH CAREER TRACK
+Do NOT default to engineering. First assess whether this person is primarily a: technical engineer / business operator / product builder / creative strategist / hybrid generalist — then pick the most honest track.
 
-**Recommended Domain:** [Exactly one from above]
-**Natural alignment or forced discipline:** Be honest — does this person have genuine pull toward this domain, or will they need to override themselves to stick with it?
-**Market demand:** Is fresher hiring strong, moderate, or weak in India right now for this domain?
-**Why it fits:** 3-4 sentences directly referencing their answers. If it's a moderate fit, say so.
+Pick exactly ONE track from:
+- Engineering (Software / Cloud / DevOps / Data / Embedded / VLSI / EV / CAE)
+- Product (Product Management / Product Operations / Technical Product Support)
+- Automation (No-Code Builder / Automation Specialist / Workflow Engineer)
+- Startup Operations (Founder's Office / Operations / Growth / Systems)
+- Technical Business (Pre-Sales / Solutions / RevOps / CRM / ERP Consulting)
+- Design / UI-UX
+- Hybrid Tech-Generalist
 
-**Entry-level jobs freshers actually get hired for:**
+**Recommended Track:** [One from above]
+**Why this track — not engineering (or why engineering IS justified):** Directly reference their coding comfort, drain triggers, and work style answers. Be explicit about whether you are recommending engineering or a non-engineering track and why.
+**Natural alignment or requires forced discipline:** Honest assessment.
+**Market demand for freshers in India:** Strong / Moderate / Weak — one line.
+**Why it fits their profile:** 3-4 sentences referencing specific answers.
+
+**Entry-level jobs freshers actually get hired for in this track:**
 List 5-7 real job titles. For each:
-→ **[Job Title]** — What you actually do on day 1 | Realistic salary range India/global | Where freshers typically get hired (company type / platform)
+→ **[Job Title]** — What you do on day 1 | Realistic salary India/global | Where freshers typically get hired
 
 **What to actually learn (specific, not vague):**
-List 4-6 exact tools, languages, or certifications — name them precisely (e.g. "Python + Pandas", "AWS Cloud Practitioner cert", "Figma", not just "programming skills")
+List 4-6 exact tools, languages, platforms, or certifications — name them precisely
 
-## SECTION 7 — REALISTIC 12-MONTH ROADMAP
+## SECTION 8 — REALISTIC 12-MONTH ROADMAP
 Month-by-month plan. IMPORTANT: No fake productivity advice. No endless course lists. Focus on projects, internships, networking, practical skills, portfolio, interview readiness. Name exact tools and technologies.
 
 **Months 1-2:** Foundation
@@ -315,7 +358,7 @@ Month-by-month plan. IMPORTANT: No fake productivity advice. No endless course l
 **Months 7-9:** Portfolio + networking
 **Months 10-12:** Interview prep + job applications
 
-## SECTION 8 — THE BRUTAL TRUTH
+## SECTION 9 — THE BRUTAL TRUTH
 3-4 sentences. No motivational poster language. Tell them:
 - What they are specifically underestimating based on their answers
 - Where they are likely wasting time right now
@@ -631,14 +674,15 @@ export default function CareerDiscovery() {
                 <p className="tag" style={{ marginBottom: "0.9rem" }}>WHAT YOUR REPORT WILL INCLUDE</p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
                   {[
-                    ["🏷️", "Profile Snapshot & Core Personality Analysis", "Archetype, worker type, strengths, risks, and realistic survival environment"],
+                    ["🏷️", "Profile Snapshot & Core Personality", "Archetype, worker type, strengths, risks, survival environment"],
                     ["📊", "Trait Ratings", "5 dimensions rated from your actual answers with █░ bars"],
-                    ["🔍", "Signal Reading", "Strong signals, mixed signals, and unexplored areas — honestly"],
-                    ["💼", "Realistic Fresher Career Fits", "Only roles that actually hire freshers — with real India salaries, entry difficulty, and 5-year growth"],
-                    ["🚫", "Careers to Avoid", "2-3 roles you may be attracted to but are realistically unsuited for, with evidence from your answers"],
-                    ["⚡", "Best-Fit Engineering / Tech Domain", "One domain picked from 8 — with fresher jobs, what to learn, and market demand honesty"],
-                    ["🗓️", "Realistic 12-Month Roadmap", "Month-by-month plan: projects, internships, portfolio, interviews — no fluff"],
-                    ["💬", "The Brutal Truth", "What you're underestimating, where you're wasting time, and what happens if you stay unfocused"],
+                    ["🔍", "Signal Reading", "Strong signals, mixed signals, unexplored areas — honestly"],
+                    ["🎯", "Long-Term Caliber vs Entry Reality", "What you're wired for long-term vs what the market actually hires freshers into — with a bridge path"],
+                    ["💼", "Realistic Fresher Career Fits", "4-5 roles with role type (stepping-stone vs long-term fit), real ₹ salaries, entry difficulty, and 5-year growth"],
+                    ["🚫", "Careers to Avoid", "2-3 roles you may be attracted to but are realistically unsuited for — evidence from your answers"],
+                    ["⚡", "Best-Fit Tech Career Track", "Engineering / Product / Automation / Startup Ops / Technical Business — not forced into engineering"],
+                    ["🗓️", "Realistic 12-Month Roadmap", "Month-by-month: projects, internships, portfolio, interviews — exact tools named"],
+                    ["💬", "The Brutal Truth", "What you're underestimating, where you're wasting time, what happens if you stay unfocused"],
                   ].map(([emoji, title, desc]) => (
                     <div key={title} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
                       <span style={{ fontSize: "0.9rem", flexShrink: 0, marginTop: "0.1rem" }}>{emoji}</span>
