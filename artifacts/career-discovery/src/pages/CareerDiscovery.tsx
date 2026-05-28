@@ -88,10 +88,10 @@ const QUESTIONS = [
     ],
   },
   {
-    id: 7, type: "multi", section: "Life & Environment",
+    id: 7, type: "multi3", section: "Life & Environment",
     label: "Preferred work environment",
     question: "Which work environment actually sounds comfortable to you?",
-    subtext: "Be real — your environment affects everything. Pick all that fit.",
+    subtext: "Be real — your environment affects everything. Pick up to 3.",
     options: [
       { emoji: "🚀", label: "Startup chaos and fast growth" },
       { emoji: "🏢", label: "Stable corporate structure" },
@@ -116,10 +116,10 @@ const QUESTIONS = [
     ],
   },
   {
-    id: 9, type: "multi", section: "Life & Environment",
+    id: 9, type: "multi3", section: "Life & Environment",
     label: "What success in their 20s looks like",
     question: "Which of these would make you feel genuinely successful in your 20s?",
-    subtext: "Not what sounds good — what would actually feel good.",
+    subtext: "Not what sounds good — what would actually feel good. Pick up to 3.",
     options: [
       { emoji: "💸", label: "Earning a lot of money" },
       { emoji: "🌍", label: "Working from anywhere in the world" },
@@ -146,10 +146,10 @@ const QUESTIONS = [
     ],
   },
   {
-    id: 11, type: "multi", section: "Your Direction",
+    id: 11, type: "multi3", section: "Your Direction",
     label: "Life vision after 30s",
     question: "After your 30s, which kind of life sounds better?",
-    subtext: "Your future pulls your career — not the other way around.",
+    subtext: "Your future pulls your career — not the other way around. Pick up to 3.",
     options: [
       { emoji: "👨‍👩‍👧", label: "Stable family life with predictable income" },
       { emoji: "💎", label: "Financial freedom — options and wealth" },
