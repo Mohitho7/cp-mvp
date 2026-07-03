@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const QUESTIONS = [
   {
@@ -438,6 +438,20 @@ export default function CareerDiscovery() {
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     }
   }
+
+  useEffect(() => {
+    if (screen !== "quiz") return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Enter") return;
+      const target = e.target as HTMLElement | null;
+      if (target && target.tagName === "TEXTAREA") return;
+      if (!canProceed()) return;
+      e.preventDefault();
+      handleNext();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
 
   function handleBack() {
     if (currentQ === 0) { setScreen("intro"); return; }
