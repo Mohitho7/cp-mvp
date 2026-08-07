@@ -493,6 +493,7 @@ export default function CareerDiscovery() {
         .grain{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23filter)'/%3E%3C/svg%3E");}
         .glow{position:fixed;width:500px;height:500px;border-radius:50%;filter:blur(130px);pointer-events:none;z-index:0;opacity:0.09;}
         .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:18px;}
+         .question-subtext{color:#8a8070;font-size:0.8rem;font-weight:400;line-height:1.55;margin-top:0.45rem;}
         .option-btn{width:100%;text-align:left;padding:0.82rem 1.1rem;border-radius:12px;border:1.5px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.025);color:#b8b0a0;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.86rem;cursor:pointer;transition:all 0.16s ease;display:flex;align-items:center;gap:0.7rem;}
         .option-btn:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.18);color:#e8e0d0;transform:translateX(3px);}
         .action-btn{padding:0.88rem 2rem;border-radius:50px;border:none;font-family:'Syne',sans-serif;font-size:0.86rem;font-weight:700;cursor:pointer;letter-spacing:0.04em;transition:all 0.2s ease;display:flex;align-items:center;gap:0.5rem;}
@@ -582,7 +583,7 @@ export default function CareerDiscovery() {
                     ))}
                   </div>
                   <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(1.1rem, 3.8vw, 1.45rem)", fontWeight: 700, lineHeight: 1.3, marginBottom: "0.4rem", letterSpacing: "-0.01em" }}>{q.question}</h2>
-                  {q.subtext && <p style={{ color: "#3a3020", fontSize: "0.78rem", fontStyle: "italic" }}>{q.subtext}</p>}
+                  {q.subtext && <p className="question-subtext">{q.subtext}</p>}
                   {q.type === "multi" && <p className="tag" style={{ marginTop: "0.5rem" }}>SELECT ALL THAT APPLY</p>}
                   {q.type === "multi3" && (
                     <p className="tag" style={{ marginTop: "0.5rem", color: Array.isArray(currentAnswer) && currentAnswer.length === 3 ? accentColor : "#3a3020" }}>
