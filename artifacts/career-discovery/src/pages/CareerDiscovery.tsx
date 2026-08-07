@@ -284,9 +284,9 @@ Rate each trait 1-5 based strictly on their answers. Use filled blocks █ and e
 **Risk Appetite** [█░ blocks] Low/Medium/High — reason
 **Learning Agility** [█░ blocks] Low/Medium/High — reason
 
-## SECTION 3 — SIGNAL READING
-✅ **Strong signals** → What shows up consistently across multiple answers — be specific, name the answers
-⚠️ **Mixed signals** → Where answers conflict or create tension — be honest, not diplomatic
+## SECTION 3 — WHAT YOUR ANSWERS REVEAL
+✅ **Clear patterns** → What shows up consistently across multiple answers — be specific, name the answers
+⚠️ **Conflicting answers** → Where answers conflict or create tension — be honest, not diplomatic
 🔍 **Worth exploring** → Areas their answers hint at but they haven't consciously considered yet
 
 ## SECTION 4 — LONG-TERM CALIBER VS ENTRY REALITY
@@ -370,7 +370,7 @@ Talk like a mentor who genuinely wants them to avoid wasting 5 years.
 ━━━ STYLE RULES ━━━
 - Write like a sharp mentor who has actually seen people succeed and fail in these jobs
 - Be specific — reference their actual answers throughout, never vague generalizations
-- Be honest about mixed signals — confusion is useful data, not a problem to hide
+- Be honest about conflicting answers — confusion is useful data, not a problem to hide
 - Zero corporate buzzwords, zero motivational fluff, zero inflated salaries
 - Every section must feel written for THIS specific person, not a template`;
 }
@@ -690,7 +690,7 @@ export default function CareerDiscovery() {
                   {[
                     ["🏷️", "Profile Snapshot & Core Personality", "Archetype, worker type, strengths, risks, survival environment"],
                     ["📊", "Trait Ratings", "5 dimensions rated from your actual answers with █░ bars"],
-                    ["🔍", "Signal Reading", "Strong signals, mixed signals, unexplored areas — honestly"],
+                    ["🔍", "What Your Answers Reveal", "Clear patterns, conflicting answers, and unexplored areas — honestly"],
                     ["🎯", "Long-Term Caliber vs Entry Reality", "What you're wired for long-term vs what the market actually hires freshers into — with a bridge path"],
                     ["💼", "Realistic Fresher Career Fits", "4-5 roles with role type (stepping-stone vs long-term fit), real ₹ salaries, entry difficulty, and 5-year growth"],
                     ["🚫", "Careers to Avoid", "2-3 roles you may be attracted to but are realistically unsuited for — evidence from your answers"],
