@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: career-discovery
+    description: Career assessment submissions, private student reports, and institution summaries
 paths:
   /healthz:
     get:
@@ -24,6 +26,135 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /submissions:
+    post:
+      operationId: createCareerSubmission
+      tags: [career-discovery]
+      summary: Save a student's answers and queue a report
+      description: Requires an authenticated student and explicit consent to share aggregate assessment data with their institution.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CareerSubmissionInput"
+      responses:
+        "201":
+          description: Submission saved and report queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CareerSubmissionAccepted"
+        "400":
+          description: Answers or consent are invalid
+        "401":
+          description: Sign in required
+        "409":
+          description: This student already has a submission
+  /submissions/me:
+    get:
+      operationId: getMyCareerSubmission
+      tags: [career-discovery]
+      summary: Get the signed-in student's current submission
+      description: Returns only the current student's own submission and report.
+      responses:
+        "200":
+          description: Current student's submission status and report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CareerSubmissionResult"
+        "401":
+          description: Sign in required
+        "404":
+          description: No assessment has been submitted
+  /submissions/{id}:
+    get:
+      operationId: getCareerSubmission
+      tags: [career-discovery]
+      summary: Get the signed-in student's submission status and report
+      description: Students can read only their own report.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Submission status, with a report when generation is complete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CareerSubmissionResult"
+        "401":
+          description: Sign in required
+        "403":
+          description: This submission belongs to another student
+        "404":
+          description: Submission not found
+  /submissions/{id}/retry:
+    post:
+      operationId: retryCareerSubmission
+      tags: [career-discovery]
+      summary: Retry a failed report generation
+      description: The owning student can queue a failed submission for another set of generation attempts.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "202":
+          description: Report generation queued again
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CareerSubmissionAccepted"
+        "401":
+          description: Sign in required
+        "403":
+          description: This submission belongs to another student
+        "404":
+          description: Submission not found
+        "409":
+          description: Only failed submissions can be retried
+  /dashboard:
+    get:
+      operationId: getInstitutionDashboard
+      tags: [career-discovery]
+      summary: Get aggregated career assessment insights
+      description: Institution administrators only. Returns cohort aggregates and never individual student reports or identity.
+      parameters:
+        - name: department
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: year
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: batch
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Aggregated cohort insights
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstitutionDashboard"
+        "401":
+          description: Sign in required
+        "403":
+          description: Institution administrator access required
 components:
   schemas:
     HealthStatus:
@@ -33,4 +164,403 @@ components:
           type: string
       required:
         - status
+    CareerAnswerValue:
+      oneOf:
+        - type: string
+        - type: array
+          items:
+            type: string
+        - type: "null"
+    CareerSubmissionInput:
+      type: object
+      properties:
+        answers:
+          type: object
+          properties:
+            q1:
+              $ref: "#/components/schemas/CareerAnswerValue"
+            q2:
+              $ref: "#/components/schemas/CareerAnswerValue"
+            q3:
+              $ref: "#/components/schemas/CareerAnswerValue"
+            q4:
+              $ref: "#/components/schemas/CareerAnswerValue"
+            q5:
+              $ref: "#/components/schemas/CareerAnswerValue"
+            q6:
+              $ref: "#/components/schemas/CareerAnswerValue"
+            q7:
+              $ref: "#/components/schemas/CareerAnswerValue"
+            q8:
+              $ref: "#/components/schemas/CareerAnswerValue"
+            q9:
+              $ref: "#/components/schemas/CareerAnswerValue"
+            q10:
+              $ref: "#/components/schemas/CareerAnswerValue"
+            q11:
+              $ref: "#/components/schemas/CareerAnswerValue"
+            q12:
+              $ref: "#/components/schemas/CareerAnswerValue"
+            q13:
+              type: string
+              maxLength: 2000
+          required: [q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11, q12, q13]
+          additionalProperties: false
+        department:
+          type: string
+          maxLength: 120
+        year:
+          type: string
+          maxLength: 40
+        batch:
+          type: string
+          maxLength: 40
+        consent:
+          type: boolean
+          const: true
+      required: [answers, department, year, batch, consent]
+      additionalProperties: false
+    CareerSubmissionAccepted:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending]
+        submittedAt:
+          type: string
+          format: date-time
+      required: [id, status, submittedAt]
+    TraitScore:
+      type: object
+      properties:
+        score:
+          type: integer
+          minimum: 1
+          maximum: 5
+        reason:
+          type: string
+        label:
+          type: string
+          enum: [Low, Medium, High]
+      required: [score, reason, label]
+    CareerProfile:
+      type: object
+      properties:
+        archetype:
+          type: string
+        workerType:
+          type: string
+          enum: [Specialist, Operator, Builder, Analyst, Communicator, Entrepreneur, Manager]
+        clarityLevel:
+          type: string
+          enum: [Clear, Mixed, Exploratory]
+        summary:
+          type: string
+        strengths:
+          type: array
+          items:
+            type: string
+        risks:
+          type: array
+          items:
+            type: string
+        survivalEnvironment:
+          type: string
+      required: [archetype, workerType, clarityLevel, summary, strengths, risks, survivalEnvironment]
+    CareerTraits:
+      type: object
+      properties:
+        technical:
+          $ref: "#/components/schemas/TraitScore"
+        creative:
+          $ref: "#/components/schemas/TraitScore"
+        people:
+          $ref: "#/components/schemas/TraitScore"
+        risk:
+          $ref: "#/components/schemas/TraitScore"
+        learning:
+          $ref: "#/components/schemas/TraitScore"
+      required: [technical, creative, people, risk, learning]
+    AnswerConflict:
+      type: object
+      properties:
+        tag:
+          type: string
+        text:
+          type: string
+      required: [tag, text]
+    AnswerPatterns:
+      type: object
+      properties:
+        clear:
+          type: array
+          items:
+            type: string
+        conflicts:
+          type: array
+          items:
+            $ref: "#/components/schemas/AnswerConflict"
+        worthExploring:
+          type: array
+          items:
+            type: string
+      required: [clear, conflicts, worthExploring]
+    CaliberVsEntry:
+      type: object
+      properties:
+        longTermCaliber:
+          type: string
+        marketBarrier:
+          type: string
+        marketBarrierLevel:
+          type: string
+          enum: [Low, Moderate, High]
+        firstEntryRoles:
+          type: array
+          items:
+            type: string
+        bridgePath:
+          type: string
+      required: [longTermCaliber, marketBarrier, marketBarrierLevel, firstEntryRoles, bridgePath]
+    SalaryRange:
+      type: object
+      properties:
+        min:
+          type: number
+        max:
+          type: number
+      required: [min, max]
+    CareerFit:
+      type: object
+      properties:
+        title:
+          type: string
+        roleType:
+          type: string
+          enum: [Stepping-stone, Long-term fit]
+        salaryInrLpa:
+          $ref: "#/components/schemas/SalaryRange"
+        entryDifficulty:
+          type: string
+          enum: [Easy to enter, Moderately difficult, Highly competitive]
+        careerHealth:
+          type: string
+          enum: [Growing, Stable, Declining]
+        aiThreat:
+          type: string
+          enum: [Low, Medium, High]
+        naturalFitScore:
+          type: integer
+          minimum: 1
+          maximum: 10
+        dailyWork:
+          type: string
+        whyFits:
+          type: string
+        fiveYearGrowth:
+          type: string
+      required: [title, roleType, salaryInrLpa, entryDifficulty, careerHealth, aiThreat, naturalFitScore, dailyWork, whyFits, fiveYearGrowth]
+    CareerToAvoid:
+      type: object
+      properties:
+        title:
+          type: string
+        why:
+          type: string
+      required: [title, why]
+    TrackDetail:
+      type: object
+      properties:
+        why:
+          type: string
+        fresherDemand:
+          type: string
+        skillsToLearn:
+          type: array
+          items:
+            type: string
+      required: [why, fresherDemand, skillsToLearn]
+    RoadmapStep:
+      type: object
+      properties:
+        months:
+          type: string
+        focus:
+          type: string
+        actions:
+          type: array
+          items:
+            type: string
+      required: [months, focus, actions]
+    CareerReport:
+      type: object
+      properties:
+        profile:
+          $ref: "#/components/schemas/CareerProfile"
+        traits:
+          $ref: "#/components/schemas/CareerTraits"
+        answerPatterns:
+          $ref: "#/components/schemas/AnswerPatterns"
+        caliberVsEntry:
+          $ref: "#/components/schemas/CaliberVsEntry"
+        careerFits:
+          type: array
+          items:
+            $ref: "#/components/schemas/CareerFit"
+        careersToAvoid:
+          type: array
+          items:
+            $ref: "#/components/schemas/CareerToAvoid"
+        recommendedTrack:
+          type: string
+          enum: [Engineering, Product, Automation, "Startup Ops", "Technical Business", "Hybrid Tech-Generalist", "Business Analyst"]
+        trackDetail:
+          $ref: "#/components/schemas/TrackDetail"
+        roadmap:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoadmapStep"
+        brutalTruth:
+          type: string
+      required: [profile, traits, answerPatterns, caliberVsEntry, careerFits, careersToAvoid, recommendedTrack, trackDetail, roadmap, brutalTruth]
+    CareerSubmissionResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, processing, done, failed]
+        submittedAt:
+          type: string
+          format: date-time
+        report:
+          anyOf:
+            - $ref: "#/components/schemas/CareerReport"
+            - type: "null"
+        error:
+          anyOf:
+            - type: string
+            - type: "null"
+      required: [id, status, submittedAt, report, error]
+    DistributionCount:
+      type: object
+      properties:
+        label:
+          type: string
+        count:
+          type: integer
+      required: [label, count]
+    TraitAverages:
+      type: object
+      properties:
+        technical:
+          type: number
+        creative:
+          type: number
+        people:
+          type: number
+        risk:
+          type: number
+        learning:
+          type: number
+      required: [technical, creative, people, risk, learning]
+    SkillCount:
+      type: object
+      properties:
+        skill:
+          type: string
+        count:
+          type: integer
+      required: [skill, count]
+    ConflictCount:
+      type: object
+      properties:
+        tag:
+          type: string
+        text:
+          type: string
+        count:
+          type: integer
+      required: [tag, text, count]
+    InstitutionDashboard:
+      type: object
+      properties:
+        institutionName:
+          type: string
+        totalStudents:
+          type: integer
+        statusCounts:
+          type: object
+          properties:
+            pending:
+              type: integer
+            processing:
+              type: integer
+            done:
+              type: integer
+            failed:
+              type: integer
+          required: [pending, processing, done, failed]
+        completedReports:
+          type: integer
+          description: Number of complete reports in the selected cohort.
+        dataSuppressed:
+          type: boolean
+          description: True when fewer than five complete reports match the selected cohort.
+        trackDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/DistributionCount"
+        clarityDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/DistributionCount"
+        workerTypeDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/DistributionCount"
+        traitAverages:
+          $ref: "#/components/schemas/TraitAverages"
+        topSkills:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillCount"
+        topCareers:
+          type: array
+          items:
+            $ref: "#/components/schemas/DistributionCount"
+        entryRoles:
+          type: array
+          items:
+            $ref: "#/components/schemas/DistributionCount"
+        marketBarrierDistribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/DistributionCount"
+        careersToAvoid:
+          type: array
+          items:
+            $ref: "#/components/schemas/DistributionCount"
+        commonConflicts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConflictCount"
+        departmentOptions:
+          type: array
+          items:
+            type: string
+        yearOptions:
+          type: array
+          items:
+            type: string
+        batchOptions:
+          type: array
+          items:
+            type: string
+      required: [institutionName, totalStudents, statusCounts, completedReports, dataSuppressed, trackDistribution, clarityDistribution, workerTypeDistribution, traitAverages, topSkills, topCareers, entryRoles, marketBarrierDistribution, careersToAvoid, commonConflicts, departmentOptions, yearOptions, batchOptions]
 

@@ -1,4 +1,10 @@
 import { useState, useRef, useEffect } from "react";
+import { useCreateCareerSubmission, useHealthCheck } from "@workspace/api-client-react";
+import type { CareerSubmissionInput } from "@workspace/api-client-react";
+import { useAuth, SignIn, SignUp } from "@clerk/react";
+import { Link, useLocation } from "wouter";
+import { AlertCircle, ArrowRight, Check, LockKeyhole, Send } from "lucide-react";
+import { Brand, PageFrame } from "@/components/Brand";
 
 const QUESTIONS = [
   {
@@ -382,7 +388,18 @@ export default function CareerDiscovery() {
   const [textInput, setTextInput] = useState("");
   const [masterPrompt, setMasterPrompt] = useState("");
   const [copied, setCopied] = useState(false);
-  const [userType, setUserType] = useState<string | null>(null);
+  const [userType, setUserType] = useState<string | null>("student");
+  const [department, setDepartment] = useState("");
+  const [year, setYear] = useState("");
+  const [batch, setBatch] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [submissionId, setSubmissionId] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [authMode, setAuthMode] = useState<"sign-in" | "sign-up">("sign-in");
+  const { isSignedIn } = useAuth();
+  const submission = useCreateCareerSubmission();
+  const health = useHealthCheck();
+  const [, setLocation] = useLocation();
   const resultRef = useRef<HTMLDivElement>(null);
 
   const q = QUESTIONS[currentQ];
@@ -432,8 +449,7 @@ export default function CareerDiscovery() {
       setCurrentQ((p) => p + 1);
       setTextInput("");
     } else {
-      const prompt = buildMasterPrompt(finalAnswers, userType);
-      setMasterPrompt(prompt);
+      setMasterPrompt(buildMasterPrompt(finalAnswers, userType));
       setScreen("result");
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     }
@@ -476,8 +492,35 @@ export default function CareerDiscovery() {
     setAnswers(Array(QUESTIONS.length).fill(null));
     setMasterPrompt("");
     setTextInput("");
-    setUserType(null);
+    setUserType("student");
     setCopied(false);
+    setDepartment("");
+    setYear("");
+    setBatch("");
+    setConsent(false);
+    setSubmissionId("");
+    setSubmitError("");
+  }
+
+  function handleSubmitAssessment() {
+    setSubmitError("");
+    const payload: CareerSubmissionInput = {
+      answers: {
+        q1: answers[0], q2: answers[1], q3: answers[2], q4: answers[3],
+        q5: answers[4], q6: answers[5], q7: answers[6], q8: answers[7],
+        q9: answers[8], q10: answers[9], q11: answers[10], q12: answers[11],
+        q13: typeof answers[12] === "string" && answers[12] !== "(skipped)" ? answers[12] : "",
+      },
+      department, year, batch, consent: true,
+    };
+    submission.mutate({ data: payload }, {
+      onSuccess: (accepted) => {
+        localStorage.setItem("careerDiscoverySubmissionId", accepted.id);
+        setSubmissionId(accepted.id);
+        setLocation(`/student/status/${accepted.id}`);
+      },
+      onError: () => setSubmitError("We couldn't save your answers just now. Your responses are still on this screen—please try again."),
+    });
   }
 
   return (
@@ -513,6 +556,7 @@ export default function CareerDiscovery() {
         <div className="grain" />
         <div className="glow" style={{ background: "#f5c842", top: "-80px", right: "-80px" }} />
         <div className="glow" style={{ background: "#5bc4a0", bottom: "-80px", left: "-80px" }} />
+        {screen === "intro" && <header className="home-topbar"><Brand /><div className="header-links">{isSignedIn ? <Link href="/student/status" data-testid="link-student-status">My report</Link> : <Link href="/sign-in" data-testid="link-home-signin">Student sign in</Link>}<Link href="/institution/dashboard" data-testid="link-institution-dashboard">Institution view</Link></div></header>}
 
         {/* ── INTRO ── */}
         {screen === "intro" && (
@@ -528,24 +572,20 @@ export default function CareerDiscovery() {
                 {" "}that actually fit you.
               </h1>
 
-              <p style={{ color: "#4a4030", fontSize: "0.88rem", lineHeight: 1.85, marginBottom: "2rem" }}>
-                13 questions about who you actually are. We build a detailed profile and generate a prompt — paste it into ChatGPT for your full personalized report including your best-fit engineering domain, why it suits you, and which jobs you can get as a fresher.
+              <p style={{ color: "#8f8777", fontSize: "0.88rem", lineHeight: 1.85, marginBottom: "2rem" }}>
+                13 candid questions about how you think, work, and want to live. Get practical career direction built for HITAM students—without forcing every answer toward software engineering.
               </p>
 
-              <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", flexWrap: "wrap", marginBottom: "2.2rem" }}>
-                {[{ id: "student", label: "🎓 Student" }, { id: "employee", label: "💼 Working" }, { id: "switcher", label: "🔄 Switching careers" }].map((u) => (
-                  <button key={u.id} className={`chip ${userType === u.id ? "active" : ""}`} onClick={() => setUserType(u.id)}>{u.label}</button>
-                ))}
-              </div>
+              <p className="tag" style={{ margin: "0 auto 2rem", color: "#9a907b" }}>BUILT FOR HITAM UNDERGRADUATES · NO ANSWER IS A WRONG TURN</p>
 
-              <button className="action-btn" onClick={() => setScreen("quiz")} style={{ background: "#f5c842", color: "#0e0c09", margin: "0 auto", padding: "1rem 2.8rem", fontSize: "0.92rem" }}>
-                Start Discovery →
+              <button className="action-btn" onClick={() => setScreen("quiz")} data-testid="button-start-assessment" style={{ background: "#f5c842", color: "#0e0c09", margin: "0 auto", padding: "1rem 2.8rem", fontSize: "0.92rem" }}>
+                Begin your discovery →
               </button>
 
-              <p className="tag" style={{ marginTop: "1.1rem" }}>~5 MIN · 13 QUESTIONS · FREE · NO ACCOUNT NEEDED</p>
+              <p className="tag" style={{ marginTop: "1.1rem", color: "#827c6e" }}>ABOUT 5 MIN · 13 QUESTIONS · STUDENT ACCOUNT TO SAVE</p>
 
               <div style={{ marginTop: "2.5rem" }}>
-                <p className="tag" style={{ marginBottom: "0.75rem", color: "#2a2010" }}>AI WILL MATCH YOU TO ONE OF THESE DOMAINS</p>
+                <p className="tag" style={{ marginBottom: "0.75rem", color: "#827c6e" }}>A STARTING POINT, NOT A BOX TO PUT YOU IN</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", justifyContent: "center" }}>
                   {["Software Engineering", "Cloud / DevOps", "Data / AI & ML", "Full Stack", "VLSI / Semiconductor", "Embedded / IoT", "EV / Power Systems", "Design / CAE / Mfg"].map((f) => (
                     <span key={f} style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.62rem", color: "#2a2010", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "50px", padding: "0.22rem 0.65rem" }}>{f}</span>
@@ -601,11 +641,12 @@ export default function CareerDiscovery() {
                         key={opt.label}
                         className="option-btn"
                         onClick={() => selectOption(opt.label)}
+                        data-testid={`option-answer-${currentQ + 1}-${opt.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
                         style={isSelected(opt.label)
                           ? { borderColor: `${accentColor}65`, background: `${accentColor}12`, color: "#f0e8c0" }
                           : atLimit ? { opacity: 0.3, cursor: "not-allowed" } : {}}
                       >
-                        <span style={{ fontSize: "0.98rem", flexShrink: 0 }}>{opt.emoji}</span>
+                         <span className="option-mark" aria-hidden="true"><span /></span>
                         <span>{opt.label}</span>
                         {isSelected(opt.label) && <span style={{ marginLeft: "auto", color: accentColor, fontSize: "0.72rem", fontWeight: 700 }}>✓</span>}
                       </button>
@@ -616,7 +657,7 @@ export default function CareerDiscovery() {
 
                 {q.type === "text" && (
                   <div>
-                    <textarea rows={4} placeholder={q.placeholder} value={textInput} onChange={(e) => setTextInput(e.target.value)} style={{ borderColor: textInput ? "rgba(245,200,66,0.28)" : undefined }} />
+                    <textarea aria-label={q.question} rows={4} placeholder={q.placeholder} value={textInput} onChange={(e) => setTextInput(e.target.value)} data-testid="input-dream-work" style={{ borderColor: textInput ? "rgba(245,200,66,0.28)" : undefined }} />
                     <p className="tag" style={{ marginTop: "0.5rem" }}>OPTIONAL — skip if you're unsure</p>
                   </div>
                 )}
@@ -627,7 +668,7 @@ export default function CareerDiscovery() {
               <button onClick={handleBack} style={{ background: "transparent", border: "1.5px solid rgba(255,255,255,0.06)", color: "#3a3020", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.8rem", padding: "0.58rem 1.1rem", borderRadius: "50px", cursor: "pointer" }}>
                 ← Back
               </button>
-              <button className="action-btn" onClick={handleNext} disabled={!canProceed()} style={{ background: canProceed() ? accentColor : "#181510", color: canProceed() ? "#0e0c09" : "#2a2010", transition: "all 0.3s ease" }}>
+              <button className="action-btn" onClick={handleNext} disabled={!canProceed()} data-testid="button-next-question" style={{ background: canProceed() ? accentColor : "#181510", color: canProceed() ? "#0e0c09" : "#2a2010", transition: "all 0.3s ease" }}>
                 {currentQ === QUESTIONS.length - 1 ? "Build My Profile →" : "Next →"}
               </button>
             </div>
@@ -635,7 +676,7 @@ export default function CareerDiscovery() {
         )}
 
         {/* ── RESULT ── */}
-        {screen === "result" && (
+        {screen === "result" && false && (
           <div style={{ minHeight: "100vh", position: "relative", zIndex: 1, padding: "2rem 1rem 5rem" }} ref={resultRef}>
             <div style={{ maxWidth: 640, margin: "0 auto" }}>
 
@@ -717,6 +758,35 @@ export default function CareerDiscovery() {
               </div>
             </div>
           </div>
+        )}
+        {screen === "result" && (
+          <PageFrame>
+            <header className="topbar"><Brand /><div className="topbar-right"><Link href="/sign-in" className="quiet-link" data-testid="link-sign-in">Student sign in</Link></div></header>
+            <main className="submit-main enter">
+              <Link href="/" className="back-link" onClick={(event) => { event.preventDefault(); setScreen("quiz"); setCurrentQ(12); }} data-testid="link-review-answers">← Review your answers</Link>
+              <div className="submit-heading"><span className="eyebrow">LAST STEP · HITAM STUDENTS</span><h1>Your answers deserve a useful read.</h1><p>We’ll turn your responses into a structured, practical career report. Your full report stays private to you.</p></div>
+              {!isSignedIn ? <div className="auth-required">
+                <div className="auth-copy"><div className="auth-icon"><LockKeyhole size={19} /></div><div><h2>Sign in to save your report</h2><p>A student account keeps this report private and lets you return to it later.</p></div></div>
+                <div className="embedded-auth">{authMode === "sign-in" ? <SignIn routing="hash" signUpUrl={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/sign-up`} /> : <SignUp routing="hash" signInUrl={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/sign-in`} />}</div>
+                <p className="auth-switch">{authMode === "sign-in" ? <>New to Career Discovery? <button onClick={() => setAuthMode("sign-up")} data-testid="button-switch-to-signup">Create an account</button></> : <>Already have an account? <button onClick={() => setAuthMode("sign-in")} data-testid="button-switch-to-signin">Sign in</button></>}</p>
+              </div> : <div className="submit-form-card">
+                <div className="form-section-head"><span className="form-step">01</span><div><h2>Your HITAM details</h2><p>Used only to understand cohort-wide patterns with your consent.</p></div></div>
+                <div className="student-fields">
+                  <label>Department<select value={department} onChange={(e) => setDepartment(e.target.value)} data-testid="select-department"><option value="">Choose your department</option>{["Computer Science & Engineering", "CSE (AI & ML)", "CSE (Data Science)", "Electronics & Communication Engineering", "Electrical & Electronics Engineering", "Mechanical Engineering", "Civil Engineering", "Other"].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+                  <label>Academic year<select value={year} onChange={(e) => setYear(e.target.value)} data-testid="select-academic-year"><option value="">Choose your year</option>{["1st Year", "2nd Year", "3rd Year", "4th Year"].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+                  <label>Batch<select value={batch} onChange={(e) => setBatch(e.target.value)} data-testid="select-batch"><option value="">Choose your batch</option>{["2022–2026", "2023–2027", "2024–2028", "2025–2029", "Other"].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+                </div>
+                <label className="consent-row"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} data-testid="checkbox-consent" /><span><strong>I’m comfortable sharing anonymized answers for institution-wide insights.</strong><small>HITAM administrators see cohort aggregates only—not your report, name, or email. Your personal report remains yours.</small></span></label>
+                {submitError && <div className="form-error" role="alert"><AlertCircle size={16} />{submitError}</div>}
+                {health.isError && <div className="service-warning" role="status"><AlertCircle size={15} /><span>The report service isn’t responding. Your answers are still here—check again before submitting.</span><button type="button" onClick={() => health.refetch()} data-testid="button-check-report-service">Check again</button></div>}
+                <button className="button button-primary submit-button" onClick={handleSubmitAssessment} disabled={!department || !year || !batch || !consent || submission.isPending || health.isError} data-testid="button-submit-assessment">
+                  {submission.isPending ? "Saving your answers…" : <>Create my private report <Send size={16} /></>}
+                </button>
+                <p className="privacy-note"><LockKeyhole size={13} /> Your identity is never included in institution dashboard results.</p>
+              </div>}
+              <div className="answer-recap"><span><Check size={14} /> 13 answers saved on this device</span><span>About 5 minutes to complete</span></div>
+            </main>
+          </PageFrame>
         )}
       </div>
     </>

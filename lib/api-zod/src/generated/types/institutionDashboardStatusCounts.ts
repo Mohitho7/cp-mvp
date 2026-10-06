@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
-}
+export type InstitutionDashboardStatusCounts = {
+  pending: number;
+  processing: number;
+  done: number;
+  failed: number;
+};

@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface TraitAverages {
+  technical: number;
+  creative: number;
+  people: number;
+  risk: number;
+  learning: number;
 }
