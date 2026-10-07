@@ -1,0 +1,109 @@
+Career Pathfinder: Architecture & Output Design
+1. The problem
+Today: questionnaire → prompt → student pastes into ChatGPT → a long free-text report only that student sees. The institution can't aggregate free text.
+
+Fix: your backend calls the LLM, forces structured JSON, stores it, and the dashboard runs SQL on it. The student report is rendered from the JSON.
+
+2. Flow
+Student submits 13 answers (existing frontend).
+POST /api/submit validates, saves answers with status = pending, returns submission_id immediately.
+Backend builds the prompt (answers + static market context) and calls the LLM API with a JSON schema.
+Validate the JSON (Pydantic). Save to results, set status = done. On failure, retry up to 2 times, then failed.
+Frontend polls GET /api/result/{id} and renders the report.
+Dashboard calls GET /api/dashboard (institution login only), which runs SQL aggregates.
+Why async: the report is long (thousands of output tokens) and can take 20-60 seconds. Don't make the student's request wait on it.
+
+3. Stack (kept simple for Thursday)
+Database + auth: Supabase (Postgres). Free tier is enough.
+Backend: FastAPI on Render/Railway, or Supabase Edge Functions.
+LLM: a low-cost Gemini Flash-class or GPT-4o-mini-class model with structured output (JSON schema). Check each provider's current pricing page. Log token usage per call so you know your real cost per student.
+Keys: LLM key lives only on the backend, never in the frontend.
+Access rule: students see only their own result; only institution admins see the dashboard.
+4. Database
+institutions(id, name)
+students(id, institution_id, name, email, department, year)
+submissions(id, student_id, answers jsonb, status, created_at)
+results(id, submission_id, report jsonb, archetype, worker_type, clarity_level, recommended_track, technical, creative, people, risk, learning, model, tokens_used, created_at)
+The flat columns (archetype, track, trait scores) are copied out of report so dashboard queries are fast and simple. A few hundred students need no cache table; plain GROUP BY queries or a view are instant.
+
+Store answers as structured fields (multi-select = array), not as prompt text.
+
+5. Prompt changes
+Output JSON, not prose. Keep the same 9 sections of thinking, but return them as fields.
+Use enums for anything you aggregate (below), so "Operator" is never spelled three ways.
+Remove the live-data dependency. The sample report quotes job-market stats (e.g. share of fresher postings). That came from ChatGPT browsing. A plain API call won't have it, and the model may invent numbers. Instead, inject a market_context block you update each quarter (salary ranges, hiring trends) and tell the model not to state statistics or salaries outside it.
+Pass answers as JSON, not pasted prose.
+Cap lengths (e.g. each explanation max 2 sentences). Cheaper, faster, easier to display.
+Consent and tone. Tell students the institution will see their results. Consider showing the institution only the structured fields, not the "brutal truth" text.
+6. Output JSON (example shape)
+{
+  "profile": {
+    "archetype": "The Opportunistic Operator",
+    "worker_type": "Operator",
+    "clarity_level": "Exploratory",
+    "summary": "...",
+    "strengths": ["..."],
+    "risks": ["..."],
+    "survival_environment": "..."
+  },
+  "traits": {
+    "technical": {"score": 3, "reason": "..."},
+    "creative": {"score": 3, "reason": "..."},
+    "people": {"score": 3, "reason": "..."},
+    "risk": {"score": 4, "reason": "..."},
+    "learning": {"score": 4, "reason": "..."}
+  },
+  "answer_patterns": {
+    "clear": ["..."],
+    "conflicts": [{"tag": "startup_vs_stability", "text": "..."}],
+    "worth_exploring": ["..."]
+  },
+  "caliber_vs_entry": {
+    "long_term_caliber": "...",
+    "market_barrier": "...",
+    "first_entry_roles": ["Business Analyst", "Operations Analyst"],
+    "bridge_path": "..."
+  },
+  "career_fits": [{
+    "title": "Business Analyst",
+    "role_type": "Stepping-stone",
+    "salary_inr_lpa": {"min": 3, "max": 6},
+    "entry_difficulty": "Moderately difficult",
+    "career_health": "Stable",
+    "ai_threat": "Medium",
+    "natural_fit_score": 8,
+    "daily_work": "...",
+    "why_fits": "...",
+    "five_year_growth": "..."
+  }],
+  "careers_to_avoid": [{"title": "Software Engineer", "why": "..."}],
+  "recommended_track": "Hybrid Tech-Generalist",
+  "track_detail": {"why": "...", "fresher_demand": "Moderate", "skills_to_learn": ["SQL", "Power BI", "n8n"]},
+  "roadmap": [{"months": "1-2", "focus": "...", "actions": ["..."]}],
+  "brutal_truth": "..."
+}
+Enums: worker_type (Specialist, Operator, Builder, Analyst, Communicator, Entrepreneur, Manager); clarity_level (Clear, Mixed, Exploratory); recommended_track (the 7 tracks in your prompt); entry_difficulty, career_health, ai_threat (your existing label sets). Trait scores are integers 1-5.
+
+7. Insights the institution can pull
+Dashboard card	Source field	What the college does with it
+Track distribution	recommended_track	Decide which tracks need programs
+Skills in demand	skills_to_learn (count across students)	Design training programs: the headline feature
+Clarity split	clarity_level	High "Exploratory" share → counseling/mentoring sessions
+Worker-type mix	worker_type	Understand cohort profile
+Trait averages by dept/year	traits.*.score	Spot technical vs people-skill gaps
+Top recommended careers	career_fits[].title	Align recruiters and placement drives
+Entry-role pipeline	first_entry_roles	Which first jobs to prepare students for
+Caliber vs entry gap	long_term_caliber vs first_entry_roles	Bridge programs (internships, projects)
+Careers advised against	careers_to_avoid	Reality check for placement planning
+Recurring conflicts	conflicts[].tag	Counseling themes
+Add filters: department, year, batch.
+
+8. Plan to Thursday (Oct 8)
+Today (Tue): Supabase tables, /submit, LLM call with JSON schema + validation, save to DB.
+Wed: result page rendered from JSON, /dashboard endpoint and cards, test with ~10 dummy students.
+Thu: fix bugs, demo. Keep buffer time.
+9. Notes for Antigravity / Codex
+Give it this whole document plus your prompt.
+Ask it to use Pydantic models matching the JSON above, and to reject or retry invalid model output.
+Ask for one submission per student, basic rate limiting, and token-usage logging.
+Seed the DB with fake students so the dashboard looks real in the demo.

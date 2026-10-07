@@ -1,0 +1,794 @@
+import { useState, useRef, useEffect } from "react";
+import { useCreateCareerSubmission, useHealthCheck } from "@workspace/api-client-react";
+import type { CareerSubmissionInput } from "@workspace/api-client-react";
+import { useAuth, SignIn, SignUp } from "@clerk/react";
+import { Link, useLocation } from "wouter";
+import { AlertCircle, ArrowRight, Check, LockKeyhole, Send } from "lucide-react";
+import { Brand, PageFrame } from "@/components/Brand";
+
+const QUESTIONS = [
+  {
+    id: 1, type: "single", section: "Who You Are",
+    label: "What drives their satisfaction",
+    question: "Which one sounds most satisfying to you?",
+    subtext: "Go with your gut — not what sounds impressive.",
+    options: [
+      { emoji: "🔨", label: "Building something cool" },
+      { emoji: "🧩", label: "Solving difficult problems" },
+      { emoji: "💰", label: "Making money early" },
+      { emoji: "🤝", label: "Working with people" },
+      { emoji: "🎨", label: "Creating or designing things" },
+      { emoji: "🌀", label: "I honestly don't know yet" },
+    ],
+  },
+  {
+    id: 2, type: "multi", section: "Who You Are",
+    label: "Natural role in teams",
+    question: "In group projects, what do you usually end up becoming?",
+    subtext: "Behavior reveals more than self-description ever will.",
+    options: [
+      { emoji: "⚙️", label: "The person who builds/codes things" },
+      { emoji: "📋", label: "The one managing everyone" },
+      { emoji: "✏️", label: "The creative or design person" },
+      { emoji: "🚨", label: "The one fixing problems last minute" },
+      { emoji: "🎯", label: "The silent one doing their own focused work" },
+      { emoji: "👻", label: "The one avoiding the project completely" },
+    ],
+  },
+  {
+    id: 3, type: "multi", section: "Who You Are",
+    label: "What they naturally spend time on",
+    question: "What kind of things do you naturally spend time on?",
+    subtext: "Not what you think you should — what you actually do.",
+    options: [
+      { emoji: "📺", label: "Watching tech / coding videos" },
+      { emoji: "🎬", label: "Editing, design, or content creation" },
+      { emoji: "🎮", label: "Gaming" },
+      { emoji: "📚", label: "Learning random stuff online" },
+      { emoji: "📈", label: "Business or money content" },
+      { emoji: "🤖", label: "Exploring AI tools" },
+      { emoji: "💬", label: "Helping friends solve problems" },
+      { emoji: "🗂️", label: "Organizing and planning things" },
+      { emoji: "📱", label: "Mostly just scrolling honestly" },
+    ],
+  },
+  {
+    id: 4, type: "multi", section: "Your Work Style",
+    label: "Tasks that drain them less",
+    question: "Which type of task sounds LESS painful to do for hours?",
+    subtext: "You don't have to love it — just drains you less. Pick all that apply.",
+    options: [
+      { emoji: "💻", label: "Writing code or working with tools" },
+      { emoji: "🗣️", label: "Talking to people or clients" },
+      { emoji: "🗃️", label: "Organizing data or systems" },
+      { emoji: "🖼️", label: "Creating visuals or content" },
+      { emoji: "🔬", label: "Researching and learning new things" },
+      { emoji: "⚡", label: "Finding shortcuts or automating tasks" },
+    ],
+  },
+  {
+    id: 5, type: "single", section: "Your Work Style",
+    label: "Coding comfort level",
+    question: "How do you currently feel about coding?",
+    subtext: "No judgment — most careers don't even require heavy coding.",
+    options: [
+      { emoji: "🔥", label: "I actually enjoy it" },
+      { emoji: "🙂", label: "I can learn if it helps my career" },
+      { emoji: "🛠️", label: "I prefer low-code or no-code tools" },
+      { emoji: "😐", label: "I don't enjoy it much" },
+      { emoji: "🤷", label: "I haven't properly explored it yet" },
+    ],
+  },
+  {
+    id: 6, type: "multi", section: "Your Work Style",
+    label: "How they learn best",
+    question: "How do you usually learn something new best?",
+    subtext: "This shapes which career growth paths will actually work for you. Pick all that apply.",
+    options: [
+      { emoji: "🎥", label: "Watching videos and tutorials" },
+      { emoji: "🧪", label: "Trying things directly and breaking stuff" },
+      { emoji: "📖", label: "Following structured steps or courses" },
+      { emoji: "👥", label: "Learning with a community or friends" },
+      { emoji: "🏗️", label: "Building real projects while learning" },
+      { emoji: "😩", label: "I struggle to stay consistent honestly" },
+    ],
+  },
+  {
+    id: 7, type: "multi3", section: "Life & Environment",
+    label: "Preferred work environment",
+    question: "Which work environment actually sounds comfortable to you?",
+    subtext: "Be real — your environment affects everything. Pick up to 3.",
+    options: [
+      { emoji: "🚀", label: "Startup chaos and fast growth" },
+      { emoji: "🏢", label: "Stable corporate structure" },
+      { emoji: "🏠", label: "Remote independent work" },
+      { emoji: "🤝", label: "Team collaboration and meetings" },
+      { emoji: "💼", label: "Freelancing or running my own thing" },
+    ],
+  },
+  {
+    id: 8, type: "multi", section: "Life & Environment",
+    label: "Things that drain them quickly",
+    question: "What would probably drain you quickly?",
+    subtext: "Elimination is more useful than recommendation.",
+    options: [
+      { emoji: "😴", label: "Doing the same repetitive thing daily" },
+      { emoji: "🧱", label: "Too much deep coding all day" },
+      { emoji: "📞", label: "Too many meetings or people interactions" },
+      { emoji: "🏙️", label: "Strict office life with no flexibility" },
+      { emoji: "⚔️", label: "High-pressure competitive environments" },
+      { emoji: "📜", label: "Too much theory with no practical work" },
+      { emoji: "📉", label: "Unstable or unpredictable income" },
+    ],
+  },
+  {
+    id: 9, type: "multi3", section: "Life & Environment",
+    label: "What success in their 20s looks like",
+    question: "Which of these would make you feel genuinely successful in your 20s?",
+    subtext: "Not what sounds good — what would actually feel good. Pick up to 3.",
+    options: [
+      { emoji: "💸", label: "Earning a lot of money" },
+      { emoji: "🌍", label: "Working from anywhere in the world" },
+      { emoji: "🏗️", label: "Building something of my own" },
+      { emoji: "🏡", label: "A stable and predictable life" },
+      { emoji: "🏆", label: "Being respected and highly skilled" },
+      { emoji: "❤️", label: "Doing work I actually enjoy" },
+      { emoji: "🧘", label: "Having free time and low stress" },
+    ],
+  },
+  {
+    id: 10, type: "multi3", section: "Your Direction",
+    label: "Most interesting area",
+    question: "Which areas sound most interesting to you?",
+    subtext: "Pick up to 3 — this is where hidden career paths start to appear.",
+    options: [
+      { emoji: "📱", label: "Creating apps or websites" },
+      { emoji: "🤖", label: "Working with AI or automation tools" },
+      { emoji: "📊", label: "Understanding business, money, or strategy" },
+      { emoji: "🎨", label: "Design or content creation" },
+      { emoji: "🗺️", label: "Managing people or projects" },
+      { emoji: "🔍", label: "Working with data or solving analytical problems" },
+      { emoji: "🌐", label: "I'm still exploring honestly" },
+    ],
+  },
+  {
+    id: 11, type: "multi3", section: "Your Direction",
+    label: "Life vision after 30s",
+    question: "After your 30s, which kind of life sounds better?",
+    subtext: "Your future pulls your career — not the other way around. Pick up to 3.",
+    options: [
+      { emoji: "👨‍👩‍👧", label: "Stable family life with predictable income" },
+      { emoji: "💎", label: "Financial freedom — options and wealth" },
+      { emoji: "🏢", label: "Running my own business or venture" },
+      { emoji: "🌴", label: "Flexible work — travel, remote, freedom" },
+      { emoji: "🎖️", label: "A respected high-level career" },
+      { emoji: "🌿", label: "Peaceful low-stress, meaningful work" },
+      { emoji: "🤷", label: "I haven't thought that far honestly" },
+    ],
+  },
+  {
+    id: 12, type: "single", section: "Your Direction",
+    label: "Continuous learning comfort",
+    question: "How comfortable are you with continuous learning?",
+    subtext: "In an AI era, this shapes everything about which careers suit you.",
+    options: [
+      { emoji: "🚀", label: "I genuinely enjoy constantly learning new things" },
+      { emoji: "✅", label: "I'm okay with it if it helps my career growth" },
+      { emoji: "😌", label: "I prefer mastering stable skills, not chasing trends" },
+      { emoji: "😬", label: "I struggle staying consistent with learning" },
+    ],
+  },
+  {
+    id: 13, type: "text", section: "The Real You",
+    label: "Dream work with no judgment",
+    question: "If nobody judged you — what kind of work would you genuinely want to try?",
+    subtext: "No parental pressure. No salary pressure. No trend pressure. Just you.",
+    placeholder: "e.g. build AI tools, run a YouTube channel, design games, manage a startup team...",
+  },
+];
+
+const SECTIONS = ["Who You Are", "Your Work Style", "Life & Environment", "Your Direction", "The Real You"];
+
+const FIELDS = [
+  "Software Engineer / Software Developer",
+  "Cloud / DevOps / Security Engineer",
+  "Data Analyst / Scientist / AI & ML Engineer",
+  "Full Stack Developer",
+  "VLSI / Semiconductor Engineer",
+  "Embedded Systems / IoT Design Engineer",
+  "EV / Power Systems / Automation Engineer",
+  "Design / CAE / Manufacturing Engineer",
+];
+
+function buildMasterPrompt(answers: (string | string[] | null)[], userType: string | null) {
+  const role = userType === "student" ? "student" : userType === "employee" ? "working professional" : userType === "switcher" ? "career switcher" : "person";
+
+  const fmt = (ans: string | string[] | null) => {
+    if (!ans || (Array.isArray(ans) && ans.length === 0) || ans === "(skipped)") return "(not answered)";
+    return Array.isArray(ans) ? ans.join(" | ") : ans;
+  };
+
+  return `You are a brutally honest senior career strategist who understands the REAL fresher hiring market in India and globally. A ${role} has completed a 13-question career discovery assessment.
+
+Your job is NOT to give trendy internet career advice or motivational suggestions. Your job is to determine:
+1. Which careers ACTUALLY hire undergraduate freshers today
+2. Which roles match the person's psychology and work style
+3. Which paths are realistically achievable within 6–18 months
+4. Which careers are oversaturated, unrealistic, or socially hyped
+5. Which roles lead to strong long-term leverage, income, and freedom
+
+━━━ MARKET REALISM RULES (apply throughout) ━━━
+- Separate "future potential roles" from "realistic fresher jobs"
+- Do NOT recommend fantasy startup titles unless freshers genuinely get hired into them
+- Do NOT over-recommend AI roles unless the profile strongly supports deep technical ability
+- Be extremely realistic about the Indian job market
+- Prioritize careers with actual hiring demand
+- For every career, label: Easy to enter / Moderately difficult / Highly competitive
+- For every career, label: Stable / Fast-growth / High burnout / Oversaturated / High leverage
+- Be honest about salary progression and difficulty — do NOT inflate salaries unrealistically
+- Do NOT assume interest in startups, AI, apps, or technology automatically means the person should become a software engineer
+- Distinguish between: (a) people who enjoy deep engineering work daily, and (b) people who enjoy using technology to build businesses, systems, products, or leverage
+- If the person prefers low-code/no-code, automation, or avoiding deep coding, treat that as a MAJOR signal — not a minor detail
+- Do NOT recommend software engineering, AI/ML, or full-stack development solely because the person likes AI tools, startups, or apps
+- Only recommend engineering-heavy careers if the person shows: tolerance for deep technical work, enjoyment of coding itself, long attention span for debugging, and willingness to spend years mastering technical depth
+- Before recommending careers, determine whether the person is primarily: a technical engineer, a business operator, a product builder, a creative strategist, or a hybrid generalist
+- The report MUST also consider realistic non-engineering tech careers — Product Operations, Startup Operations, Founder's Office, Automation Specialist, Technical Product Support, No-Code Builder, Product Management track, Growth/Systems roles — if they better match the person's psychology
+
+━━━ CAREER CALIBER VS ENTRY REALITY RULES ━━━
+The report MUST clearly separate:
+1. The person's NATURAL LONG-TERM CALIBER — what they are psychologically best suited for long-term
+2. The REALISTIC FRESHER ENTRY PATH — the actual jobs undergraduate freshers are realistically hired into today
+
+Many people are naturally suited for higher-leverage roles (Product Management, Startup Operations, Founder's Office, Entrepreneurship, Automation Consulting, Strategy, Product Building) but freshers are usually NOT directly hired into these. If this mismatch exists: explicitly explain it, do NOT hide it, and create a bridge path.
+
+The report must explain: "Your real caliber appears to be X" → "But companies require experience before hiring for X" → "So your realistic starting point is Y" → "While working in Y, build deliberately toward X"
+
+Distinguish between: survival jobs, stepping-stone jobs, and true long-term fit. Do NOT pretend the first job and long-term career identity are always the same.
+
+━━━ THEIR COMPLETE PROFILE ━━━
+
+[ WHO THEY ARE ]
+What drives their satisfaction → ${fmt(answers[0])}
+Natural role in teams → ${fmt(answers[1])}
+What they naturally spend time on → ${fmt(answers[2])}
+
+[ WORK STYLE ]
+Tasks that drain them less → ${fmt(answers[3])}
+Coding comfort level → ${fmt(answers[4])}
+How they learn best → ${fmt(answers[5])}
+
+[ LIFE & ENVIRONMENT ]
+Preferred work environment → ${fmt(answers[6])}
+Things that drain them quickly → ${fmt(answers[7])}
+What success in their 20s looks like → ${fmt(answers[8])}
+
+[ DIRECTION ]
+Most interesting areas → ${fmt(answers[9])}
+Life vision after 30s → ${fmt(answers[10])}
+Continuous learning comfort → ${fmt(answers[11])}
+
+[ THE REAL THEM ]
+Dream work with no judgment → ${fmt(answers[12])}
+
+━━━ GENERATE THIS EXACT REPORT ━━━
+
+## SECTION 1 — PROFILE SNAPSHOT & CORE PERSONALITY ANALYSIS
+**Archetype:** A 2-3 word title (e.g. "The Systematic Operator", "The Curious Builder")
+**Worker Type:** Identify which ONE best fits — Specialist / Operator / Builder / Analyst / Communicator / Entrepreneur / Manager — and explain why in one sentence using their actual answers.
+**Summary:** 2 sentences on who they are professionally, based strictly on their answers.
+**Clarity Level:** Clear / Mixed / Exploratory — one sentence explaining why.
+**Biggest Strengths:** 2-3 bullet points pulled from their actual answers.
+**Biggest Risks:** 2-3 honest risks — what could derail them if they don't address it.
+**Realistic Survival Environment:** What kind of workplace would this person NOT quit within 6 months, based on their answers.
+
+## SECTION 2 — TRAIT RATINGS
+Rate each trait 1-5 based strictly on their answers. Use filled blocks █ and empty blocks ░ out of 5. Add a Low/Medium/High label and one sentence from their actual answers explaining the rating.
+
+**Technical Inclination** [█░ blocks] Low/Medium/High — reason
+**Creative Drive** [█░ blocks] Low/Medium/High — reason
+**People Orientation** [█░ blocks] Low/Medium/High — reason
+**Risk Appetite** [█░ blocks] Low/Medium/High — reason
+**Learning Agility** [█░ blocks] Low/Medium/High — reason
+
+## SECTION 3 — WHAT YOUR ANSWERS REVEAL
+✅ **Clear patterns** → What shows up consistently across multiple answers — be specific, name the answers
+⚠️ **Conflicting answers** → Where answers conflict or create tension — be honest, not diplomatic
+🔍 **Worth exploring** → Areas their answers hint at but they haven't consciously considered yet
+
+## SECTION 4 — LONG-TERM CALIBER VS ENTRY REALITY
+This section MUST be brutally honest about the gap between what this person is naturally wired for and what the market will actually hire them for as a fresher.
+
+**Their real long-term caliber:**
+Based strictly on their answers, what kind of role is this person psychologically best suited for long-term? (Be specific — e.g. "You are wired to be a product builder / operator / systems thinker / founder-type / strategist — not a line-level engineer.")
+
+**Why the market won't hand them that immediately:**
+Explain plainly which experience barriers, credibility barriers, or seniority requirements prevent freshers from entering that role directly. Do not sugarcoat it.
+
+**Their realistic first-entry job:**
+Name the specific job title(s) a fresh graduate with their profile can actually get hired for today — not what sounds good, what hiring managers actually post and select freshers for.
+
+**The bridge path:**
+Explain how they should use that first job as a deliberate stepping stone. What skills, projects, networks, or proof points should they be building while in that role so they can transition to their real caliber within 3-5 years?
+
+## SECTION 5 — REALISTIC FRESHER CAREER FITS
+Give ONLY 4-5 careers that: (a) regularly hire undergraduate freshers, (b) can realistically be entered within 6–18 months, (c) match their psychology. For each:
+
+**[Career Title]**
+→ **Role type:** Long-term fit / Stepping-stone role / Realistic market-entry only — one line explanation
+→ **What freshers actually do daily:** Specific day-to-day reality — talk like someone who has seen people work in this job
+→ **Why it fits this person:** Directly reference 2-3 of their specific answers — make the connection explicit
+→ **Real fresher salary in India:** Honest range (e.g. ₹3–5 LPA), not inflated
+→ **Entry difficulty:** Easy / Moderately difficult / Highly competitive
+→ **Career health:** Stable / Fast-growth / High burnout / Oversaturated / High leverage
+→ **AI/automation threat:** Low / Medium / High — one line reason
+→ **5-year growth:** Where does this role realistically lead after 5 years
+→ **Natural fit or forced:** Is this person naturally wired for it, or would they be pushing against their grain
+
+## SECTION 6 — CAREERS THEY SHOULD AVOID
+Give 2-3 careers. For each:
+
+**[Career Title]**
+**Why avoid:** Name the specific answers that reveal this mismatch — careers they may be romantically attracted to but are realistically unsuited for, careers that conflict with their energy, or careers likely to burn them out based on what they said
+
+## SECTION 7 — BEST-FIT TECH CAREER TRACK
+Do NOT default to engineering. First assess whether this person is primarily a: technical engineer / business operator / product builder / creative strategist / hybrid generalist — then pick the most honest track.
+
+Pick exactly ONE track from:
+- Engineering (Software / Cloud / DevOps / Data / Embedded / VLSI / EV / CAE)
+- Product (Product Management / Product Operations / Technical Product Support)
+- Automation (No-Code Builder / Automation Specialist / Workflow Engineer)
+- Startup Operations (Founder's Office / Operations / Growth / Systems)
+- Technical Business (Pre-Sales / Solutions / RevOps / CRM / ERP Consulting)
+- Design / UI-UX
+- Hybrid Tech-Generalist
+
+**Recommended Track:** [One from above]
+**Why this track — not engineering (or why engineering IS justified):** Directly reference their coding comfort, drain triggers, and work style answers. Be explicit about whether you are recommending engineering or a non-engineering track and why.
+**Natural alignment or requires forced discipline:** Honest assessment.
+**Market demand for freshers in India:** Strong / Moderate / Weak — one line.
+**Why it fits their profile:** 3-4 sentences referencing specific answers.
+
+**Entry-level jobs freshers actually get hired for in this track:**
+List 5-7 real job titles. For each:
+→ **[Job Title]** — What you do on day 1 | Realistic salary India/global | Where freshers typically get hired
+
+**What to actually learn (specific, not vague):**
+List 4-6 exact tools, languages, platforms, or certifications — name them precisely
+
+## SECTION 8 — REALISTIC 12-MONTH ROADMAP
+Month-by-month plan. IMPORTANT: No fake productivity advice. No endless course lists. Focus on projects, internships, networking, practical skills, portfolio, interview readiness. Name exact tools and technologies.
+
+**Months 1-2:** Foundation
+**Months 3-4:** First project + visibility
+**Months 5-6:** Internship hunting / freelance / open source
+**Months 7-9:** Portfolio + networking
+**Months 10-12:** Interview prep + job applications
+
+## SECTION 9 — THE BRUTAL TRUTH
+3-4 sentences. No motivational poster language. Tell them:
+- What they are specifically underestimating based on their answers
+- Where they are likely wasting time right now
+- What will realistically happen if they stay unfocused for another year
+- What specific type of discipline this person needs — not generic "be consistent", but tailored to their actual work style answers
+
+Talk like a mentor who genuinely wants them to avoid wasting 5 years.
+
+━━━ STYLE RULES ━━━
+- Write like a sharp mentor who has actually seen people succeed and fail in these jobs
+- Be specific — reference their actual answers throughout, never vague generalizations
+- Be honest about conflicting answers — confusion is useful data, not a problem to hide
+- Zero corporate buzzwords, zero motivational fluff, zero inflated salaries
+- Every section must feel written for THIS specific person, not a template`;
+}
+
+export default function CareerDiscovery() {
+  const [screen, setScreen] = useState<"intro" | "quiz" | "result">("intro");
+  const [currentQ, setCurrentQ] = useState(0);
+  const [answers, setAnswers] = useState<(string | string[] | null)[]>(Array(QUESTIONS.length).fill(null));
+  const [textInput, setTextInput] = useState("");
+  const [masterPrompt, setMasterPrompt] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [userType, setUserType] = useState<string | null>("student");
+  const [department, setDepartment] = useState("");
+  const [year, setYear] = useState("");
+  const [batch, setBatch] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [submissionId, setSubmissionId] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [authMode, setAuthMode] = useState<"sign-in" | "sign-up">("sign-in");
+  const { isSignedIn } = useAuth();
+  const submission = useCreateCareerSubmission();
+  const health = useHealthCheck();
+  const [, setLocation] = useLocation();
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  const q = QUESTIONS[currentQ];
+  const progress = ((currentQ + 1) / QUESTIONS.length) * 100;
+  const currentAnswer = answers[currentQ];
+  const sectionIndex = SECTIONS.indexOf(q?.section);
+  const sectionColors = ["#f5c842", "#5bc4a0", "#7eb8f7", "#e07af5", "#f0806a"];
+  const accentColor = sectionColors[Math.max(0, sectionIndex)] || "#f5c842";
+
+  function selectOption(label: string) {
+    setAnswers((prev) => {
+      const next = [...prev];
+      if (q.type === "single") {
+        next[currentQ] = label;
+      } else {
+        const cur = Array.isArray(next[currentQ]) ? [...next[currentQ]] : [];
+        if (cur.includes(label)) {
+          next[currentQ] = cur.filter((x) => x !== label);
+        } else {
+          const limit = q.type === "multi3" ? 3 : Infinity;
+          if (cur.length < limit) next[currentQ] = [...cur, label];
+        }
+      }
+      return next;
+    });
+  }
+
+  function isSelected(label: string) {
+    if (!currentAnswer) return false;
+    return Array.isArray(currentAnswer) ? currentAnswer.includes(label) : currentAnswer === label;
+  }
+
+  function canProceed() {
+    if (q.type === "text") return true;
+    if (q.type === "single") return !!currentAnswer;
+    if (q.type === "multi" || q.type === "multi3") return Array.isArray(currentAnswer) && currentAnswer.length > 0;
+    return false;
+  }
+
+  function handleNext() {
+    const finalAnswers = [...answers];
+    if (q.type === "text") {
+      finalAnswers[currentQ] = textInput || "(skipped)";
+      setAnswers(finalAnswers);
+    }
+    if (currentQ < QUESTIONS.length - 1) {
+      setCurrentQ((p) => p + 1);
+      setTextInput("");
+    } else {
+      setMasterPrompt(buildMasterPrompt(finalAnswers, userType));
+      setScreen("result");
+      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+    }
+  }
+
+  useEffect(() => {
+    if (screen !== "quiz") return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== "Enter") return;
+      const target = e.target as HTMLElement | null;
+      if (target && target.tagName === "TEXTAREA") return;
+      if (!canProceed()) return;
+      e.preventDefault();
+      handleNext();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  });
+
+  function handleBack() {
+    if (currentQ === 0) { setScreen("intro"); return; }
+    const prevQ = QUESTIONS[currentQ - 1];
+    setCurrentQ((p) => p - 1);
+    if (prevQ.type === "text") {
+      const prev = answers[currentQ - 1];
+      setTextInput(typeof prev === "string" && prev !== "(skipped)" ? prev : "");
+    }
+  }
+
+  function handleCopy() {
+    navigator.clipboard?.writeText(masterPrompt).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  }
+
+  function handleRetake() {
+    setScreen("intro");
+    setCurrentQ(0);
+    setAnswers(Array(QUESTIONS.length).fill(null));
+    setMasterPrompt("");
+    setTextInput("");
+    setUserType("student");
+    setCopied(false);
+    setDepartment("");
+    setYear("");
+    setBatch("");
+    setConsent(false);
+    setSubmissionId("");
+    setSubmitError("");
+  }
+
+  function handleSubmitAssessment() {
+    setSubmitError("");
+    const payload: CareerSubmissionInput = {
+      answers: {
+        q1: answers[0], q2: answers[1], q3: answers[2], q4: answers[3],
+        q5: answers[4], q6: answers[5], q7: answers[6], q8: answers[7],
+        q9: answers[8], q10: answers[9], q11: answers[10], q12: answers[11],
+        q13: typeof answers[12] === "string" && answers[12] !== "(skipped)" ? answers[12] : "",
+      },
+      department, year, batch, consent: true,
+    };
+    submission.mutate({ data: payload }, {
+      onSuccess: (accepted) => {
+        localStorage.setItem("careerDiscoverySubmissionId", accepted.id);
+        setSubmissionId(accepted.id);
+        setLocation(`/student/status/${accepted.id}`);
+      },
+      onError: () => setSubmitError("We couldn't save your answers just now. Your responses are still on this screen—please try again."),
+    });
+  }
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+        *{box-sizing:border-box;margin:0;padding:0;}
+        html,body{background:#0e0c09;}
+        ::-webkit-scrollbar{width:4px;}
+        ::-webkit-scrollbar-track{background:#1a1710;}
+        ::-webkit-scrollbar-thumb{background:#3a3520;border-radius:2px;}
+        .root{min-height:100vh;background:#0e0c09;font-family:'Plus Jakarta Sans',sans-serif;color:#e8e0d0;position:relative;overflow-x:hidden;}
+        .grain{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23filter)'/%3E%3C/svg%3E");}
+        .glow{position:fixed;width:500px;height:500px;border-radius:50%;filter:blur(130px);pointer-events:none;z-index:0;opacity:0.09;}
+        .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:18px;}
+         .question-subtext{color:#8a8070;font-size:0.8rem;font-weight:400;line-height:1.55;margin-top:0.45rem;}
+        .option-btn{width:100%;text-align:left;padding:0.82rem 1.1rem;border-radius:12px;border:1.5px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.025);color:#b8b0a0;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.86rem;cursor:pointer;transition:all 0.16s ease;display:flex;align-items:center;gap:0.7rem;}
+        .option-btn:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.18);color:#e8e0d0;transform:translateX(3px);}
+        .action-btn{padding:0.88rem 2rem;border-radius:50px;border:none;font-family:'Syne',sans-serif;font-size:0.86rem;font-weight:700;cursor:pointer;letter-spacing:0.04em;transition:all 0.2s ease;display:flex;align-items:center;gap:0.5rem;}
+        .action-btn:disabled{opacity:0.25;cursor:not-allowed;}
+        textarea{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);border-radius:12px;color:#e8e0d0;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.88rem;padding:1rem;width:100%;resize:none;outline:none;transition:border-color 0.2s;line-height:1.6;}
+        textarea:focus{border-color:rgba(245,200,66,0.3);}
+        textarea::placeholder{color:#3a3020;}
+        .prompt-box{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.07);border-radius:14px;color:#8a8070;font-family:'DM Mono',monospace;font-size:0.73rem;line-height:1.8;padding:1.2rem;width:100%;overflow-y:auto;max-height:320px;white-space:pre-wrap;word-break:break-word;user-select:text;}
+        .chip{padding:0.5rem 1.2rem;border-radius:50px;border:1.5px solid rgba(255,255,255,0.08);background:transparent;color:#6a6050;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.8rem;cursor:pointer;transition:all 0.18s;}
+        .chip:hover{border-color:rgba(255,255,255,0.18);color:#c8c0b0;}
+        .chip.active{background:rgba(245,200,66,0.1);border-color:rgba(245,200,66,0.35);color:#f0e080;}
+        .step-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.68rem;flex-shrink:0;}
+        .tag{font-family:'DM Mono',monospace;font-size:0.62rem;color:#3a3020;letter-spacing:0.1em;}
+      `}</style>
+
+      <div className="root">
+        <div className="grain" />
+        <div className="glow" style={{ background: "#f5c842", top: "-80px", right: "-80px" }} />
+        <div className="glow" style={{ background: "#5bc4a0", bottom: "-80px", left: "-80px" }} />
+        {screen === "intro" && <header className="home-topbar"><Brand /><div className="header-links">{isSignedIn ? <Link href="/student/status" data-testid="link-student-status">My report</Link> : <Link href="/sign-in" data-testid="link-home-signin">Student sign in</Link>}<Link href="/institution/dashboard" data-testid="link-institution-dashboard">Institution view</Link></div></header>}
+
+        {/* ── INTRO ── */}
+        {screen === "intro" && (
+          <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", position: "relative", zIndex: 1 }}>
+            <div style={{ maxWidth: 540, width: "100%", textAlign: "center" }}>
+              <div style={{ display: "inline-block", background: "rgba(245,200,66,0.07)", border: "1px solid rgba(245,200,66,0.18)", borderRadius: "50px", padding: "0.38rem 1rem", marginBottom: "1.8rem" }}>
+                <span className="tag" style={{ color: "#f5c842" }}>CAREER DISCOVERY · BETA</span>
+              </div>
+
+              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(1.9rem, 5.5vw, 3rem)", fontWeight: 800, lineHeight: 1.1, marginBottom: "1.1rem", letterSpacing: "-0.02em" }}>
+                Find careers you've{" "}
+                <span style={{ color: "#f5c842" }}>never heard of</span>
+                {" "}that actually fit you.
+              </h1>
+
+              <p style={{ color: "#8f8777", fontSize: "0.88rem", lineHeight: 1.85, marginBottom: "2rem" }}>
+                13 candid questions about how you think, work, and want to live. Get practical career direction built for HITAM students—without forcing every answer toward software engineering.
+              </p>
+
+              <p className="tag" style={{ margin: "0 auto 2rem", color: "#9a907b" }}>BUILT FOR HITAM UNDERGRADUATES · NO ANSWER IS A WRONG TURN</p>
+
+              <button className="action-btn" onClick={() => setScreen("quiz")} data-testid="button-start-assessment" style={{ background: "#f5c842", color: "#0e0c09", margin: "0 auto", padding: "1rem 2.8rem", fontSize: "0.92rem" }}>
+                Begin your discovery →
+              </button>
+
+              <p className="tag" style={{ marginTop: "1.1rem", color: "#827c6e" }}>ABOUT 5 MIN · 13 QUESTIONS · STUDENT ACCOUNT TO SAVE</p>
+
+              <div style={{ marginTop: "2.5rem" }}>
+                <p className="tag" style={{ marginBottom: "0.75rem", color: "#827c6e" }}>A STARTING POINT, NOT A BOX TO PUT YOU IN</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", justifyContent: "center" }}>
+                  {["Software Engineering", "Cloud / DevOps", "Data / AI & ML", "Full Stack", "VLSI / Semiconductor", "Embedded / IoT", "EV / Power Systems", "Design / CAE / Mfg"].map((f) => (
+                    <span key={f} style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.62rem", color: "#2a2010", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "50px", padding: "0.22rem 0.65rem" }}>{f}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── QUIZ ── */}
+        {screen === "quiz" && q && (
+          <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", position: "relative", zIndex: 1 }}>
+            <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100 }}>
+              <div style={{ height: "3px", background: "#1a1710" }}>
+                <div style={{ height: "100%", width: `${progress}%`, background: accentColor, transition: "width 0.4s ease, background 0.6s ease", borderRadius: "0 2px 2px 0" }} />
+              </div>
+              <div style={{ background: "rgba(14,12,9,0.93)", backdropFilter: "blur(12px)", padding: "0.72rem 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.55rem" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: accentColor, display: "inline-block", transition: "background 0.6s" }} />
+                  <span className="tag" style={{ color: accentColor, transition: "color 0.6s" }}>{q.section.toUpperCase()}</span>
+                </div>
+                <span className="tag">{currentQ + 1} / {QUESTIONS.length}</span>
+              </div>
+            </div>
+
+            <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "5.2rem 1rem 6.5rem", overflowY: "auto" }}>
+              <div key={currentQ} style={{ maxWidth: 530, width: "100%", animation: "slideIn 0.28s ease forwards" }}>
+                <style>{`@keyframes slideIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}`}</style>
+
+                <div style={{ marginBottom: "1.7rem" }}>
+                  <div style={{ display: "flex", gap: "0.35rem", marginBottom: "1rem" }}>
+                    {SECTIONS.map((s, i) => (
+                      <div key={s} style={{ flex: 1, height: "2px", borderRadius: 1, background: i <= sectionIndex ? accentColor : "rgba(255,255,255,0.05)", transition: "background 0.6s" }} />
+                    ))}
+                  </div>
+                  <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(1.1rem, 3.8vw, 1.45rem)", fontWeight: 700, lineHeight: 1.3, marginBottom: "0.4rem", letterSpacing: "-0.01em" }}>{q.question}</h2>
+                  {q.subtext && <p className="question-subtext">{q.subtext}</p>}
+                  {q.type === "multi" && <p className="tag" style={{ marginTop: "0.5rem" }}>SELECT ALL THAT APPLY</p>}
+                  {q.type === "multi3" && (
+                    <p className="tag" style={{ marginTop: "0.5rem", color: Array.isArray(currentAnswer) && currentAnswer.length === 3 ? accentColor : "#3a3020" }}>
+                      PICK UP TO 3 — {Array.isArray(currentAnswer) ? currentAnswer.length : 0}/3 SELECTED
+                    </p>
+                  )}
+                </div>
+
+                {q.type !== "text" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.42rem" }}>
+                    {q.options!.map((opt) => {
+                      const atLimit = q.type === "multi3" && Array.isArray(currentAnswer) && currentAnswer.length >= 3 && !isSelected(opt.label);
+                      return (
+                      <button
+                        key={opt.label}
+                        className="option-btn"
+                        onClick={() => selectOption(opt.label)}
+                        data-testid={`option-answer-${currentQ + 1}-${opt.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                        style={isSelected(opt.label)
+                          ? { borderColor: `${accentColor}65`, background: `${accentColor}12`, color: "#f0e8c0" }
+                          : atLimit ? { opacity: 0.3, cursor: "not-allowed" } : {}}
+                      >
+                         <span className="option-mark" aria-hidden="true"><span /></span>
+                        <span>{opt.label}</span>
+                        {isSelected(opt.label) && <span style={{ marginLeft: "auto", color: accentColor, fontSize: "0.72rem", fontWeight: 700 }}>✓</span>}
+                      </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {q.type === "text" && (
+                  <div>
+                    <textarea aria-label={q.question} rows={4} placeholder={q.placeholder} value={textInput} onChange={(e) => setTextInput(e.target.value)} data-testid="input-dream-work" style={{ borderColor: textInput ? "rgba(245,200,66,0.28)" : undefined }} />
+                    <p className="tag" style={{ marginTop: "0.5rem" }}>OPTIONAL — skip if you're unsure</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(14,12,9,0.95)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(255,255,255,0.04)", padding: "0.9rem 1.4rem", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 100 }}>
+              <button onClick={handleBack} style={{ background: "transparent", border: "1.5px solid rgba(255,255,255,0.06)", color: "#3a3020", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.8rem", padding: "0.58rem 1.1rem", borderRadius: "50px", cursor: "pointer" }}>
+                ← Back
+              </button>
+              <button className="action-btn" onClick={handleNext} disabled={!canProceed()} data-testid="button-next-question" style={{ background: canProceed() ? accentColor : "#181510", color: canProceed() ? "#0e0c09" : "#2a2010", transition: "all 0.3s ease" }}>
+                {currentQ === QUESTIONS.length - 1 ? "Build My Profile →" : "Next →"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── RESULT ── */}
+        {screen === "result" && false && (
+          <div style={{ minHeight: "100vh", position: "relative", zIndex: 1, padding: "2rem 1rem 5rem" }} ref={resultRef}>
+            <div style={{ maxWidth: 640, margin: "0 auto" }}>
+
+              <div style={{ textAlign: "center", marginBottom: "2.2rem", paddingTop: "0.5rem" }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(91,196,160,0.07)", border: "1px solid rgba(91,196,160,0.18)", borderRadius: "50px", padding: "0.38rem 1rem", marginBottom: "1.1rem" }}>
+                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#5bc4a0", display: "inline-block" }} />
+                  <span className="tag" style={{ color: "#5bc4a0" }}>PROFILE PROMPT READY</span>
+                </div>
+                <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(1.4rem, 4.5vw, 1.9rem)", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: "0.55rem" }}>Your career profile is built.</h1>
+                <p style={{ color: "#4a4030", fontSize: "0.85rem", lineHeight: 1.75, maxWidth: 500, margin: "0 auto" }}>
+                  Copy the prompt and paste it into ChatGPT. The AI will read your full profile and recommend your best-fit engineering domain, explain why, and list the exact fresher jobs you can land.
+                </p>
+              </div>
+
+              {/* Steps */}
+              <div className="card" style={{ padding: "1.3rem 1.5rem", marginBottom: "1rem" }}>
+                <p className="tag" style={{ marginBottom: "1rem" }}>HOW TO USE THIS</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.7rem" }}>
+                  {[
+                    { n: "01", text: "Copy the prompt below", color: "#f5c842" },
+                    { n: "02", text: "Open ChatGPT in a new tab", color: "#5bc4a0" },
+                    { n: "03", text: "Start a new chat and paste it", color: "#7eb8f7" },
+                    { n: "04", text: "Read your full personalized career report", color: "#e07af5" },
+                  ].map(({ n, text, color }) => (
+                    <div key={n} style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
+                      <div className="step-num" style={{ background: `${color}15`, border: `1px solid ${color}35`, color }}>{n}</div>
+                      <span style={{ color: "#7a7060", fontSize: "0.84rem" }}>{text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Prompt */}
+              <div style={{ marginBottom: "1rem" }}>
+                <p className="tag" style={{ marginBottom: "0.55rem" }}>YOUR MASTER PROMPT</p>
+                <div className="prompt-box">{masterPrompt}</div>
+              </div>
+
+              {/* Buttons */}
+              <div style={{ display: "flex", gap: "0.7rem", flexWrap: "wrap", marginBottom: "1.2rem" }}>
+                <button className="action-btn" onClick={handleCopy} style={{ background: copied ? "#5bc4a0" : "#f5c842", color: "#0e0c09", flex: 1, justifyContent: "center", minWidth: 140 }}>
+                  {copied ? "✓ Copied!" : "📋 Copy Prompt"}
+                </button>
+                <button className="action-btn" onClick={() => window.open("https://chatgpt.com", "_blank")} style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.09)", color: "#b0a890", flex: 1, justifyContent: "center", minWidth: 140 }}>
+                  Open ChatGPT ↗
+                </button>
+              </div>
+
+              {/* What you'll get */}
+              <div className="card" style={{ padding: "1.3rem 1.5rem" }}>
+                <p className="tag" style={{ marginBottom: "0.9rem" }}>WHAT YOUR REPORT WILL INCLUDE</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
+                  {[
+                    ["🏷️", "Profile Snapshot & Core Personality", "Archetype, worker type, strengths, risks, survival environment"],
+                    ["📊", "Trait Ratings", "5 dimensions rated from your actual answers with █░ bars"],
+                    ["🔍", "What Your Answers Reveal", "Clear patterns, conflicting answers, and unexplored areas — honestly"],
+                    ["🎯", "Long-Term Caliber vs Entry Reality", "What you're wired for long-term vs what the market actually hires freshers into — with a bridge path"],
+                    ["💼", "Realistic Fresher Career Fits", "4-5 roles with role type (stepping-stone vs long-term fit), real ₹ salaries, entry difficulty, and 5-year growth"],
+                    ["🚫", "Careers to Avoid", "2-3 roles you may be attracted to but are realistically unsuited for — evidence from your answers"],
+                    ["⚡", "Best-Fit Tech Career Track", "Engineering / Product / Automation / Startup Ops / Technical Business — not forced into engineering"],
+                    ["🗓️", "Realistic 12-Month Roadmap", "Month-by-month: projects, internships, portfolio, interviews — exact tools named"],
+                    ["💬", "The Brutal Truth", "What you're underestimating, where you're wasting time, what happens if you stay unfocused"],
+                  ].map(([emoji, title, desc]) => (
+                    <div key={title} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
+                      <span style={{ fontSize: "0.9rem", flexShrink: 0, marginTop: "0.1rem" }}>{emoji}</span>
+                      <div>
+                        <span style={{ color: "#d0c8b8", fontSize: "0.82rem", fontWeight: 600 }}>{title}</span>
+                        <span style={{ color: "#3a3020", fontSize: "0.8rem" }}> — {desc}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ textAlign: "center", marginTop: "1.8rem" }}>
+                <button onClick={handleRetake} style={{ background: "transparent", border: "none", color: "#2a2010", fontFamily: "'DM Mono', monospace", fontSize: "0.68rem", cursor: "pointer", letterSpacing: "0.06em" }}>
+                  ← Retake quiz
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {screen === "result" && (
+          <PageFrame>
+            <header className="topbar"><Brand /><div className="topbar-right"><Link href="/sign-in" className="quiet-link" data-testid="link-sign-in">Student sign in</Link></div></header>
+            <main className="submit-main enter">
+              <Link href="/" className="back-link" onClick={(event) => { event.preventDefault(); setScreen("quiz"); setCurrentQ(12); }} data-testid="link-review-answers">← Review your answers</Link>
+              <div className="submit-heading"><span className="eyebrow">LAST STEP · HITAM STUDENTS</span><h1>Your answers deserve a useful read.</h1><p>We’ll turn your responses into a structured, practical career report. Your full report stays private to you.</p></div>
+              {!isSignedIn ? <div className="auth-required">
+                <div className="auth-copy"><div className="auth-icon"><LockKeyhole size={19} /></div><div><h2>Sign in to save your report</h2><p>A student account keeps this report private and lets you return to it later.</p></div></div>
+                <div className="embedded-auth">{authMode === "sign-in" ? <SignIn routing="hash" signUpUrl={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/sign-up`} /> : <SignUp routing="hash" signInUrl={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/sign-in`} />}</div>
+                <p className="auth-switch">{authMode === "sign-in" ? <>New to Career Discovery? <button onClick={() => setAuthMode("sign-up")} data-testid="button-switch-to-signup">Create an account</button></> : <>Already have an account? <button onClick={() => setAuthMode("sign-in")} data-testid="button-switch-to-signin">Sign in</button></>}</p>
+              </div> : <div className="submit-form-card">
+                <div className="form-section-head"><span className="form-step">01</span><div><h2>Your HITAM details</h2><p>Used only to understand cohort-wide patterns with your consent.</p></div></div>
+                <div className="student-fields">
+                  <label>Department<select value={department} onChange={(e) => setDepartment(e.target.value)} data-testid="select-department"><option value="">Choose your department</option>{["Computer Science & Engineering", "CSE (AI & ML)", "CSE (Data Science)", "Electronics & Communication Engineering", "Electrical & Electronics Engineering", "Mechanical Engineering", "Civil Engineering", "Other"].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+                  <label>Academic year<select value={year} onChange={(e) => setYear(e.target.value)} data-testid="select-academic-year"><option value="">Choose your year</option>{["1st Year", "2nd Year", "3rd Year", "4th Year"].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+                  <label>Batch<select value={batch} onChange={(e) => setBatch(e.target.value)} data-testid="select-batch"><option value="">Choose your batch</option>{["2022–2026", "2023–2027", "2024–2028", "2025–2029", "Other"].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+                </div>
+                <label className="consent-row"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} data-testid="checkbox-consent" /><span><strong>I’m comfortable sharing anonymized answers for institution-wide insights.</strong><small>HITAM administrators see cohort aggregates only—not your report, name, or email. Your personal report remains yours.</small></span></label>
+                {submitError && <div className="form-error" role="alert"><AlertCircle size={16} />{submitError}</div>}
+                {health.isError && <div className="service-warning" role="status"><AlertCircle size={15} /><span>The report service isn’t responding. Your answers are still here—check again before submitting.</span><button type="button" onClick={() => health.refetch()} data-testid="button-check-report-service">Check again</button></div>}
+                <button className="button button-primary submit-button" onClick={handleSubmitAssessment} disabled={!department || !year || !batch || !consent || submission.isPending || health.isError} data-testid="button-submit-assessment">
+                  {submission.isPending ? "Saving your answers…" : <>Create my private report <Send size={16} /></>}
+                </button>
+                <p className="privacy-note"><LockKeyhole size={13} /> Your identity is never included in institution dashboard results.</p>
+              </div>}
+              <div className="answer-recap"><span><Check size={14} /> 13 answers saved on this device</span><span>About 5 minutes to complete</span></div>
+            </main>
+          </PageFrame>
+        )}
+      </div>
+    </>
+  );
+}
