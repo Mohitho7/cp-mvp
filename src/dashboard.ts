@@ -131,20 +131,25 @@ export async function queryDashboard(
         .orderBy(asc(schema.studentsTable.batch)),
     ]);
 
-  const statusCounts = { pending: 0, processing: 0, done: 0, failed: 0 };
-  for (const row of statusRows) {
+  const statusCounts: Record<string, number> = { pending: 0, processing: 0, done: 0, failed: 0 };
+  for (const row of statusRows as Array<{ status: string; count: unknown }>) {
     statusCounts[row.status] = Number(row.count);
   }
   const totalStudents = Number(studentCount[0]?.count ?? 0);
-  const completedReports = statusCounts.done;
+  const completedReports = statusCounts["done"] ?? 0;
   const common: DashboardCommon = {
     institutionName,
     totalStudents,
     completedReports,
-    statusCounts,
-    departmentOptions: departmentRows.map((row) => row.value),
-    yearOptions: yearRows.map((row) => row.value),
-    batchOptions: batchRows.map((row) => row.value),
+    statusCounts: {
+      pending: statusCounts["pending"] ?? 0,
+      processing: statusCounts["processing"] ?? 0,
+      done: statusCounts["done"] ?? 0,
+      failed: statusCounts["failed"] ?? 0,
+    },
+    departmentOptions: (departmentRows as Array<{ value: string }>).map((row) => row.value),
+    yearOptions: (yearRows as Array<{ value: string }>).map((row) => row.value),
+    batchOptions: (batchRows as Array<{ value: string }>).map((row) => row.value),
   };
 
   if (isDataSuppressed(completedReports)) {
@@ -325,7 +330,7 @@ export async function queryDashboard(
     marketBarrierDistribution: countRows(barrierResult),
     longTermCaliberDistribution: countRows(caliberResult),
     careersToAvoid: countRows(avoidResult),
-    commonConflicts: conflictResult.rows.map((row) => {
+    commonConflicts: (conflictResult.rows as Array<{ tag: unknown; text: unknown; count: unknown }>).map((row) => {
       const count = Number(row.count);
       if (!Number.isFinite(count)) {
         throw new Error("Dashboard query returned an invalid conflict count.");

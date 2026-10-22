@@ -61,14 +61,14 @@ function legacyReport(): LegacyCareerReport {
     careerFits: [
       {
         title: "Software Engineer",
-        roleType: "Technical Specialist",
+        roleType: "Long-term fit",
         naturalFitScore: 8,
         dailyWork: "Writing and maintaining services.",
         whyFits: "Strong alignment with systematic logic.",
         salaryInrLpa: { min: 6, max: 12 },
-        entryDifficulty: "High",
-        careerHealth: "Growing",
-        aiThreat: "Moderate",
+        entryDifficulty: "Highly competitive",
+        careerHealth: "Fast-growth",
+        aiThreat: "Medium",
         fiveYearGrowth: "Senior Engineer",
       },
     ],
@@ -78,7 +78,7 @@ function legacyReport(): LegacyCareerReport {
         why: "Misaligned with introverted execution preference.",
       },
     ],
-    recommendedTrack: "Core Software Engineering",
+    recommendedTrack: "Engineering",
     trackDetail: {
       why: "Builds on foundational programming knowledge.",
       fresherDemand: "Moderate",
