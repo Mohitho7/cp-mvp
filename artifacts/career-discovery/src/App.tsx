@@ -14,6 +14,9 @@ import { isPreviewAccessAllowed } from "@/lib/previewIsolation";
 import {
   isAssessmentStartRequested,
   resolveHomeNavigation,
+  resolveAdminRouteNavigation,
+  resolvePostSignInDestination,
+  sanitizeRedirectUrl,
   SUBMISSION_STORAGE_KEY,
 } from "@/lib/assessmentNavigation";
 import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
@@ -97,11 +100,77 @@ const clerkAppearance = {
 };
 
 function SignInPage() {
-  return <PageFrame><header className="topbar"><Brand /></header><main className="auth-page"><div className="auth-page-copy"><span className="eyebrow">A GOOD PLACE TO START AGAIN</span><h1>Your next step should fit <em>you.</em></h1><p>Sign in to keep your private report close.</p></div><SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} /></main></PageFrame>;
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const redirectUrl = sanitizeRedirectUrl(searchParams?.get("redirect_url"));
+  const fallbackDestination = resolvePostSignInDestination(redirectUrl);
+
+  return (
+    <PageFrame>
+      <header className="topbar">
+        <Brand />
+        <div className="topbar-right">
+          <Link
+            href="/institution/dashboard"
+            className="quiet-link"
+            data-testid="link-signin-nav-faculty"
+          >
+            Faculty
+          </Link>
+        </div>
+      </header>
+      <main className="auth-page">
+        <div className="auth-page-copy">
+          <span className="eyebrow">A GOOD PLACE TO START AGAIN</span>
+          <h1>Your next step should fit <em>you.</em></h1>
+          <p>Sign in to keep your private report close.</p>
+        </div>
+        <SignIn
+          routing="path"
+          path={`${basePath}/sign-in`}
+          signUpUrl={`${basePath}/sign-up${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
+          fallbackRedirectUrl={fallbackDestination}
+          forceRedirectUrl={redirectUrl}
+        />
+      </main>
+    </PageFrame>
+  );
 }
 
 function SignUpPage() {
-  return <PageFrame><header className="topbar"><Brand /></header><main className="auth-page"><div className="auth-page-copy"><span className="eyebrow">MAKE SPACE FOR A BETTER QUESTION</span><h1>Start with what’s <em>true.</em></h1><p>Create your student account to save your answers and receive a private report.</p></div><SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} /></main></PageFrame>;
+  const searchParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const redirectUrl = sanitizeRedirectUrl(searchParams?.get("redirect_url"));
+  const fallbackDestination = resolvePostSignInDestination(redirectUrl);
+
+  return (
+    <PageFrame>
+      <header className="topbar">
+        <Brand />
+        <div className="topbar-right">
+          <Link
+            href="/institution/dashboard"
+            className="quiet-link"
+            data-testid="link-signup-nav-faculty"
+          >
+            Faculty
+          </Link>
+        </div>
+      </header>
+      <main className="auth-page">
+        <div className="auth-page-copy">
+          <span className="eyebrow">MAKE SPACE FOR A BETTER QUESTION</span>
+          <h1>Start with what’s <em>true.</em></h1>
+          <p>Create your student account to save your answers and receive a private report.</p>
+        </div>
+        <SignUp
+          routing="path"
+          path={`${basePath}/sign-up`}
+          signInUrl={`${basePath}/sign-in${redirectUrl ? `?redirect_url=${encodeURIComponent(redirectUrl)}` : ""}`}
+          fallbackRedirectUrl={fallbackDestination}
+          forceRedirectUrl={redirectUrl}
+        />
+      </main>
+    </PageFrame>
+  );
 }
 
 function ClerkQueryClientCacheInvalidator() {
@@ -142,11 +211,37 @@ function HomeRedirect() {
 }
 
 function StudentRoute() {
-  return <><Show when="signed-in"><StudentStatus /></Show><Show when="signed-out"><Redirect to="/sign-in" /></Show></>;
+  return (
+    <>
+      <Show when="signed-in">
+        <StudentStatus />
+      </Show>
+      <Show when="signed-out">
+        <Redirect to="/sign-in?redirect_url=/student/status" />
+      </Show>
+    </>
+  );
 }
 
 function AdminRoute() {
-  return <><Show when="signed-in"><InstitutionDashboard /></Show><Show when="signed-out"><Redirect to="/sign-in" /></Show></>;
+  const [location] = useLocation();
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  const decision = resolveAdminRouteNavigation({
+    isSignedIn: false,
+    pathname: location,
+    search,
+  });
+
+  return (
+    <>
+      <Show when="signed-in">
+        <InstitutionDashboard />
+      </Show>
+      <Show when="signed-out">
+        <Redirect to={decision.redirectPath ?? "/sign-in?redirect_url=%2Finstitution%2Fdashboard"} />
+      </Show>
+    </>
+  );
 }
 
 function NotFound() {

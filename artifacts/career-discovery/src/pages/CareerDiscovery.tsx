@@ -466,6 +466,13 @@ export default function CareerDiscovery() {
           <header className="home-topbar">
             <Brand />
             <div className="header-links">
+              <Link
+                href="/institution/dashboard"
+                className="quiet-link"
+                data-testid="link-nav-faculty"
+              >
+                Faculty
+              </Link>
               {isSignedIn ? (
                 <Link href="/student/status" data-testid="link-student-status" className="button button-primary" style={{ padding: "8px 18px", fontSize: "12px" }}>
                   My Report
@@ -703,7 +710,19 @@ export default function CareerDiscovery() {
 
         {screen === "result" && (
           <PageFrame>
-            <header className="topbar"><Brand /><div className="topbar-right"><Link href="/sign-in" className="quiet-link" data-testid="link-sign-in">Student sign in</Link></div></header>
+            <header className="topbar">
+              <Brand />
+              <div className="topbar-right">
+                <Link
+                  href="/institution/dashboard"
+                  className="quiet-link"
+                  data-testid="link-result-nav-faculty"
+                >
+                  Faculty
+                </Link>
+                <Link href="/sign-in" className="quiet-link" data-testid="link-sign-in">Student sign in</Link>
+              </div>
+            </header>
             <main className="submit-main enter" ref={resultRef}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
                 <Link href="/" className="back-link" onClick={(event) => { event.preventDefault(); setScreen("quiz"); setCurrentQ(0); }} data-testid="link-review-answers">← Review your answers</Link>

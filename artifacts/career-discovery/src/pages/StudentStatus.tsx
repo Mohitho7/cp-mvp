@@ -40,7 +40,22 @@ export default function StudentStatus() {
   }
   return (
     <PageFrame>
-      <header className="topbar"><Brand /><div className="topbar-right"><span className="signed-user">{user?.firstName || "Student"} · private report</span><button className="quiet-link signout-link" onClick={() => signOut({ redirectUrl: "/" })} data-testid="button-student-signout"><LogOut size={14} /> Sign out</button></div></header>
+      <header className="topbar">
+        <Brand />
+        <div className="topbar-right">
+          <Link
+            href="/institution/dashboard"
+            className="quiet-link"
+            data-testid="link-student-nav-faculty"
+          >
+            Faculty
+          </Link>
+          <span className="signed-user">{user?.firstName || "Student"} · private report</span>
+          <button className="quiet-link signout-link" onClick={() => signOut({ redirectUrl: "/" })} data-testid="button-student-signout">
+            <LogOut size={14} /> Sign out
+          </button>
+        </div>
+      </header>
       <main className="student-main enter">
         <Link href="/" className="back-link" data-testid="link-back-home"><ArrowLeft size={15} /> Home</Link>
         {activeReport ? (

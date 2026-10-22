@@ -129,3 +129,77 @@ export function syncSubmissionStorageOnStatusCheck(
     // Gracefully handle storage errors
   }
 }
+
+export const FACULTY_DASHBOARD_PATH = "/institution/dashboard";
+
+/**
+ * Validates and sanitizes a destination URL to prevent open redirects and loops.
+ * Only permits internal relative paths starting with a single '/' (not '//' or '\').
+ */
+export function sanitizeRedirectUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  const trimmed = url.trim();
+  if (
+    trimmed.startsWith("/") &&
+    !trimmed.startsWith("//") &&
+    !trimmed.includes("\\") &&
+    !trimmed.startsWith("/sign-in") &&
+    !trimmed.startsWith("/sign-up")
+  ) {
+    return trimmed;
+  }
+  return undefined;
+}
+
+/**
+ * Builds a sign-in URL that preserves a destination URL in the redirect_url query parameter.
+ */
+export function buildSignInUrl(targetPath?: string | null): string {
+  const safeTarget = sanitizeRedirectUrl(targetPath);
+  if (safeTarget && safeTarget !== "/") {
+    return `/sign-in?redirect_url=${encodeURIComponent(safeTarget)}`;
+  }
+  return "/sign-in";
+}
+
+export interface AdminRouteNavigationParams {
+  isSignedIn: boolean;
+  pathname?: string;
+  search?: string;
+}
+
+export interface AdminRouteDecision {
+  action: "render_dashboard" | "redirect_signin";
+  redirectPath?: string;
+}
+
+/**
+ * Resolves the navigation decision for admin / faculty routes.
+ * When signed out, preserves the requested faculty destination so the user returns
+ * to the dashboard after authenticating.
+ */
+export function resolveAdminRouteNavigation({
+  isSignedIn,
+  pathname = FACULTY_DASHBOARD_PATH,
+  search = "",
+}: AdminRouteNavigationParams): AdminRouteDecision {
+  if (isSignedIn) {
+    return { action: "render_dashboard" };
+  }
+
+  const fullPath = `${pathname}${search}` || FACULTY_DASHBOARD_PATH;
+  return {
+    action: "redirect_signin",
+    redirectPath: buildSignInUrl(fullPath),
+  };
+}
+
+/**
+ * Determines the post-sign-in destination URL.
+ * Preserves the faculty dashboard if requested, or falls back to /student/status.
+ */
+export function resolvePostSignInDestination(redirectParam?: string | null): string {
+  const safe = sanitizeRedirectUrl(redirectParam);
+  return safe || "/student/status";
+}
+

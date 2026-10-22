@@ -5,6 +5,11 @@ import {
   resolveHomeNavigation,
   resolveAssessmentInitialState,
   syncSubmissionStorageOnStatusCheck,
+  resolveAdminRouteNavigation,
+  resolvePostSignInDestination,
+  sanitizeRedirectUrl,
+  buildSignInUrl,
+  FACULTY_DASHBOARD_PATH,
   SUBMISSION_STORAGE_KEY,
 } from "./assessmentNavigation";
 import {
@@ -219,3 +224,85 @@ describe("Assessment Navigation — Submission Storage Synchronization", () => {
     assert.equal(storage.getItem(SUBMISSION_STORAGE_KEY), "existing-valid-id");
   });
 });
+
+describe("Faculty Navigation & Return-After-Sign-In — Admin Route Protection", () => {
+  it("signed-in visitor accessing /institution/dashboard is allowed to render dashboard", () => {
+    const decision = resolveAdminRouteNavigation({
+      isSignedIn: true,
+      pathname: "/institution/dashboard",
+    });
+    assert.equal(decision.action, "render_dashboard");
+    assert.equal(decision.redirectPath, undefined);
+  });
+
+  it("signed-out visitor accessing /institution/dashboard redirects to sign-in preserving destination", () => {
+    const decision = resolveAdminRouteNavigation({
+      isSignedIn: false,
+      pathname: "/institution/dashboard",
+    });
+    assert.equal(decision.action, "redirect_signin");
+    assert.equal(decision.redirectPath, "/sign-in?redirect_url=%2Finstitution%2Fdashboard");
+  });
+
+  it("signed-out visitor preserves cohort filter query parameters when redirected to sign-in", () => {
+    const decision = resolveAdminRouteNavigation({
+      isSignedIn: false,
+      pathname: "/institution/dashboard",
+      search: "?department=Computer+Science+%26+Engineering&year=3rd+Year",
+    });
+    assert.equal(decision.action, "redirect_signin");
+    assert.equal(
+      decision.redirectPath,
+      `/sign-in?redirect_url=${encodeURIComponent("/institution/dashboard?department=Computer+Science+%26+Engineering&year=3rd+Year")}`
+    );
+  });
+});
+
+describe("Faculty Navigation & Return-After-Sign-In — URL Sanitization & Post-Sign-In Target", () => {
+  it("sanitizeRedirectUrl allows safe relative internal paths", () => {
+    assert.equal(sanitizeRedirectUrl("/institution/dashboard"), "/institution/dashboard");
+    assert.equal(sanitizeRedirectUrl("/student/status"), "/student/status");
+    assert.equal(sanitizeRedirectUrl("/institution/dashboard?batch=2023-2027"), "/institution/dashboard?batch=2023-2027");
+  });
+
+  it("sanitizeRedirectUrl rejects open redirect attacks and protocol-relative URLs", () => {
+    assert.equal(sanitizeRedirectUrl("https://malicious-site.com"), undefined);
+    assert.equal(sanitizeRedirectUrl("http://attacker.com"), undefined);
+    assert.equal(sanitizeRedirectUrl("//attacker.com"), undefined);
+    assert.equal(sanitizeRedirectUrl("/\\attacker.com"), undefined);
+    assert.equal(sanitizeRedirectUrl("javascript:alert(1)"), undefined);
+  });
+
+  it("sanitizeRedirectUrl prevents self-referential auth loop URLs", () => {
+    assert.equal(sanitizeRedirectUrl("/sign-in"), undefined);
+    assert.equal(sanitizeRedirectUrl("/sign-in?redirect_url=/foo"), undefined);
+    assert.equal(sanitizeRedirectUrl("/sign-up"), undefined);
+  });
+
+  it("buildSignInUrl builds encoded return URL for faculty destination", () => {
+    assert.equal(
+      buildSignInUrl("/institution/dashboard"),
+      "/sign-in?redirect_url=%2Finstitution%2Fdashboard"
+    );
+    assert.equal(buildSignInUrl(null), "/sign-in");
+    assert.equal(buildSignInUrl("https://evil.com"), "/sign-in");
+  });
+
+  it("resolvePostSignInDestination returns requested faculty dashboard if valid", () => {
+    assert.equal(
+      resolvePostSignInDestination("/institution/dashboard"),
+      "/institution/dashboard"
+    );
+    assert.equal(
+      resolvePostSignInDestination("/institution/dashboard?department=CSE"),
+      "/institution/dashboard?department=CSE"
+    );
+  });
+
+  it("resolvePostSignInDestination falls back to /student/status if no target or target is invalid", () => {
+    assert.equal(resolvePostSignInDestination(null), "/student/status");
+    assert.equal(resolvePostSignInDestination(""), "/student/status");
+    assert.equal(resolvePostSignInDestination("https://evil.com"), "/student/status");
+  });
+});
+
