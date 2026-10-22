@@ -1,14 +1,12 @@
 {
-  "buildCommand": "pnpm build",
-  "outputDirectory": "web/dist",
-  "functions": {
-    "api/result/[id].ts": { "maxDuration": 300 },
-    "api/worker/cron.ts": { "maxDuration": 300 }
-  },
-  "crons": [
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm --filter @workspace/career-discovery run build",
+  "outputDirectory": "artifacts/career-discovery/dist/public",
+  "rewrites": [
     {
-      "path": "/api/worker/cron",
-      "schedule": "*/5 * * * *"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
+

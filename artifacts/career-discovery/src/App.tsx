@@ -16,6 +16,26 @@ import {
   resolveHomeNavigation,
   SUBMISSION_STORAGE_KEY,
 } from "@/lib/assessmentNavigation";
+import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
+
+const customApiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+if (customApiUrl) {
+  setBaseUrl(customApiUrl);
+}
+
+if (typeof window !== "undefined") {
+  setAuthTokenGetter(async () => {
+    try {
+      const session = (window as unknown as { Clerk?: { session?: { getToken: () => Promise<string | null> } } }).Clerk?.session;
+      if (session) {
+        return await session.getToken();
+      }
+    } catch {
+      // fallback to cookie
+    }
+    return null;
+  });
+}
 
 const queryClient = new QueryClient();
 const clerkPubKey = publishableKeyFromHost(
