@@ -49,13 +49,26 @@ function buildRawWhere(
   return sql.join(conditions, sql` AND `);
 }
 
-function countRows(
-  result: { rows: Array<{ label: string; count: number }> },
-): Array<{ label: string; count: number }> {
-  return result.rows.map((row) => ({
-    label: row.label,
-    count: Number(row.count),
-  }));
+function countRows(result: {
+  rows: Array<Record<string, unknown>>;
+}): Array<{ label: string; count: number }> {
+  return result.rows.map((row) => {
+    if (typeof row.label !== "string") {
+      throw new Error("Dashboard query returned a non-string label.");
+    }
+    const count = Number(row.count);
+    if (!Number.isFinite(count)) {
+      throw new Error("Dashboard query returned an invalid count.");
+    }
+    return { label: row.label, count };
+  });
+}
+
+function readRequiredString(value: unknown, field: string): string {
+  if (typeof value !== "string") {
+    throw new Error(`Dashboard query returned an invalid ${field}.`);
+  }
+  return value;
 }
 
 function emptyTraits() {
@@ -68,6 +81,25 @@ function emptyTraits() {
   };
 }
 
+/**
+ * Aggregates cohort metrics for the institution faculty insights dashboard.
+ *
+ * CAREER CLUSTERS METRIC DEFINITION:
+ * - "Career Clusters" represents the number of distinct, consistently normalized
+ *   broad career categories represented among eligible completed student reports.
+ * - Anchored in the canonical career taxonomy (`WORK_LANE_IDS` in `careerStrategy/types.ts`):
+ *     1. Engineering (e.g. Software Engineer, QA Engineer, Cloud / DevOps, Cybersecurity, Data Scientist)
+ *     2. Product (e.g. Product Manager, Associate Product Manager)
+ *     3. Automation (e.g. AI Automation / No-Code Solutions Specialist)
+ *     4. Startup Ops (e.g. Operations Associate, Project Coordinator, Digital Marketer)
+ *     5. Technical Business (e.g. Business Analyst, Data Analyst)
+ *     6. Design / UI-UX (e.g. UX/UI Designer)
+ *     7. Hybrid Tech-Generalist (e.g. IT Support Specialist)
+ * - Multiple specific job roles within the same category map to ONE overarching cluster
+ *   via `cr.recommended_track` (`career_results.recommended_track`).
+ * - Privacy Invariant: When `completedReports < PRIVACY_THRESHOLD (5)`, granular
+ *   distributions including `trackDistribution` are suppressed (`dataSuppressed: true`).
+ */
 export async function getCareerDashboard(
   institutionId: string,
   institutionName: string,
@@ -91,7 +123,9 @@ export async function getCareerDashboard(
         .where(where)
         .groupBy(careerSubmissionsTable.status),
       db
-        .select({ count: sql<number>`count(distinct ${studentsTable.id})::int` })
+        .select({
+          count: sql<number>`count(distinct ${studentsTable.id})::int`,
+        })
         .from(careerSubmissionsTable)
         .innerJoin(
           studentsTable,
@@ -148,6 +182,7 @@ export async function getCareerDashboard(
       topCareers: [],
       entryRoles: [],
       marketBarrierDistribution: [],
+      longTermCaliberDistribution: [],
       careersToAvoid: [],
       commonConflicts: [],
     };
@@ -167,6 +202,7 @@ export async function getCareerDashboard(
     careerResult,
     entryRoleResult,
     barrierResult,
+    caliberResult,
     avoidResult,
     conflictResult,
     averages,
@@ -195,33 +231,88 @@ export async function getCareerDashboard(
     db.execute(sql<{ label: string; count: number }>`
       SELECT skill.value AS label, count(*)::int AS count
       ${fromSql}
-      CROSS JOIN LATERAL jsonb_array_elements_text(
-        cr.report #> '{trackDetail,skillsToLearn}'
-      ) AS skill(value)
-      WHERE ${rawWhere}
+      CROSS JOIN LATERAL (
+        SELECT jsonb_array_elements_text(
+          CASE WHEN jsonb_typeof(cr.report #> '{trackDetail,skillsToLearn}') = 'array'
+               THEN cr.report #> '{trackDetail,skillsToLearn}'
+               ELSE '[]'::jsonb
+          END
+        ) AS value
+        UNION ALL
+        SELECT item ->> 'skill' AS value
+        FROM jsonb_array_elements(
+          CASE WHEN jsonb_typeof(cr.report -> 'skillsGaps') = 'array'
+               THEN cr.report -> 'skillsGaps'
+               ELSE '[]'::jsonb
+          END
+        ) AS item
+        UNION ALL
+        SELECT skill_text AS value
+        FROM jsonb_array_elements(
+          CASE WHEN jsonb_typeof(cr.report -> 'roadmap') = 'array'
+               THEN cr.report -> 'roadmap'
+               ELSE '[]'::jsonb
+          END
+        ) AS rm,
+        jsonb_array_elements_text(
+          CASE WHEN jsonb_typeof(rm -> 'skillsToLearn') = 'array'
+               THEN rm -> 'skillsToLearn'
+               ELSE '[]'::jsonb
+          END
+        ) AS skill_text
+      ) AS skill
+      WHERE ${rawWhere} AND skill.value IS NOT NULL AND trim(skill.value) != ''
       GROUP BY skill.value
       ORDER BY count DESC, label
       LIMIT 8
     `),
     db.execute(sql<{ label: string; count: number }>`
-      SELECT career.item ->> 'title' AS label, count(*)::int AS count
+      SELECT career.title AS label, count(*)::int AS count
       ${fromSql}
-      CROSS JOIN LATERAL jsonb_array_elements(
-        cr.report -> 'careerFits'
-      ) AS career(item)
-      WHERE ${rawWhere}
-      GROUP BY career.item ->> 'title'
+      CROSS JOIN LATERAL (
+        SELECT item ->> 'title' AS title
+        FROM jsonb_array_elements(
+          CASE WHEN jsonb_typeof(cr.report -> 'careerFits') = 'array'
+               THEN cr.report -> 'careerFits'
+               ELSE '[]'::jsonb
+          END
+        ) AS item
+        UNION ALL
+        SELECT item ->> 'title' AS title
+        FROM jsonb_array_elements(
+          CASE WHEN jsonb_typeof(cr.report -> 'longTermOptions') = 'array'
+               THEN cr.report -> 'longTermOptions'
+               ELSE '[]'::jsonb
+          END
+        ) AS item
+      ) AS career
+      WHERE ${rawWhere} AND career.title IS NOT NULL AND trim(career.title) != ''
+      GROUP BY career.title
       ORDER BY count DESC, label
       LIMIT 8
     `),
     db.execute(sql<{ label: string; count: number }>`
-      SELECT role.value AS label, count(*)::int AS count
+      SELECT role.title AS label, count(*)::int AS count
       ${fromSql}
-      CROSS JOIN LATERAL jsonb_array_elements_text(
-        cr.report #> '{caliberVsEntry,firstEntryRoles}'
-      ) AS role(value)
-      WHERE ${rawWhere}
-      GROUP BY role.value
+      CROSS JOIN LATERAL (
+        SELECT role_text AS title
+        FROM jsonb_array_elements_text(
+          CASE WHEN jsonb_typeof(cr.report #> '{caliberVsEntry,firstEntryRoles}') = 'array'
+               THEN cr.report #> '{caliberVsEntry,firstEntryRoles}'
+               ELSE '[]'::jsonb
+          END
+        ) AS role_text
+        UNION ALL
+        SELECT item ->> 'title' AS title
+        FROM jsonb_array_elements(
+          CASE WHEN jsonb_typeof(cr.report -> 'entryOptions') = 'array'
+               THEN cr.report -> 'entryOptions'
+               ELSE '[]'::jsonb
+          END
+        ) AS item
+      ) AS role
+      WHERE ${rawWhere} AND role.title IS NOT NULL AND trim(role.title) != ''
+      GROUP BY role.title
       ORDER BY count DESC, label
       LIMIT 8
     `),
@@ -229,17 +320,31 @@ export async function getCareerDashboard(
       SELECT cr.report #>> '{caliberVsEntry,marketBarrierLevel}' AS label,
         count(*)::int AS count
       ${fromSql}
-      WHERE ${rawWhere}
+      WHERE ${rawWhere} AND cr.report #>> '{caliberVsEntry,marketBarrierLevel}' IS NOT NULL
       GROUP BY cr.report #>> '{caliberVsEntry,marketBarrierLevel}'
       ORDER BY count DESC, label
     `),
     db.execute(sql<{ label: string; count: number }>`
+      SELECT cr.report #>> '{caliberVsEntry,longTermCaliber}' AS label,
+        count(*)::int AS count
+      ${fromSql}
+      WHERE ${rawWhere} AND cr.report #>> '{caliberVsEntry,longTermCaliber}' IS NOT NULL
+      GROUP BY cr.report #>> '{caliberVsEntry,longTermCaliber}'
+      ORDER BY count DESC, label
+      LIMIT 8
+    `),
+    db.execute(sql<{ label: string; count: number }>`
       SELECT career.item ->> 'title' AS label, count(*)::int AS count
       ${fromSql}
-      CROSS JOIN LATERAL jsonb_array_elements(
-        cr.report -> 'careersToAvoid'
-      ) AS career(item)
-      WHERE ${rawWhere}
+      CROSS JOIN LATERAL (
+        SELECT item FROM jsonb_array_elements(
+          CASE WHEN jsonb_typeof(cr.report -> 'careersToAvoid') = 'array'
+               THEN cr.report -> 'careersToAvoid'
+               ELSE '[]'::jsonb
+          END
+        ) AS item
+      ) AS career
+      WHERE ${rawWhere} AND career.item ->> 'title' IS NOT NULL AND trim(career.item ->> 'title') != ''
       GROUP BY career.item ->> 'title'
       ORDER BY count DESC, label
       LIMIT 8
@@ -250,26 +355,26 @@ export async function getCareerDashboard(
         conflict.item ->> 'text' AS text,
         count(*)::int AS count
       ${fromSql}
-      CROSS JOIN LATERAL jsonb_array_elements(
-        cr.report #> '{answerPatterns,conflicts}'
-      ) AS conflict(item)
-      WHERE ${rawWhere}
+      CROSS JOIN LATERAL (
+        SELECT item FROM jsonb_array_elements(
+          CASE WHEN jsonb_typeof(cr.report #> '{answerPatterns,conflicts}') = 'array'
+               THEN cr.report #> '{answerPatterns,conflicts}'
+               ELSE '[]'::jsonb
+          END
+        ) AS item
+      ) AS conflict
+      WHERE ${rawWhere} AND conflict.item ->> 'tag' IS NOT NULL
       GROUP BY conflict.item ->> 'tag', conflict.item ->> 'text'
       ORDER BY count DESC, tag
       LIMIT 8
     `),
     db
       .select({
-        technical:
-          sql<number>`coalesce(avg(${careerResultsTable.technicalScore}), 0)::float8`,
-        creative:
-          sql<number>`coalesce(avg(${careerResultsTable.creativeScore}), 0)::float8`,
-        people:
-          sql<number>`coalesce(avg(${careerResultsTable.peopleScore}), 0)::float8`,
-        risk:
-          sql<number>`coalesce(avg(${careerResultsTable.riskScore}), 0)::float8`,
-        learning:
-          sql<number>`coalesce(avg(${careerResultsTable.learningScore}), 0)::float8`,
+        technical: sql<number>`coalesce(avg(${careerResultsTable.technicalScore}), 0)::float8`,
+        creative: sql<number>`coalesce(avg(${careerResultsTable.creativeScore}), 0)::float8`,
+        people: sql<number>`coalesce(avg(${careerResultsTable.peopleScore}), 0)::float8`,
+        risk: sql<number>`coalesce(avg(${careerResultsTable.riskScore}), 0)::float8`,
+        learning: sql<number>`coalesce(avg(${careerResultsTable.learningScore}), 0)::float8`,
       })
       .from(careerResultsTable)
       .innerJoin(
@@ -303,11 +408,18 @@ export async function getCareerDashboard(
     topCareers: countRows(careerResult),
     entryRoles: countRows(entryRoleResult),
     marketBarrierDistribution: countRows(barrierResult),
+    longTermCaliberDistribution: countRows(caliberResult),
     careersToAvoid: countRows(avoidResult),
-    commonConflicts: conflictResult.rows.map((row) => ({
-      tag: row.tag,
-      text: row.text,
-      count: Number(row.count),
-    })),
+    commonConflicts: conflictResult.rows.map((row) => {
+      const count = Number(row.count);
+      if (!Number.isFinite(count)) {
+        throw new Error("Dashboard query returned an invalid conflict count.");
+      }
+      return {
+        tag: readRequiredString(row.tag, "conflict tag"),
+        text: readRequiredString(row.text, "conflict text"),
+        count,
+      };
+    }),
   };
 }

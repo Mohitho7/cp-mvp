@@ -8,9 +8,16 @@
 import type { CaliberVsEntryMarketBarrierLevel } from './caliberVsEntryMarketBarrierLevel';
 
 export interface CaliberVsEntry {
+  /** @maxLength 350 */
   longTermCaliber: string;
+  /** @maxLength 350 */
   marketBarrier: string;
   marketBarrierLevel: CaliberVsEntryMarketBarrierLevel;
+  /**
+     * @minItems 1
+     * @maxItems 5
+     */
   firstEntryRoles: string[];
+  /** @maxLength 350 */
   bridgePath: string;
 }

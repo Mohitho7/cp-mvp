@@ -9,11 +9,22 @@ import type { CareerProfileClarityLevel } from './careerProfileClarityLevel';
 import type { CareerProfileWorkerType } from './careerProfileWorkerType';
 
 export interface CareerProfile {
+  /** @maxLength 80 */
   archetype: string;
   workerType: CareerProfileWorkerType;
   clarityLevel: CareerProfileClarityLevel;
+  /** @maxLength 350 */
   summary: string;
+  /**
+     * @minItems 2
+     * @maxItems 3
+     */
   strengths: string[];
+  /**
+     * @minItems 2
+     * @maxItems 3
+     */
   risks: string[];
+  /** @maxLength 300 */
   survivalEnvironment: string;
 }

@@ -7,6 +7,14 @@
  */
 
 export interface SalaryRange {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
   min: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
   max: number;
 }

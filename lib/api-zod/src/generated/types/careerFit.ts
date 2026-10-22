@@ -12,9 +12,10 @@ import type { CareerFitRoleType } from './careerFitRoleType';
 import type { SalaryRange } from './salaryRange';
 
 export interface CareerFit {
+  /** @maxLength 120 */
   title: string;
   roleType: CareerFitRoleType;
-  salaryInrLpa: SalaryRange;
+  salaryInrLpa: SalaryRange | null;
   entryDifficulty: CareerFitEntryDifficulty;
   careerHealth: CareerFitCareerHealth;
   aiThreat: CareerFitAiThreat;
@@ -23,7 +24,10 @@ export interface CareerFit {
      * @maximum 10
      */
   naturalFitScore: number;
+  /** @maxLength 300 */
   dailyWork: string;
+  /** @maxLength 300 */
   whyFits: string;
+  /** @maxLength 300 */
   fiveYearGrowth: string;
 }

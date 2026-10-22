@@ -36,6 +36,19 @@ export interface CareerSubmissionInput {
   year: string;
   /** @maxLength 40 */
   batch: string;
+  /**
+     * Student's degree/programme as free text.
+     * @maxLength 100
+     */
+  degree: string;
+  /** Expected graduation year (validated server-side against a dynamic window). */
+  graduationYear: number;
+  /**
+     * Realistic weekly hours the student can dedicate to career preparation.
+     * @minimum 1
+     * @maximum 60
+     */
+  availableHoursPerWeek: number;
   consent: true;
 }
 
@@ -67,6 +80,7 @@ export interface TraitScore {
      * @maximum 5
      */
   score: number;
+  /** @maxLength 250 */
   reason: string;
   label: TraitScoreLabel;
 }
@@ -94,12 +108,23 @@ export const CareerProfileClarityLevel = {
 } as const;
 
 export interface CareerProfile {
+  /** @maxLength 80 */
   archetype: string;
   workerType: CareerProfileWorkerType;
   clarityLevel: CareerProfileClarityLevel;
+  /** @maxLength 350 */
   summary: string;
+  /**
+     * @minItems 2
+     * @maxItems 3
+     */
   strengths: string[];
+  /**
+     * @minItems 2
+     * @maxItems 3
+     */
   risks: string[];
+  /** @maxLength 300 */
   survivalEnvironment: string;
 }
 
@@ -112,13 +137,18 @@ export interface CareerTraits {
 }
 
 export interface AnswerConflict {
+  /** @maxLength 60 */
   tag: string;
+  /** @maxLength 300 */
   text: string;
 }
 
 export interface AnswerPatterns {
+  /** @maxItems 5 */
   clear: string[];
+  /** @maxItems 5 */
   conflicts: AnswerConflict[];
+  /** @maxItems 5 */
   worthExploring: string[];
 }
 
@@ -132,15 +162,30 @@ export const CaliberVsEntryMarketBarrierLevel = {
 } as const;
 
 export interface CaliberVsEntry {
+  /** @maxLength 350 */
   longTermCaliber: string;
+  /** @maxLength 350 */
   marketBarrier: string;
   marketBarrierLevel: CaliberVsEntryMarketBarrierLevel;
+  /**
+     * @minItems 1
+     * @maxItems 5
+     */
   firstEntryRoles: string[];
+  /** @maxLength 350 */
   bridgePath: string;
 }
 
 export interface SalaryRange {
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
   min: number;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
   max: number;
 }
 
@@ -165,9 +210,11 @@ export type CareerFitCareerHealth = typeof CareerFitCareerHealth[keyof typeof Ca
 
 
 export const CareerFitCareerHealth = {
-  Growing: 'Growing',
   Stable: 'Stable',
-  Declining: 'Declining',
+  'Fast-growth': 'Fast-growth',
+  High_burnout: 'High burnout',
+  Oversaturated: 'Oversaturated',
+  High_leverage: 'High leverage',
 } as const;
 
 export type CareerFitAiThreat = typeof CareerFitAiThreat[keyof typeof CareerFitAiThreat];
@@ -180,9 +227,10 @@ export const CareerFitAiThreat = {
 } as const;
 
 export interface CareerFit {
+  /** @maxLength 120 */
   title: string;
   roleType: CareerFitRoleType;
-  salaryInrLpa: SalaryRange;
+  salaryInrLpa: SalaryRange | null;
   entryDifficulty: CareerFitEntryDifficulty;
   careerHealth: CareerFitCareerHealth;
   aiThreat: CareerFitAiThreat;
@@ -191,26 +239,211 @@ export interface CareerFit {
      * @maximum 10
      */
   naturalFitScore: number;
+  /** @maxLength 300 */
   dailyWork: string;
+  /** @maxLength 300 */
   whyFits: string;
+  /** @maxLength 300 */
   fiveYearGrowth: string;
 }
 
 export interface CareerToAvoid {
+  /** @maxLength 120 */
   title: string;
+  /** @maxLength 300 */
   why: string;
 }
 
 export interface TrackDetail {
+  /** @maxLength 350 */
   why: string;
+  /** @maxLength 150 */
   fresherDemand: string;
+  /**
+     * @minItems 4
+     * @maxItems 8
+     */
   skillsToLearn: string[];
 }
 
 export interface RoadmapStep {
+  /** @maxLength 20 */
   months: string;
+  /** @maxLength 120 */
   focus: string;
+  /**
+     * @minItems 1
+     * @maxItems 3
+     */
   actions: string[];
+}
+
+export interface LongTermCareerOption {
+  /** @maxLength 80 */
+  id: string;
+  /** @maxLength 120 */
+  title: string;
+  /** @maxLength 100 */
+  category: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rank: number;
+  score: number;
+  fitScore: number;
+  /** @maxLength 500 */
+  rationale: string;
+}
+
+export type EntryLevelCareerOptionAccessibility = typeof EntryLevelCareerOptionAccessibility[keyof typeof EntryLevelCareerOptionAccessibility];
+
+
+export const EntryLevelCareerOptionAccessibility = {
+  VERY_HIGH: 'VERY_HIGH',
+  HIGH: 'HIGH',
+  MEDIUM: 'MEDIUM',
+  MODERATE: 'MODERATE',
+  LOW: 'LOW',
+  VERY_LOW: 'VERY_LOW',
+} as const;
+
+export type EntryLevelCareerOptionAlignment = typeof EntryLevelCareerOptionAlignment[keyof typeof EntryLevelCareerOptionAlignment];
+
+
+export const EntryLevelCareerOptionAlignment = {
+  STRONG: 'STRONG',
+  MODERATE: 'MODERATE',
+  NEUTRAL: 'NEUTRAL',
+  WEAK: 'WEAK',
+} as const;
+
+export interface EntryLevelCareerOption {
+  /** @maxLength 80 */
+  id: string;
+  /** @maxLength 120 */
+  title: string;
+  /** @maxLength 100 */
+  category: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rank: number;
+  score: number;
+  fitScore: number;
+  /** @maxLength 500 */
+  rationale: string;
+  accessibility: EntryLevelCareerOptionAccessibility;
+  alignment: EntryLevelCareerOptionAlignment;
+  runwayWeeks: number;
+}
+
+export interface ComparisonRoleItem {
+  /** @maxLength 80 */
+  id: string;
+  /** @maxLength 120 */
+  title: string;
+  /** @maxLength 500 */
+  roleInvolves: string;
+  /** @maxLength 500 */
+  whyFit: string;
+  /** @maxLength 500 */
+  tradeOff: string;
+  /** @maxLength 500 */
+  differentiation: string;
+}
+
+export interface CareerComparison {
+  /**
+     * @minItems 3
+     * @maxItems 3
+     */
+  longTerm: ComparisonRoleItem[];
+  /**
+     * @minItems 3
+     * @maxItems 3
+     */
+  entryLevel: ComparisonRoleItem[];
+}
+
+export type WorkLaneEntryRouteRouteType = typeof WorkLaneEntryRouteRouteType[keyof typeof WorkLaneEntryRouteRouteType];
+
+
+export const WorkLaneEntryRouteRouteType = {
+  DIRECT: 'DIRECT',
+  ADJACENT: 'ADJACENT',
+  BRIDGE: 'BRIDGE',
+} as const;
+
+export interface CareerReference {
+  /** @maxLength 80 */
+  id: string;
+  /** @maxLength 120 */
+  title: string;
+}
+
+export interface WorkLaneEntryRoute {
+  routeType: WorkLaneEntryRouteRouteType;
+  entryCareer: CareerReference;
+  bridgeCareer: CareerReference | null;
+  /** @maxLength 500 */
+  rationale: string;
+}
+
+export type WorkLaneRecommendationLane = typeof WorkLaneRecommendationLane[keyof typeof WorkLaneRecommendationLane];
+
+
+export const WorkLaneRecommendationLane = {
+  Engineering: 'Engineering',
+  Product: 'Product',
+  Automation: 'Automation',
+  Startup_Ops: 'Startup Ops',
+  Technical_Business: 'Technical Business',
+  'Design_/_UI-UX': 'Design / UI-UX',
+  'Hybrid_Tech-Generalist': 'Hybrid Tech-Generalist',
+} as const;
+
+export interface WorkLaneRecommendation {
+  lane: WorkLaneRecommendationLane;
+  /** @maxLength 500 */
+  why: string;
+  primaryCareer: CareerReference;
+  supportingCareers: CareerReference[];
+  entryRoute: WorkLaneEntryRoute;
+  /** @maxLength 600 */
+  explanation: string;
+}
+
+export interface RoadmapMilestone {
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  order: number;
+  /** @maxLength 40 */
+  monthRange: string;
+  /** @maxLength 160 */
+  focus: string;
+  /**
+     * @minItems 1
+     * @maxItems 4
+     */
+  actions: string[];
+  /**
+     * @minItems 1
+     * @maxItems 4
+     */
+  measurableOutputs: string[];
+}
+
+export interface MentorNote {
+  /** @maxLength 500 */
+  observedPattern: string;
+  /** @maxLength 500 */
+  realisticRisk: string;
+  /** @maxLength 500 */
+  actionableExperiment: string;
 }
 
 export type CareerReportRecommendedTrack = typeof CareerReportRecommendedTrack[keyof typeof CareerReportRecommendedTrack];
@@ -222,21 +455,155 @@ export const CareerReportRecommendedTrack = {
   Automation: 'Automation',
   Startup_Ops: 'Startup Ops',
   Technical_Business: 'Technical Business',
+  'Design_/_UI-UX': 'Design / UI-UX',
   'Hybrid_Tech-Generalist': 'Hybrid Tech-Generalist',
-  Business_Analyst: 'Business Analyst',
 } as const;
+
+export type WorkArchetypeStrength = typeof WorkArchetypeStrength[keyof typeof WorkArchetypeStrength];
+
+
+export const WorkArchetypeStrength = {
+  Strong: 'Strong',
+  Moderate: 'Moderate',
+  Emerging: 'Emerging',
+} as const;
+
+export interface WorkArchetype {
+  /** @maxLength 60 */
+  name: string;
+  /** @maxLength 300 */
+  definition: string;
+  strength: WorkArchetypeStrength;
+  /** @maxItems 3 */
+  evidence: string[];
+}
+
+export interface CareerDirectionRole {
+  /** @maxLength 120 */
+  title: string;
+  /** @maxLength 500 */
+  why: string;
+}
+
+export type CareerDirectionRoute = typeof CareerDirectionRoute[keyof typeof CareerDirectionRoute];
+
+
+export const CareerDirectionRoute = {
+  DIRECT: 'DIRECT',
+  ADJACENT: 'ADJACENT',
+  BRIDGE: 'BRIDGE',
+} as const;
+
+export interface CareerDirection {
+  target: CareerDirectionRole;
+  entry: CareerDirectionRole;
+  route: CareerDirectionRoute;
+  /** @maxLength 500 */
+  routeWhy: string;
+  barriers: string[];
+  alternativesNote: string | null;
+}
 
 export interface CareerReport {
   profile: CareerProfile;
   traits: CareerTraits;
   answerPatterns: AnswerPatterns;
   caliberVsEntry: CaliberVsEntry;
+  /** Deterministic work archetype set by the server for new reports; absent in legacy reports. */
+  workArchetype: WorkArchetype | null;
+  /** Deterministic career direction composed by the server for new reports; absent in legacy reports. */
+  careerDirection: CareerDirection | null;
+  /**
+     * @minItems 5
+     * @maxItems 5
+     */
+  longTermOptions: LongTermCareerOption[];
+  /**
+     * @minItems 5
+     * @maxItems 5
+     */
+  entryOptions: EntryLevelCareerOption[];
+  careerComparison: CareerComparison;
+  recommendedWorkLane: WorkLaneRecommendation;
+  /**
+     * @minItems 5
+     * @maxItems 5
+     */
+  roadmap: RoadmapMilestone[];
+  mentorNote: MentorNote;
+  recommendedTrack: CareerReportRecommendedTrack;
+}
+
+export type LegacyCareerReportRecommendedTrack = typeof LegacyCareerReportRecommendedTrack[keyof typeof LegacyCareerReportRecommendedTrack];
+
+
+export const LegacyCareerReportRecommendedTrack = {
+  Engineering: 'Engineering',
+  Product: 'Product',
+  Automation: 'Automation',
+  Startup_Ops: 'Startup Ops',
+  Technical_Business: 'Technical Business',
+  'Design_/_UI-UX': 'Design / UI-UX',
+  'Hybrid_Tech-Generalist': 'Hybrid Tech-Generalist',
+} as const;
+
+export type CareerComparisonItemRole = typeof CareerComparisonItemRole[keyof typeof CareerComparisonItemRole];
+
+
+export const CareerComparisonItemRole = {
+  target: 'target',
+  entry: 'entry',
+  alternative: 'alternative',
+  exploratory: 'exploratory',
+  cautious: 'cautious',
+} as const;
+
+export interface CareerComparisonItem {
+  /** @maxLength 120 */
+  title: string;
+  role: CareerComparisonItemRole;
+  /** @maxLength 500 */
+  rationale: string;
+  skillsToDevelop: string[];
+  entryDifficulty: string | null;
+  prerequisites: string | null;
+}
+
+export interface SkillsGap {
+  /** @maxLength 80 */
+  skill: string;
+  /** @maxLength 300 */
+  whyItMatters: string;
+  /** @maxLength 300 */
+  activity: string;
+  /** @maxLength 300 */
+  evidenceOfProgress: string;
+}
+
+export interface LegacyCareerReport {
+  profile: CareerProfile;
+  traits: CareerTraits;
+  answerPatterns: AnswerPatterns;
+  caliberVsEntry: CaliberVsEntry;
+  /**
+     * @minItems 4
+     * @maxItems 6
+     */
   careerFits: CareerFit[];
   careersToAvoid: CareerToAvoid[];
-  recommendedTrack: CareerReportRecommendedTrack;
+  recommendedTrack: LegacyCareerReportRecommendedTrack;
   trackDetail: TrackDetail;
+  /**
+     * @minItems 5
+     * @maxItems 5
+     */
   roadmap: RoadmapStep[];
+  /** @maxLength 500 */
   brutalTruth: string;
+  workArchetype?: WorkArchetype | null;
+  careerDirection?: CareerDirection | null;
+  careerComparison?: CareerComparisonItem[] | null;
+  skillsGaps?: SkillsGap[] | null;
 }
 
 export type CareerSubmissionResultStatus = typeof CareerSubmissionResultStatus[keyof typeof CareerSubmissionResultStatus];
@@ -249,11 +616,44 @@ export const CareerSubmissionResultStatus = {
   failed: 'failed',
 } as const;
 
+export interface CareerStrategyExplanation {
+  target: string;
+  entry: string;
+  route: string;
+  academic: string;
+  time: string;
+  bridge: string | null;
+  alternative: string | null;
+}
+
+export type CareerStrategyRationale = {
+  target: string;
+  entry: string;
+  bridge: string | null;
+  academic: string;
+  time: string;
+};
+
+export interface CareerStrategy {
+  strategyVersion: string;
+  explanationVersion: string;
+  targetCareer: CareerReference | null;
+  bestEntryCareer: CareerReference | null;
+  bridgeCareer: CareerReference | null;
+  alternativeRoute: CareerReference | null;
+  routeType: 'DIRECT' | 'ADJACENT' | 'BRIDGE' | null;
+  rationale: CareerStrategyRationale;
+  explanation: CareerStrategyExplanation;
+  insufficientContext: boolean;
+}
+
 export interface CareerSubmissionResult {
   id: string;
   status: CareerSubmissionResultStatus;
   submittedAt: string;
-  report: CareerReport | null;
+  report: CareerReport | LegacyCareerReport | null;
+  /** Deterministic entry strategy persisted with the report; null until generated (e.g. legacy reports). */
+  strategy: CareerStrategy | null;
   error: string | null;
 }
 
@@ -304,6 +704,8 @@ export interface InstitutionDashboard {
   topCareers: DistributionCount[];
   entryRoles: DistributionCount[];
   marketBarrierDistribution: DistributionCount[];
+  /** Most common long-term caliber directions in the selected cohort. */
+  longTermCaliberDistribution: DistributionCount[];
   careersToAvoid: DistributionCount[];
   commonConflicts: ConflictCount[];
   departmentOptions: string[];

@@ -7,7 +7,13 @@
  */
 
 export interface RoadmapStep {
+  /** @maxLength 20 */
   months: string;
+  /** @maxLength 120 */
   focus: string;
+  /**
+     * @minItems 1
+     * @maxItems 3
+     */
   actions: string[];
 }

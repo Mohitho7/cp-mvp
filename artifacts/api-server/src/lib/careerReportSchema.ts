@@ -4,7 +4,14 @@ import { z } from "zod";
 
 const reportUnion = GetCareerSubmissionResponse.shape.report;
 export const careerReportSchema = reportUnion.options[0];
+export const canonicalCareerReportSchema = careerReportSchema;
 export type CareerReport = z.infer<typeof careerReportSchema>;
+
+export const legacyCareerReportSchema = reportUnion.options[1];
+export type LegacyCareerReport = z.infer<typeof legacyCareerReportSchema>;
+
+export const submissionReportSchema = reportUnion;
+export type SubmissionReport = z.infer<typeof submissionReportSchema>;
 
 type JsonSchema = Record<string, unknown>;
 

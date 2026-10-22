@@ -4,27 +4,23 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-const rawPort = process.env.PORT;
+const rawPort = process.env.PORT ?? "5000";
+const apiPort = Number(rawPort);
 
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
+// Local development runs the Express API (PORT) and the Vite dev server on
+// distinct ports. VITE_PORT overrides only the Vite server port and defaults
+// to 5173 (or PORT if provided).
+const rawVitePort = process.env.VITE_PORT ?? (process.env.PORT ? rawPort : "5173");
+const port = Number(rawVitePort);
 
-const port = Number(rawPort);
+// Dev-only proxy so relative frontend `/api/*` requests reach the Express
+// API server. Defaults to the API port on localhost; override for remote
+// APIs. The `/api` prefix is preserved. Production builds are unaffected
+// (proxy applies to the dev server only).
+const apiProxyTarget =
+  process.env.VITE_API_PROXY_TARGET ?? `http://localhost:${apiPort}`;
 
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
-}
-
-const basePath = process.env.BASE_PATH;
-
-if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
-}
+const basePath = process.env.BASE_PATH ?? "/";
 
 export default defineConfig({
   base: basePath,
@@ -63,6 +59,12 @@ export default defineConfig({
     strictPort: true,
     host: "0.0.0.0",
     allowedHosts: true,
+    proxy: {
+      "/api": {
+        target: apiProxyTarget,
+        changeOrigin: true,
+      },
+    },
     fs: {
       strict: true,
     },

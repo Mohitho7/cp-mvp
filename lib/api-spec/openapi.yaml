@@ -51,6 +51,39 @@ paths:
           description: Sign in required
         "409":
           description: This student already has a submission
+        "429":
+          description: Too many submission attempts
+        "503":
+          description: Institution setup is incomplete
+  /submit:
+    post:
+      operationId: submitCareerAssessment
+      tags: [career-discovery]
+      summary: Save a student's answers and queue a report
+      description: Compatibility alias for POST /submissions. Requires an authenticated student and explicit consent to share aggregate assessment data with their institution.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CareerSubmissionInput"
+      responses:
+        "201":
+          description: Submission saved and report queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CareerSubmissionAccepted"
+        "400":
+          description: Answers or consent are invalid
+        "401":
+          description: Sign in required
+        "409":
+          description: This student already has a submission
+        "429":
+          description: Too many submission attempts
+        "503":
+          description: Institution setup is incomplete
   /submissions/me:
     get:
       operationId: getMyCareerSubmission
@@ -90,10 +123,8 @@ paths:
                 $ref: "#/components/schemas/CareerSubmissionResult"
         "401":
           description: Sign in required
-        "403":
-          description: This submission belongs to another student
         "404":
-          description: Submission not found
+          description: Submission not found or does not belong to the signed-in student
   /submissions/{id}/retry:
     post:
       operationId: retryCareerSubmission
@@ -116,12 +147,34 @@ paths:
                 $ref: "#/components/schemas/CareerSubmissionAccepted"
         "401":
           description: Sign in required
-        "403":
-          description: This submission belongs to another student
         "404":
-          description: Submission not found
+          description: Submission not found or does not belong to the signed-in student
         "409":
           description: Only failed submissions can be retried
+  /result/{id}:
+    get:
+      operationId: getCareerResult
+      tags: [career-discovery]
+      summary: Get the signed-in student's submission status and report
+      description: Compatibility alias for GET /submissions/{id}. Students can read only their own report.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Submission status, with a report when generation is complete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CareerSubmissionResult"
+        "401":
+          description: Sign in required
+        "404":
+          description: Submission not found or does not belong to the signed-in student
   /dashboard:
     get:
       operationId: getInstitutionDashboard
@@ -155,6 +208,8 @@ paths:
           description: Sign in required
         "403":
           description: Institution administrator access required
+        "503":
+          description: Institution administrator access is not configured
 components:
   schemas:
     HealthStatus:
@@ -215,10 +270,22 @@ components:
         batch:
           type: string
           maxLength: 40
+        degree:
+          type: string
+          maxLength: 100
+          description: Student's degree/programme as free text.
+        graduationYear:
+          type: integer
+          description: Expected graduation year (validated server-side against a dynamic window).
+        availableHoursPerWeek:
+          type: integer
+          minimum: 1
+          maximum: 60
+          description: Realistic weekly hours the student can dedicate to career preparation.
         consent:
           type: boolean
           const: true
-      required: [answers, department, year, batch, consent]
+      required: [answers, department, year, batch, degree, graduationYear, availableHoursPerWeek, consent]
       additionalProperties: false
     CareerSubmissionAccepted:
       type: object
@@ -242,6 +309,7 @@ components:
           maximum: 5
         reason:
           type: string
+          maxLength: 250
         label:
           type: string
           enum: [Low, Medium, High]
@@ -251,25 +319,52 @@ components:
       properties:
         archetype:
           type: string
+          maxLength: 80
         workerType:
           type: string
-          enum: [Specialist, Operator, Builder, Analyst, Communicator, Entrepreneur, Manager]
+          enum:
+            [
+              Specialist,
+              Operator,
+              Builder,
+              Analyst,
+              Communicator,
+              Entrepreneur,
+              Manager,
+            ]
         clarityLevel:
           type: string
           enum: [Clear, Mixed, Exploratory]
         summary:
           type: string
+          maxLength: 350
         strengths:
           type: array
+          minItems: 2
+          maxItems: 3
           items:
             type: string
+            maxLength: 250
         risks:
           type: array
+          minItems: 2
+          maxItems: 3
           items:
             type: string
+            maxLength: 250
         survivalEnvironment:
           type: string
-      required: [archetype, workerType, clarityLevel, summary, strengths, risks, survivalEnvironment]
+          maxLength: 300
+      required:
+        [
+          archetype,
+          workerType,
+          clarityLevel,
+          summary,
+          strengths,
+          risks,
+          survivalEnvironment,
+        ]
     CareerTraits:
       type: object
       properties:
@@ -289,66 +384,93 @@ components:
       properties:
         tag:
           type: string
+          maxLength: 60
         text:
           type: string
+          maxLength: 300
       required: [tag, text]
     AnswerPatterns:
       type: object
       properties:
         clear:
           type: array
+          maxItems: 5
           items:
             type: string
+            maxLength: 250
         conflicts:
           type: array
+          maxItems: 5
           items:
             $ref: "#/components/schemas/AnswerConflict"
         worthExploring:
           type: array
+          maxItems: 5
           items:
             type: string
+            maxLength: 250
       required: [clear, conflicts, worthExploring]
     CaliberVsEntry:
       type: object
       properties:
         longTermCaliber:
           type: string
+          maxLength: 350
         marketBarrier:
           type: string
+          maxLength: 350
         marketBarrierLevel:
           type: string
           enum: [Low, Moderate, High]
         firstEntryRoles:
           type: array
+          minItems: 1
+          maxItems: 5
           items:
             type: string
+            maxLength: 100
         bridgePath:
           type: string
-      required: [longTermCaliber, marketBarrier, marketBarrierLevel, firstEntryRoles, bridgePath]
+          maxLength: 350
+      required:
+        [
+          longTermCaliber,
+          marketBarrier,
+          marketBarrierLevel,
+          firstEntryRoles,
+          bridgePath,
+        ]
     SalaryRange:
       type: object
       properties:
         min:
           type: number
+          minimum: 0
+          maximum: 100
         max:
           type: number
+          minimum: 0
+          maximum: 100
       required: [min, max]
     CareerFit:
       type: object
       properties:
         title:
           type: string
+          maxLength: 120
         roleType:
           type: string
           enum: [Stepping-stone, Long-term fit]
         salaryInrLpa:
-          $ref: "#/components/schemas/SalaryRange"
+          anyOf:
+            - $ref: "#/components/schemas/SalaryRange"
+            - type: "null"
         entryDifficulty:
           type: string
           enum: [Easy to enter, Moderately difficult, Highly competitive]
         careerHealth:
           type: string
-          enum: [Growing, Stable, Declining]
+          enum: [Stable, Fast-growth, High burnout, Oversaturated, High leverage]
         aiThreat:
           type: string
           enum: [Low, Medium, High]
@@ -358,44 +480,354 @@ components:
           maximum: 10
         dailyWork:
           type: string
+          maxLength: 300
         whyFits:
           type: string
+          maxLength: 300
         fiveYearGrowth:
           type: string
-      required: [title, roleType, salaryInrLpa, entryDifficulty, careerHealth, aiThreat, naturalFitScore, dailyWork, whyFits, fiveYearGrowth]
+          maxLength: 300
+      required:
+        [
+          title,
+          roleType,
+          salaryInrLpa,
+          entryDifficulty,
+          careerHealth,
+          aiThreat,
+          naturalFitScore,
+          dailyWork,
+          whyFits,
+          fiveYearGrowth,
+        ]
     CareerToAvoid:
       type: object
       properties:
         title:
           type: string
+          maxLength: 120
         why:
           type: string
+          maxLength: 300
       required: [title, why]
     TrackDetail:
       type: object
       properties:
         why:
           type: string
+          maxLength: 350
         fresherDemand:
           type: string
+          maxLength: 150
         skillsToLearn:
           type: array
+          minItems: 4
+          maxItems: 8
           items:
             type: string
+            maxLength: 80
       required: [why, fresherDemand, skillsToLearn]
     RoadmapStep:
       type: object
       properties:
         months:
           type: string
+          maxLength: 20
         focus:
           type: string
+          maxLength: 120
         actions:
           type: array
+          minItems: 1
+          maxItems: 3
           items:
             type: string
+            maxLength: 200
       required: [months, focus, actions]
+    LongTermCareerOption:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 80
+        title:
+          type: string
+          maxLength: 120
+        category:
+          type: string
+          maxLength: 100
+        rank:
+          type: integer
+          minimum: 1
+          maximum: 5
+        score:
+          type: number
+        fitScore:
+          type: number
+        rationale:
+          type: string
+          maxLength: 500
+      required: [id, title, category, rank, score, fitScore, rationale]
+      additionalProperties: false
+    EntryLevelCareerOption:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 80
+        title:
+          type: string
+          maxLength: 120
+        category:
+          type: string
+          maxLength: 100
+        rank:
+          type: integer
+          minimum: 1
+          maximum: 5
+        score:
+          type: number
+        fitScore:
+          type: number
+        rationale:
+          type: string
+          maxLength: 500
+        accessibility:
+          type: string
+          enum: [VERY_HIGH, HIGH, MEDIUM, MODERATE, LOW, VERY_LOW]
+        alignment:
+          type: string
+          enum: [STRONG, MODERATE, NEUTRAL, WEAK]
+        runwayWeeks:
+          type: number
+      required:
+        [
+          id,
+          title,
+          category,
+          rank,
+          score,
+          fitScore,
+          rationale,
+          accessibility,
+          alignment,
+          runwayWeeks,
+        ]
+      additionalProperties: false
+    ComparisonRoleItem:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 80
+        title:
+          type: string
+          maxLength: 120
+        roleInvolves:
+          type: string
+          maxLength: 500
+        whyFit:
+          type: string
+          maxLength: 500
+        tradeOff:
+          type: string
+          maxLength: 500
+        differentiation:
+          type: string
+          maxLength: 500
+      required: [id, title, roleInvolves, whyFit, tradeOff, differentiation]
+      additionalProperties: false
+    CareerComparison:
+      type: object
+      properties:
+        longTerm:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items:
+            $ref: "#/components/schemas/ComparisonRoleItem"
+        entryLevel:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items:
+            $ref: "#/components/schemas/ComparisonRoleItem"
+      required: [longTerm, entryLevel]
+      additionalProperties: false
+    WorkLaneEntryRoute:
+      type: object
+      properties:
+        routeType:
+          type: string
+          enum: [DIRECT, ADJACENT, BRIDGE]
+        entryCareer:
+          $ref: "#/components/schemas/CareerReference"
+        bridgeCareer:
+          anyOf:
+            - $ref: "#/components/schemas/CareerReference"
+            - type: "null"
+        rationale:
+          type: string
+          maxLength: 500
+      required: [routeType, entryCareer, bridgeCareer, rationale]
+      additionalProperties: false
+    WorkLaneRecommendation:
+      type: object
+      properties:
+        lane:
+          type: string
+          enum:
+            [
+              Engineering,
+              Product,
+              Automation,
+              "Startup Ops",
+              "Technical Business",
+              "Design / UI-UX",
+              "Hybrid Tech-Generalist",
+            ]
+        why:
+          type: string
+          maxLength: 500
+        primaryCareer:
+          $ref: "#/components/schemas/CareerReference"
+        supportingCareers:
+          type: array
+          items:
+            $ref: "#/components/schemas/CareerReference"
+        entryRoute:
+          $ref: "#/components/schemas/WorkLaneEntryRoute"
+        explanation:
+          type: string
+          maxLength: 600
+      required:
+        [
+          lane,
+          why,
+          primaryCareer,
+          supportingCareers,
+          entryRoute,
+          explanation,
+        ]
+      additionalProperties: false
+    RoadmapMilestone:
+      type: object
+      properties:
+        order:
+          type: integer
+          minimum: 1
+          maximum: 5
+        monthRange:
+          type: string
+          maxLength: 40
+        focus:
+          type: string
+          maxLength: 160
+        actions:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items:
+            type: string
+            maxLength: 250
+        measurableOutputs:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items:
+            type: string
+            maxLength: 250
+      required: [order, monthRange, focus, actions, measurableOutputs]
+      additionalProperties: false
+    MentorNote:
+      type: object
+      properties:
+        observedPattern:
+          type: string
+          maxLength: 500
+        realisticRisk:
+          type: string
+          maxLength: 500
+        actionableExperiment:
+          type: string
+          maxLength: 500
+      required: [observedPattern, realisticRisk, actionableExperiment]
+      additionalProperties: false
     CareerReport:
+      type: object
+      properties:
+        profile:
+          $ref: "#/components/schemas/CareerProfile"
+        traits:
+          $ref: "#/components/schemas/CareerTraits"
+        answerPatterns:
+          $ref: "#/components/schemas/AnswerPatterns"
+        caliberVsEntry:
+          $ref: "#/components/schemas/CaliberVsEntry"
+        workArchetype:
+          anyOf:
+            - $ref: "#/components/schemas/WorkArchetype"
+            - type: "null"
+          description: Deterministic work archetype set by the server for new reports; absent in legacy reports.
+        careerDirection:
+          anyOf:
+            - $ref: "#/components/schemas/CareerDirection"
+            - type: "null"
+          description: Deterministic career direction composed by the server for new reports; absent in legacy reports.
+        longTermOptions:
+          type: array
+          minItems: 5
+          maxItems: 5
+          items:
+            $ref: "#/components/schemas/LongTermCareerOption"
+        entryOptions:
+          type: array
+          minItems: 5
+          maxItems: 5
+          items:
+            $ref: "#/components/schemas/EntryLevelCareerOption"
+        careerComparison:
+          $ref: "#/components/schemas/CareerComparison"
+        recommendedWorkLane:
+          $ref: "#/components/schemas/WorkLaneRecommendation"
+        roadmap:
+          type: array
+          minItems: 5
+          maxItems: 5
+          items:
+            $ref: "#/components/schemas/RoadmapMilestone"
+        mentorNote:
+          $ref: "#/components/schemas/MentorNote"
+        recommendedTrack:
+          type: string
+          enum:
+            [
+              Engineering,
+              Product,
+              Automation,
+              "Startup Ops",
+              "Technical Business",
+              "Design / UI-UX",
+              "Hybrid Tech-Generalist",
+            ]
+      required:
+        [
+          profile,
+          traits,
+          answerPatterns,
+          caliberVsEntry,
+          workArchetype,
+          careerDirection,
+          longTermOptions,
+          entryOptions,
+          careerComparison,
+          recommendedWorkLane,
+          roadmap,
+          mentorNote,
+          recommendedTrack,
+        ]
+      additionalProperties: false
+    LegacyCareerReport:
       type: object
       properties:
         profile:
@@ -408,6 +840,8 @@ components:
           $ref: "#/components/schemas/CaliberVsEntry"
         careerFits:
           type: array
+          minItems: 4
+          maxItems: 6
           items:
             $ref: "#/components/schemas/CareerFit"
         careersToAvoid:
@@ -416,16 +850,164 @@ components:
             $ref: "#/components/schemas/CareerToAvoid"
         recommendedTrack:
           type: string
-          enum: [Engineering, Product, Automation, "Startup Ops", "Technical Business", "Hybrid Tech-Generalist", "Business Analyst"]
+          enum:
+            [
+              Engineering,
+              Product,
+              Automation,
+              "Startup Ops",
+              "Technical Business",
+              "Design / UI-UX",
+              "Hybrid Tech-Generalist",
+            ]
         trackDetail:
           $ref: "#/components/schemas/TrackDetail"
         roadmap:
           type: array
+          minItems: 5
+          maxItems: 5
           items:
             $ref: "#/components/schemas/RoadmapStep"
         brutalTruth:
           type: string
-      required: [profile, traits, answerPatterns, caliberVsEntry, careerFits, careersToAvoid, recommendedTrack, trackDetail, roadmap, brutalTruth]
+          maxLength: 500
+        workArchetype:
+          anyOf:
+            - $ref: "#/components/schemas/WorkArchetype"
+            - type: "null"
+        careerDirection:
+          anyOf:
+            - $ref: "#/components/schemas/CareerDirection"
+            - type: "null"
+        careerComparison:
+          anyOf:
+            - type: array
+              minItems: 1
+              maxItems: 8
+              items:
+                $ref: "#/components/schemas/CareerComparisonItem"
+            - type: "null"
+        skillsGaps:
+          anyOf:
+            - type: array
+              items:
+                $ref: "#/components/schemas/SkillsGap"
+            - type: "null"
+      required:
+        [
+          profile,
+          traits,
+          answerPatterns,
+          caliberVsEntry,
+          careerFits,
+          careersToAvoid,
+          recommendedTrack,
+          trackDetail,
+          roadmap,
+          brutalTruth,
+        ]
+    WorkArchetype:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 60
+        definition:
+          type: string
+          maxLength: 300
+        strength:
+          type: string
+          enum: [Strong, Moderate, Emerging]
+        evidence:
+          type: array
+          maxItems: 3
+          items:
+            type: string
+            maxLength: 120
+      required: [name, definition, strength, evidence]
+      additionalProperties: false
+    CareerDirectionRole:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 120
+        why:
+          type: string
+          maxLength: 500
+      required: [title, why]
+      additionalProperties: false
+    CareerDirection:
+      type: object
+      properties:
+        target:
+          $ref: "#/components/schemas/CareerDirectionRole"
+        entry:
+          $ref: "#/components/schemas/CareerDirectionRole"
+        route:
+          type: string
+          enum: [DIRECT, ADJACENT, BRIDGE]
+        routeWhy:
+          type: string
+          maxLength: 500
+        barriers:
+          type: array
+          items:
+            type: string
+            maxLength: 300
+        alternativesNote:
+          anyOf:
+            - type: string
+              maxLength: 500
+            - type: "null"
+      required: [target, entry, route, routeWhy, barriers, alternativesNote]
+      additionalProperties: false
+    CareerComparisonItem:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 120
+        role:
+          type: string
+          enum: [target, entry, alternative, exploratory, cautious]
+        rationale:
+          type: string
+          maxLength: 500
+        skillsToDevelop:
+          type: array
+          items:
+            type: string
+            maxLength: 80
+        entryDifficulty:
+          anyOf:
+            - type: string
+              maxLength: 60
+            - type: "null"
+        prerequisites:
+          anyOf:
+            - type: string
+              maxLength: 300
+            - type: "null"
+      required: [title, role, rationale, skillsToDevelop, entryDifficulty, prerequisites]
+      additionalProperties: false
+    SkillsGap:
+      type: object
+      properties:
+        skill:
+          type: string
+          maxLength: 80
+        whyItMatters:
+          type: string
+          maxLength: 300
+        activity:
+          type: string
+          maxLength: 300
+        evidenceOfProgress:
+          type: string
+          maxLength: 300
+      required: [skill, whyItMatters, activity, evidenceOfProgress]
+      additionalProperties: false
     CareerSubmissionResult:
       type: object
       properties:
@@ -441,12 +1023,103 @@ components:
         report:
           anyOf:
             - $ref: "#/components/schemas/CareerReport"
+            - $ref: "#/components/schemas/LegacyCareerReport"
             - type: "null"
+        strategy:
+          anyOf:
+            - $ref: "#/components/schemas/CareerStrategy"
+            - type: "null"
+          description: Deterministic entry strategy persisted with the report; null until generated (e.g. legacy reports).
         error:
           anyOf:
             - type: string
             - type: "null"
-      required: [id, status, submittedAt, report, error]
+      required: [id, status, submittedAt, report, strategy, error]
+    CareerReference:
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 80
+        title:
+          type: string
+          maxLength: 120
+      required: [id, title]
+      additionalProperties: false
+    CareerStrategyExplanation:
+      type: object
+      properties:
+        target:
+          type: string
+        entry:
+          type: string
+        route:
+          type: string
+        academic:
+          type: string
+        time:
+          type: string
+        bridge:
+          anyOf:
+            - type: string
+            - type: "null"
+        alternative:
+          anyOf:
+            - type: string
+            - type: "null"
+      required: [target, entry, route, academic, time, bridge, alternative]
+      additionalProperties: false
+    CareerStrategy:
+      type: object
+      properties:
+        strategyVersion:
+          type: string
+        explanationVersion:
+          type: string
+        targetCareer:
+          anyOf:
+            - $ref: "#/components/schemas/CareerReference"
+            - type: "null"
+        bestEntryCareer:
+          anyOf:
+            - $ref: "#/components/schemas/CareerReference"
+            - type: "null"
+        bridgeCareer:
+          anyOf:
+            - $ref: "#/components/schemas/CareerReference"
+            - type: "null"
+        alternativeRoute:
+          anyOf:
+            - $ref: "#/components/schemas/CareerReference"
+            - type: "null"
+        routeType:
+          anyOf:
+            - type: string
+              enum: [DIRECT, ADJACENT, BRIDGE]
+            - type: "null"
+        rationale:
+          type: object
+          properties:
+            target:
+              type: string
+            entry:
+              type: string
+            bridge:
+              anyOf:
+                - type: string
+                - type: "null"
+            academic:
+              type: string
+            time:
+              type: string
+          required: [target, entry, bridge, academic, time]
+          additionalProperties: false
+        explanation:
+          $ref: "#/components/schemas/CareerStrategyExplanation"
+        insufficientContext:
+          type: boolean
+      required: [strategyVersion, explanationVersion, targetCareer, bestEntryCareer, bridgeCareer, alternativeRoute, routeType, rationale, explanation, insufficientContext]
+      additionalProperties: false
     DistributionCount:
       type: object
       properties:
@@ -542,6 +1215,11 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/DistributionCount"
+        longTermCaliberDistribution:
+          type: array
+          description: Most common long-term caliber directions in the selected cohort.
+          items:
+            $ref: "#/components/schemas/DistributionCount"
         careersToAvoid:
           type: array
           items:
@@ -562,5 +1240,25 @@ components:
           type: array
           items:
             type: string
-      required: [institutionName, totalStudents, statusCounts, completedReports, dataSuppressed, trackDistribution, clarityDistribution, workerTypeDistribution, traitAverages, topSkills, topCareers, entryRoles, marketBarrierDistribution, careersToAvoid, commonConflicts, departmentOptions, yearOptions, batchOptions]
-
+      required:
+        [
+          institutionName,
+          totalStudents,
+          statusCounts,
+          completedReports,
+          dataSuppressed,
+          trackDistribution,
+          clarityDistribution,
+          workerTypeDistribution,
+          traitAverages,
+          topSkills,
+          topCareers,
+          entryRoles,
+          marketBarrierDistribution,
+          longTermCaliberDistribution,
+          careersToAvoid,
+          commonConflicts,
+          departmentOptions,
+          yearOptions,
+          batchOptions,
+        ]

@@ -29,6 +29,10 @@ export const createCareerSubmissionBodyYearMax = 40;
 
 export const createCareerSubmissionBodyBatchMax = 40;
 
+export const createCareerSubmissionBodyDegreeMax = 100;
+
+export const createCareerSubmissionBodyAvailableHoursPerWeekMax = 60;
+
 
 
 export const CreateCareerSubmissionBody = zod.object({
@@ -50,6 +54,53 @@ export const CreateCareerSubmissionBody = zod.object({
   "department": zod.string().max(createCareerSubmissionBodyDepartmentMax),
   "year": zod.string().max(createCareerSubmissionBodyYearMax),
   "batch": zod.string().max(createCareerSubmissionBodyBatchMax),
+  "degree": zod.string().max(createCareerSubmissionBodyDegreeMax).describe('Student\'s degree\/programme as free text.'),
+  "graduationYear": zod.number().describe('Expected graduation year (validated server-side against a dynamic window).'),
+  "availableHoursPerWeek": zod.number().min(1).max(createCareerSubmissionBodyAvailableHoursPerWeekMax).describe('Realistic weekly hours the student can dedicate to career preparation.'),
+  "consent": zod.boolean()
+})
+
+
+/**
+ * Compatibility alias for POST /submissions. Requires an authenticated student and explicit consent to share aggregate assessment data with their institution.
+ * @summary Save a student's answers and queue a report
+ */
+export const submitCareerAssessmentBodyAnswersQ13Max = 2000;
+
+export const submitCareerAssessmentBodyDepartmentMax = 120;
+
+export const submitCareerAssessmentBodyYearMax = 40;
+
+export const submitCareerAssessmentBodyBatchMax = 40;
+
+export const submitCareerAssessmentBodyDegreeMax = 100;
+
+export const submitCareerAssessmentBodyAvailableHoursPerWeekMax = 60;
+
+
+
+export const SubmitCareerAssessmentBody = zod.object({
+  "answers": zod.object({
+  "q1": zod.union([zod.string(),zod.array(zod.string()),zod.null()]),
+  "q2": zod.union([zod.string(),zod.array(zod.string()),zod.null()]),
+  "q3": zod.union([zod.string(),zod.array(zod.string()),zod.null()]),
+  "q4": zod.union([zod.string(),zod.array(zod.string()),zod.null()]),
+  "q5": zod.union([zod.string(),zod.array(zod.string()),zod.null()]),
+  "q6": zod.union([zod.string(),zod.array(zod.string()),zod.null()]),
+  "q7": zod.union([zod.string(),zod.array(zod.string()),zod.null()]),
+  "q8": zod.union([zod.string(),zod.array(zod.string()),zod.null()]),
+  "q9": zod.union([zod.string(),zod.array(zod.string()),zod.null()]),
+  "q10": zod.union([zod.string(),zod.array(zod.string()),zod.null()]),
+  "q11": zod.union([zod.string(),zod.array(zod.string()),zod.null()]),
+  "q12": zod.union([zod.string(),zod.array(zod.string()),zod.null()]),
+  "q13": zod.string().max(submitCareerAssessmentBodyAnswersQ13Max)
+}),
+  "department": zod.string().max(submitCareerAssessmentBodyDepartmentMax),
+  "year": zod.string().max(submitCareerAssessmentBodyYearMax),
+  "batch": zod.string().max(submitCareerAssessmentBodyBatchMax),
+  "degree": zod.string().max(submitCareerAssessmentBodyDegreeMax).describe('Student\'s degree\/programme as free text.'),
+  "graduationYear": zod.number().describe('Expected graduation year (validated server-side against a dynamic window).'),
+  "availableHoursPerWeek": zod.number().min(1).max(submitCareerAssessmentBodyAvailableHoursPerWeekMax).describe('Realistic weekly hours the student can dedicate to career preparation.'),
   "consent": zod.boolean()
 })
 
@@ -58,17 +109,351 @@ export const CreateCareerSubmissionBody = zod.object({
  * Returns only the current student's own submission and report.
  * @summary Get the signed-in student's current submission
  */
+export const getMyCareerSubmissionResponseReportOneProfileArchetypeMax = 80;
+
+export const getMyCareerSubmissionResponseReportOneProfileSummaryMax = 350;
+
+export const getMyCareerSubmissionResponseReportOneProfileStrengthsItemMax = 250;
+
+export const getMyCareerSubmissionResponseReportOneProfileStrengthsMin = 2;
+export const getMyCareerSubmissionResponseReportOneProfileStrengthsMax = 3;
+
+export const getMyCareerSubmissionResponseReportOneProfileRisksItemMax = 250;
+
+export const getMyCareerSubmissionResponseReportOneProfileRisksMin = 2;
+export const getMyCareerSubmissionResponseReportOneProfileRisksMax = 3;
+
+export const getMyCareerSubmissionResponseReportOneProfileSurvivalEnvironmentMax = 300;
+
 export const getMyCareerSubmissionResponseReportOneTraitsTechnicalScoreMax = 5;
+
+export const getMyCareerSubmissionResponseReportOneTraitsTechnicalReasonMax = 250;
 
 export const getMyCareerSubmissionResponseReportOneTraitsCreativeScoreMax = 5;
 
+export const getMyCareerSubmissionResponseReportOneTraitsCreativeReasonMax = 250;
+
 export const getMyCareerSubmissionResponseReportOneTraitsPeopleScoreMax = 5;
+
+export const getMyCareerSubmissionResponseReportOneTraitsPeopleReasonMax = 250;
 
 export const getMyCareerSubmissionResponseReportOneTraitsRiskScoreMax = 5;
 
+export const getMyCareerSubmissionResponseReportOneTraitsRiskReasonMax = 250;
+
 export const getMyCareerSubmissionResponseReportOneTraitsLearningScoreMax = 5;
 
-export const getMyCareerSubmissionResponseReportOneCareerFitsItemNaturalFitScoreMax = 10;
+export const getMyCareerSubmissionResponseReportOneTraitsLearningReasonMax = 250;
+
+export const getMyCareerSubmissionResponseReportOneAnswerPatternsClearItemMax = 250;
+
+export const getMyCareerSubmissionResponseReportOneAnswerPatternsClearMax = 5;
+
+export const getMyCareerSubmissionResponseReportOneAnswerPatternsConflictsItemTagMax = 60;
+
+export const getMyCareerSubmissionResponseReportOneAnswerPatternsConflictsItemTextMax = 300;
+
+export const getMyCareerSubmissionResponseReportOneAnswerPatternsConflictsMax = 5;
+
+export const getMyCareerSubmissionResponseReportOneAnswerPatternsWorthExploringItemMax = 250;
+
+export const getMyCareerSubmissionResponseReportOneAnswerPatternsWorthExploringMax = 5;
+
+export const getMyCareerSubmissionResponseReportOneCaliberVsEntryLongTermCaliberMax = 350;
+
+export const getMyCareerSubmissionResponseReportOneCaliberVsEntryMarketBarrierMax = 350;
+
+export const getMyCareerSubmissionResponseReportOneCaliberVsEntryFirstEntryRolesItemMax = 100;
+
+export const getMyCareerSubmissionResponseReportOneCaliberVsEntryFirstEntryRolesMax = 5;
+
+export const getMyCareerSubmissionResponseReportOneCaliberVsEntryBridgePathMax = 350;
+
+export const getMyCareerSubmissionResponseReportOneWorkArchetypeOneNameMax = 60;
+
+export const getMyCareerSubmissionResponseReportOneWorkArchetypeOneDefinitionMax = 300;
+
+export const getMyCareerSubmissionResponseReportOneWorkArchetypeOneEvidenceItemMax = 120;
+
+export const getMyCareerSubmissionResponseReportOneWorkArchetypeOneEvidenceMax = 3;
+
+export const getMyCareerSubmissionResponseReportOneCareerDirectionOneTargetTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportOneCareerDirectionOneTargetWhyMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneCareerDirectionOneEntryTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportOneCareerDirectionOneEntryWhyMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneCareerDirectionOneRouteWhyMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneCareerDirectionOneBarriersItemMax = 300;
+
+export const getMyCareerSubmissionResponseReportOneCareerDirectionOneAlternativesNoteOneMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneLongTermOptionsItemIdMax = 80;
+
+export const getMyCareerSubmissionResponseReportOneLongTermOptionsItemTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportOneLongTermOptionsItemCategoryMax = 100;
+
+export const getMyCareerSubmissionResponseReportOneLongTermOptionsItemRankMax = 5;
+
+export const getMyCareerSubmissionResponseReportOneLongTermOptionsItemRationaleMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneLongTermOptionsMin = 5;
+export const getMyCareerSubmissionResponseReportOneLongTermOptionsMax = 5;
+
+export const getMyCareerSubmissionResponseReportOneEntryOptionsItemIdMax = 80;
+
+export const getMyCareerSubmissionResponseReportOneEntryOptionsItemTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportOneEntryOptionsItemCategoryMax = 100;
+
+export const getMyCareerSubmissionResponseReportOneEntryOptionsItemRankMax = 5;
+
+export const getMyCareerSubmissionResponseReportOneEntryOptionsItemRationaleMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneEntryOptionsMin = 5;
+export const getMyCareerSubmissionResponseReportOneEntryOptionsMax = 5;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonLongTermItemIdMax = 80;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonLongTermItemTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonLongTermItemRoleInvolvesMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonLongTermItemWhyFitMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonLongTermItemTradeOffMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonLongTermItemDifferentiationMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonLongTermMin = 3;
+export const getMyCareerSubmissionResponseReportOneCareerComparisonLongTermMax = 3;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemIdMax = 80;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemRoleInvolvesMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemWhyFitMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemTradeOffMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemDifferentiationMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelMin = 3;
+export const getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelMax = 3;
+
+export const getMyCareerSubmissionResponseReportOneRecommendedWorkLaneWhyMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneRecommendedWorkLanePrimaryCareerIdMax = 80;
+
+export const getMyCareerSubmissionResponseReportOneRecommendedWorkLanePrimaryCareerTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportOneRecommendedWorkLaneSupportingCareersItemIdMax = 80;
+
+export const getMyCareerSubmissionResponseReportOneRecommendedWorkLaneSupportingCareersItemTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteEntryCareerIdMax = 80;
+
+export const getMyCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteEntryCareerTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteBridgeCareerOneIdMax = 80;
+
+export const getMyCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteBridgeCareerOneTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteRationaleMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneRecommendedWorkLaneExplanationMax = 600;
+
+export const getMyCareerSubmissionResponseReportOneRoadmapItemOrderMax = 5;
+
+export const getMyCareerSubmissionResponseReportOneRoadmapItemMonthRangeMax = 40;
+
+export const getMyCareerSubmissionResponseReportOneRoadmapItemFocusMax = 160;
+
+export const getMyCareerSubmissionResponseReportOneRoadmapItemActionsItemMax = 250;
+
+export const getMyCareerSubmissionResponseReportOneRoadmapItemActionsMax = 4;
+
+export const getMyCareerSubmissionResponseReportOneRoadmapItemMeasurableOutputsItemMax = 250;
+
+export const getMyCareerSubmissionResponseReportOneRoadmapItemMeasurableOutputsMax = 4;
+
+export const getMyCareerSubmissionResponseReportOneRoadmapMin = 5;
+export const getMyCareerSubmissionResponseReportOneRoadmapMax = 5;
+
+export const getMyCareerSubmissionResponseReportOneMentorNoteObservedPatternMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneMentorNoteRealisticRiskMax = 500;
+
+export const getMyCareerSubmissionResponseReportOneMentorNoteActionableExperimentMax = 500;
+
+export const getMyCareerSubmissionResponseReportTwoProfileArchetypeMax = 80;
+
+export const getMyCareerSubmissionResponseReportTwoProfileSummaryMax = 350;
+
+export const getMyCareerSubmissionResponseReportTwoProfileStrengthsItemMax = 250;
+
+export const getMyCareerSubmissionResponseReportTwoProfileStrengthsMin = 2;
+export const getMyCareerSubmissionResponseReportTwoProfileStrengthsMax = 3;
+
+export const getMyCareerSubmissionResponseReportTwoProfileRisksItemMax = 250;
+
+export const getMyCareerSubmissionResponseReportTwoProfileRisksMin = 2;
+export const getMyCareerSubmissionResponseReportTwoProfileRisksMax = 3;
+
+export const getMyCareerSubmissionResponseReportTwoProfileSurvivalEnvironmentMax = 300;
+
+export const getMyCareerSubmissionResponseReportTwoTraitsTechnicalScoreMax = 5;
+
+export const getMyCareerSubmissionResponseReportTwoTraitsTechnicalReasonMax = 250;
+
+export const getMyCareerSubmissionResponseReportTwoTraitsCreativeScoreMax = 5;
+
+export const getMyCareerSubmissionResponseReportTwoTraitsCreativeReasonMax = 250;
+
+export const getMyCareerSubmissionResponseReportTwoTraitsPeopleScoreMax = 5;
+
+export const getMyCareerSubmissionResponseReportTwoTraitsPeopleReasonMax = 250;
+
+export const getMyCareerSubmissionResponseReportTwoTraitsRiskScoreMax = 5;
+
+export const getMyCareerSubmissionResponseReportTwoTraitsRiskReasonMax = 250;
+
+export const getMyCareerSubmissionResponseReportTwoTraitsLearningScoreMax = 5;
+
+export const getMyCareerSubmissionResponseReportTwoTraitsLearningReasonMax = 250;
+
+export const getMyCareerSubmissionResponseReportTwoAnswerPatternsClearItemMax = 250;
+
+export const getMyCareerSubmissionResponseReportTwoAnswerPatternsClearMax = 5;
+
+export const getMyCareerSubmissionResponseReportTwoAnswerPatternsConflictsItemTagMax = 60;
+
+export const getMyCareerSubmissionResponseReportTwoAnswerPatternsConflictsItemTextMax = 300;
+
+export const getMyCareerSubmissionResponseReportTwoAnswerPatternsConflictsMax = 5;
+
+export const getMyCareerSubmissionResponseReportTwoAnswerPatternsWorthExploringItemMax = 250;
+
+export const getMyCareerSubmissionResponseReportTwoAnswerPatternsWorthExploringMax = 5;
+
+export const getMyCareerSubmissionResponseReportTwoCaliberVsEntryLongTermCaliberMax = 350;
+
+export const getMyCareerSubmissionResponseReportTwoCaliberVsEntryMarketBarrierMax = 350;
+
+export const getMyCareerSubmissionResponseReportTwoCaliberVsEntryFirstEntryRolesItemMax = 100;
+
+export const getMyCareerSubmissionResponseReportTwoCaliberVsEntryFirstEntryRolesMax = 5;
+
+export const getMyCareerSubmissionResponseReportTwoCaliberVsEntryBridgePathMax = 350;
+
+export const getMyCareerSubmissionResponseReportTwoCareerFitsItemTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMinMin = 0;
+export const getMyCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMinMax = 100;
+
+export const getMyCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMaxMin = 0;
+export const getMyCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMaxMax = 100;
+
+export const getMyCareerSubmissionResponseReportTwoCareerFitsItemNaturalFitScoreMax = 10;
+
+export const getMyCareerSubmissionResponseReportTwoCareerFitsItemDailyWorkMax = 300;
+
+export const getMyCareerSubmissionResponseReportTwoCareerFitsItemWhyFitsMax = 300;
+
+export const getMyCareerSubmissionResponseReportTwoCareerFitsItemFiveYearGrowthMax = 300;
+
+export const getMyCareerSubmissionResponseReportTwoCareerFitsMin = 4;
+export const getMyCareerSubmissionResponseReportTwoCareerFitsMax = 6;
+
+export const getMyCareerSubmissionResponseReportTwoCareersToAvoidItemTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportTwoCareersToAvoidItemWhyMax = 300;
+
+export const getMyCareerSubmissionResponseReportTwoTrackDetailWhyMax = 350;
+
+export const getMyCareerSubmissionResponseReportTwoTrackDetailFresherDemandMax = 150;
+
+export const getMyCareerSubmissionResponseReportTwoTrackDetailSkillsToLearnItemMax = 80;
+
+export const getMyCareerSubmissionResponseReportTwoTrackDetailSkillsToLearnMin = 4;
+export const getMyCareerSubmissionResponseReportTwoTrackDetailSkillsToLearnMax = 8;
+
+export const getMyCareerSubmissionResponseReportTwoRoadmapItemMonthsMax = 20;
+
+export const getMyCareerSubmissionResponseReportTwoRoadmapItemFocusMax = 120;
+
+export const getMyCareerSubmissionResponseReportTwoRoadmapItemActionsItemMax = 200;
+
+export const getMyCareerSubmissionResponseReportTwoRoadmapItemActionsMax = 3;
+
+export const getMyCareerSubmissionResponseReportTwoRoadmapMin = 5;
+export const getMyCareerSubmissionResponseReportTwoRoadmapMax = 5;
+
+export const getMyCareerSubmissionResponseReportTwoBrutalTruthMax = 500;
+
+export const getMyCareerSubmissionResponseReportTwoWorkArchetypeOneNameMax = 60;
+
+export const getMyCareerSubmissionResponseReportTwoWorkArchetypeOneDefinitionMax = 300;
+
+export const getMyCareerSubmissionResponseReportTwoWorkArchetypeOneEvidenceItemMax = 120;
+
+export const getMyCareerSubmissionResponseReportTwoWorkArchetypeOneEvidenceMax = 3;
+
+export const getMyCareerSubmissionResponseReportTwoCareerDirectionOneTargetTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportTwoCareerDirectionOneTargetWhyMax = 500;
+
+export const getMyCareerSubmissionResponseReportTwoCareerDirectionOneEntryTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportTwoCareerDirectionOneEntryWhyMax = 500;
+
+export const getMyCareerSubmissionResponseReportTwoCareerDirectionOneRouteWhyMax = 500;
+
+export const getMyCareerSubmissionResponseReportTwoCareerDirectionOneBarriersItemMax = 300;
+
+export const getMyCareerSubmissionResponseReportTwoCareerDirectionOneAlternativesNoteOneMax = 500;
+
+export const getMyCareerSubmissionResponseReportTwoCareerComparisonOneItemTitleMax = 120;
+
+export const getMyCareerSubmissionResponseReportTwoCareerComparisonOneItemRationaleMax = 500;
+
+export const getMyCareerSubmissionResponseReportTwoCareerComparisonOneItemSkillsToDevelopItemMax = 80;
+
+export const getMyCareerSubmissionResponseReportTwoCareerComparisonOneItemEntryDifficultyOneMax = 60;
+
+export const getMyCareerSubmissionResponseReportTwoCareerComparisonOneItemPrerequisitesOneMax = 300;
+
+export const getMyCareerSubmissionResponseReportTwoCareerComparisonOneMax = 8;
+
+export const getMyCareerSubmissionResponseReportTwoSkillsGapsOneItemSkillMax = 80;
+
+export const getMyCareerSubmissionResponseReportTwoSkillsGapsOneItemWhyItMattersMax = 300;
+
+export const getMyCareerSubmissionResponseReportTwoSkillsGapsOneItemActivityMax = 300;
+
+export const getMyCareerSubmissionResponseReportTwoSkillsGapsOneItemEvidenceOfProgressMax = 300;
+
+export const getMyCareerSubmissionResponseStrategyOneTargetCareerOneIdMax = 80;
+
+export const getMyCareerSubmissionResponseStrategyOneTargetCareerOneTitleMax = 120;
+
+export const getMyCareerSubmissionResponseStrategyOneBestEntryCareerOneIdMax = 80;
+
+export const getMyCareerSubmissionResponseStrategyOneBestEntryCareerOneTitleMax = 120;
+
+export const getMyCareerSubmissionResponseStrategyOneBridgeCareerOneIdMax = 80;
+
+export const getMyCareerSubmissionResponseStrategyOneBridgeCareerOneTitleMax = 120;
+
+export const getMyCareerSubmissionResponseStrategyOneAlternativeRouteOneIdMax = 80;
+
+export const getMyCareerSubmissionResponseStrategyOneAlternativeRouteOneTitleMax = 120;
 
 
 
@@ -78,88 +463,309 @@ export const GetMyCareerSubmissionResponse = zod.object({
   "submittedAt": zod.coerce.date(),
   "report": zod.union([zod.object({
   "profile": zod.object({
-  "archetype": zod.string(),
+  "archetype": zod.string().max(getMyCareerSubmissionResponseReportOneProfileArchetypeMax),
   "workerType": zod.enum(['Specialist', 'Operator', 'Builder', 'Analyst', 'Communicator', 'Entrepreneur', 'Manager']),
   "clarityLevel": zod.enum(['Clear', 'Mixed', 'Exploratory']),
-  "summary": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "survivalEnvironment": zod.string()
+  "summary": zod.string().max(getMyCareerSubmissionResponseReportOneProfileSummaryMax),
+  "strengths": zod.array(zod.string().max(getMyCareerSubmissionResponseReportOneProfileStrengthsItemMax)).min(getMyCareerSubmissionResponseReportOneProfileStrengthsMin).max(getMyCareerSubmissionResponseReportOneProfileStrengthsMax),
+  "risks": zod.array(zod.string().max(getMyCareerSubmissionResponseReportOneProfileRisksItemMax)).min(getMyCareerSubmissionResponseReportOneProfileRisksMin).max(getMyCareerSubmissionResponseReportOneProfileRisksMax),
+  "survivalEnvironment": zod.string().max(getMyCareerSubmissionResponseReportOneProfileSurvivalEnvironmentMax)
 }),
   "traits": zod.object({
   "technical": zod.object({
   "score": zod.number().min(1).max(getMyCareerSubmissionResponseReportOneTraitsTechnicalScoreMax),
-  "reason": zod.string(),
+  "reason": zod.string().max(getMyCareerSubmissionResponseReportOneTraitsTechnicalReasonMax),
   "label": zod.enum(['Low', 'Medium', 'High'])
 }),
   "creative": zod.object({
   "score": zod.number().min(1).max(getMyCareerSubmissionResponseReportOneTraitsCreativeScoreMax),
-  "reason": zod.string(),
+  "reason": zod.string().max(getMyCareerSubmissionResponseReportOneTraitsCreativeReasonMax),
   "label": zod.enum(['Low', 'Medium', 'High'])
 }),
   "people": zod.object({
   "score": zod.number().min(1).max(getMyCareerSubmissionResponseReportOneTraitsPeopleScoreMax),
-  "reason": zod.string(),
+  "reason": zod.string().max(getMyCareerSubmissionResponseReportOneTraitsPeopleReasonMax),
   "label": zod.enum(['Low', 'Medium', 'High'])
 }),
   "risk": zod.object({
   "score": zod.number().min(1).max(getMyCareerSubmissionResponseReportOneTraitsRiskScoreMax),
-  "reason": zod.string(),
+  "reason": zod.string().max(getMyCareerSubmissionResponseReportOneTraitsRiskReasonMax),
   "label": zod.enum(['Low', 'Medium', 'High'])
 }),
   "learning": zod.object({
   "score": zod.number().min(1).max(getMyCareerSubmissionResponseReportOneTraitsLearningScoreMax),
-  "reason": zod.string(),
+  "reason": zod.string().max(getMyCareerSubmissionResponseReportOneTraitsLearningReasonMax),
   "label": zod.enum(['Low', 'Medium', 'High'])
 })
 }),
   "answerPatterns": zod.object({
-  "clear": zod.array(zod.string()),
+  "clear": zod.array(zod.string().max(getMyCareerSubmissionResponseReportOneAnswerPatternsClearItemMax)).max(getMyCareerSubmissionResponseReportOneAnswerPatternsClearMax),
   "conflicts": zod.array(zod.object({
-  "tag": zod.string(),
-  "text": zod.string()
-})),
-  "worthExploring": zod.array(zod.string())
+  "tag": zod.string().max(getMyCareerSubmissionResponseReportOneAnswerPatternsConflictsItemTagMax),
+  "text": zod.string().max(getMyCareerSubmissionResponseReportOneAnswerPatternsConflictsItemTextMax)
+})).max(getMyCareerSubmissionResponseReportOneAnswerPatternsConflictsMax),
+  "worthExploring": zod.array(zod.string().max(getMyCareerSubmissionResponseReportOneAnswerPatternsWorthExploringItemMax)).max(getMyCareerSubmissionResponseReportOneAnswerPatternsWorthExploringMax)
 }),
   "caliberVsEntry": zod.object({
-  "longTermCaliber": zod.string(),
-  "marketBarrier": zod.string(),
+  "longTermCaliber": zod.string().max(getMyCareerSubmissionResponseReportOneCaliberVsEntryLongTermCaliberMax),
+  "marketBarrier": zod.string().max(getMyCareerSubmissionResponseReportOneCaliberVsEntryMarketBarrierMax),
   "marketBarrierLevel": zod.enum(['Low', 'Moderate', 'High']),
-  "firstEntryRoles": zod.array(zod.string()),
-  "bridgePath": zod.string()
+  "firstEntryRoles": zod.array(zod.string().max(getMyCareerSubmissionResponseReportOneCaliberVsEntryFirstEntryRolesItemMax)).min(1).max(getMyCareerSubmissionResponseReportOneCaliberVsEntryFirstEntryRolesMax),
+  "bridgePath": zod.string().max(getMyCareerSubmissionResponseReportOneCaliberVsEntryBridgePathMax)
 }),
-  "careerFits": zod.array(zod.object({
-  "title": zod.string(),
-  "roleType": zod.enum(['Stepping-stone', 'Long-term fit']),
-  "salaryInrLpa": zod.object({
-  "min": zod.number(),
-  "max": zod.number()
+  "workArchetype": zod.union([zod.object({
+  "name": zod.string().max(getMyCareerSubmissionResponseReportOneWorkArchetypeOneNameMax),
+  "definition": zod.string().max(getMyCareerSubmissionResponseReportOneWorkArchetypeOneDefinitionMax),
+  "strength": zod.enum(['Strong', 'Moderate', 'Emerging']),
+  "evidence": zod.array(zod.string().max(getMyCareerSubmissionResponseReportOneWorkArchetypeOneEvidenceItemMax)).max(getMyCareerSubmissionResponseReportOneWorkArchetypeOneEvidenceMax)
+}),zod.null()]).describe('Deterministic work archetype set by the server for new reports; absent in legacy reports.'),
+  "careerDirection": zod.union([zod.object({
+  "target": zod.object({
+  "title": zod.string().max(getMyCareerSubmissionResponseReportOneCareerDirectionOneTargetTitleMax),
+  "why": zod.string().max(getMyCareerSubmissionResponseReportOneCareerDirectionOneTargetWhyMax)
 }),
-  "entryDifficulty": zod.enum(['Easy to enter', 'Moderately difficult', 'Highly competitive']),
-  "careerHealth": zod.enum(['Growing', 'Stable', 'Declining']),
-  "aiThreat": zod.enum(['Low', 'Medium', 'High']),
-  "naturalFitScore": zod.number().min(1).max(getMyCareerSubmissionResponseReportOneCareerFitsItemNaturalFitScoreMax),
-  "dailyWork": zod.string(),
-  "whyFits": zod.string(),
-  "fiveYearGrowth": zod.string()
+  "entry": zod.object({
+  "title": zod.string().max(getMyCareerSubmissionResponseReportOneCareerDirectionOneEntryTitleMax),
+  "why": zod.string().max(getMyCareerSubmissionResponseReportOneCareerDirectionOneEntryWhyMax)
+}),
+  "route": zod.enum(['DIRECT', 'ADJACENT', 'BRIDGE']),
+  "routeWhy": zod.string().max(getMyCareerSubmissionResponseReportOneCareerDirectionOneRouteWhyMax),
+  "barriers": zod.array(zod.string().max(getMyCareerSubmissionResponseReportOneCareerDirectionOneBarriersItemMax)),
+  "alternativesNote": zod.union([zod.string().max(getMyCareerSubmissionResponseReportOneCareerDirectionOneAlternativesNoteOneMax),zod.null()])
+}),zod.null()]).describe('Deterministic career direction composed by the server for new reports; absent in legacy reports.'),
+  "longTermOptions": zod.array(zod.object({
+  "id": zod.string().max(getMyCareerSubmissionResponseReportOneLongTermOptionsItemIdMax),
+  "title": zod.string().max(getMyCareerSubmissionResponseReportOneLongTermOptionsItemTitleMax),
+  "category": zod.string().max(getMyCareerSubmissionResponseReportOneLongTermOptionsItemCategoryMax),
+  "rank": zod.number().min(1).max(getMyCareerSubmissionResponseReportOneLongTermOptionsItemRankMax),
+  "score": zod.number(),
+  "fitScore": zod.number(),
+  "rationale": zod.string().max(getMyCareerSubmissionResponseReportOneLongTermOptionsItemRationaleMax)
+})).min(getMyCareerSubmissionResponseReportOneLongTermOptionsMin).max(getMyCareerSubmissionResponseReportOneLongTermOptionsMax),
+  "entryOptions": zod.array(zod.object({
+  "id": zod.string().max(getMyCareerSubmissionResponseReportOneEntryOptionsItemIdMax),
+  "title": zod.string().max(getMyCareerSubmissionResponseReportOneEntryOptionsItemTitleMax),
+  "category": zod.string().max(getMyCareerSubmissionResponseReportOneEntryOptionsItemCategoryMax),
+  "rank": zod.number().min(1).max(getMyCareerSubmissionResponseReportOneEntryOptionsItemRankMax),
+  "score": zod.number(),
+  "fitScore": zod.number(),
+  "rationale": zod.string().max(getMyCareerSubmissionResponseReportOneEntryOptionsItemRationaleMax),
+  "accessibility": zod.enum(['VERY_HIGH', 'HIGH', 'MEDIUM', 'MODERATE', 'LOW', 'VERY_LOW']),
+  "alignment": zod.enum(['STRONG', 'MODERATE', 'NEUTRAL', 'WEAK']),
+  "runwayWeeks": zod.number()
+})).min(getMyCareerSubmissionResponseReportOneEntryOptionsMin).max(getMyCareerSubmissionResponseReportOneEntryOptionsMax),
+  "careerComparison": zod.object({
+  "longTerm": zod.array(zod.object({
+  "id": zod.string().max(getMyCareerSubmissionResponseReportOneCareerComparisonLongTermItemIdMax),
+  "title": zod.string().max(getMyCareerSubmissionResponseReportOneCareerComparisonLongTermItemTitleMax),
+  "roleInvolves": zod.string().max(getMyCareerSubmissionResponseReportOneCareerComparisonLongTermItemRoleInvolvesMax),
+  "whyFit": zod.string().max(getMyCareerSubmissionResponseReportOneCareerComparisonLongTermItemWhyFitMax),
+  "tradeOff": zod.string().max(getMyCareerSubmissionResponseReportOneCareerComparisonLongTermItemTradeOffMax),
+  "differentiation": zod.string().max(getMyCareerSubmissionResponseReportOneCareerComparisonLongTermItemDifferentiationMax)
+})).min(getMyCareerSubmissionResponseReportOneCareerComparisonLongTermMin).max(getMyCareerSubmissionResponseReportOneCareerComparisonLongTermMax),
+  "entryLevel": zod.array(zod.object({
+  "id": zod.string().max(getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemIdMax),
+  "title": zod.string().max(getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemTitleMax),
+  "roleInvolves": zod.string().max(getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemRoleInvolvesMax),
+  "whyFit": zod.string().max(getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemWhyFitMax),
+  "tradeOff": zod.string().max(getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemTradeOffMax),
+  "differentiation": zod.string().max(getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemDifferentiationMax)
+})).min(getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelMin).max(getMyCareerSubmissionResponseReportOneCareerComparisonEntryLevelMax)
+}),
+  "recommendedWorkLane": zod.object({
+  "lane": zod.enum(['Engineering', 'Product', 'Automation', 'Startup Ops', 'Technical Business', 'Design / UI-UX', 'Hybrid Tech-Generalist']),
+  "why": zod.string().max(getMyCareerSubmissionResponseReportOneRecommendedWorkLaneWhyMax),
+  "primaryCareer": zod.object({
+  "id": zod.string().max(getMyCareerSubmissionResponseReportOneRecommendedWorkLanePrimaryCareerIdMax),
+  "title": zod.string().max(getMyCareerSubmissionResponseReportOneRecommendedWorkLanePrimaryCareerTitleMax)
+}),
+  "supportingCareers": zod.array(zod.object({
+  "id": zod.string().max(getMyCareerSubmissionResponseReportOneRecommendedWorkLaneSupportingCareersItemIdMax),
+  "title": zod.string().max(getMyCareerSubmissionResponseReportOneRecommendedWorkLaneSupportingCareersItemTitleMax)
 })),
-  "careersToAvoid": zod.array(zod.object({
-  "title": zod.string(),
-  "why": zod.string()
-})),
-  "recommendedTrack": zod.enum(['Engineering', 'Product', 'Automation', 'Startup Ops', 'Technical Business', 'Hybrid Tech-Generalist', 'Business Analyst']),
-  "trackDetail": zod.object({
-  "why": zod.string(),
-  "fresherDemand": zod.string(),
-  "skillsToLearn": zod.array(zod.string())
+  "entryRoute": zod.object({
+  "routeType": zod.enum(['DIRECT', 'ADJACENT', 'BRIDGE']),
+  "entryCareer": zod.object({
+  "id": zod.string().max(getMyCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteEntryCareerIdMax),
+  "title": zod.string().max(getMyCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteEntryCareerTitleMax)
+}),
+  "bridgeCareer": zod.union([zod.object({
+  "id": zod.string().max(getMyCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteBridgeCareerOneIdMax),
+  "title": zod.string().max(getMyCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteBridgeCareerOneTitleMax)
+}),zod.null()]),
+  "rationale": zod.string().max(getMyCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteRationaleMax)
+}),
+  "explanation": zod.string().max(getMyCareerSubmissionResponseReportOneRecommendedWorkLaneExplanationMax)
 }),
   "roadmap": zod.array(zod.object({
-  "months": zod.string(),
-  "focus": zod.string(),
-  "actions": zod.array(zod.string())
-})),
-  "brutalTruth": zod.string()
+  "order": zod.number().min(1).max(getMyCareerSubmissionResponseReportOneRoadmapItemOrderMax),
+  "monthRange": zod.string().max(getMyCareerSubmissionResponseReportOneRoadmapItemMonthRangeMax),
+  "focus": zod.string().max(getMyCareerSubmissionResponseReportOneRoadmapItemFocusMax),
+  "actions": zod.array(zod.string().max(getMyCareerSubmissionResponseReportOneRoadmapItemActionsItemMax)).min(1).max(getMyCareerSubmissionResponseReportOneRoadmapItemActionsMax),
+  "measurableOutputs": zod.array(zod.string().max(getMyCareerSubmissionResponseReportOneRoadmapItemMeasurableOutputsItemMax)).min(1).max(getMyCareerSubmissionResponseReportOneRoadmapItemMeasurableOutputsMax)
+})).min(getMyCareerSubmissionResponseReportOneRoadmapMin).max(getMyCareerSubmissionResponseReportOneRoadmapMax),
+  "mentorNote": zod.object({
+  "observedPattern": zod.string().max(getMyCareerSubmissionResponseReportOneMentorNoteObservedPatternMax),
+  "realisticRisk": zod.string().max(getMyCareerSubmissionResponseReportOneMentorNoteRealisticRiskMax),
+  "actionableExperiment": zod.string().max(getMyCareerSubmissionResponseReportOneMentorNoteActionableExperimentMax)
+}),
+  "recommendedTrack": zod.enum(['Engineering', 'Product', 'Automation', 'Startup Ops', 'Technical Business', 'Design / UI-UX', 'Hybrid Tech-Generalist'])
+}),zod.object({
+  "profile": zod.object({
+  "archetype": zod.string().max(getMyCareerSubmissionResponseReportTwoProfileArchetypeMax),
+  "workerType": zod.enum(['Specialist', 'Operator', 'Builder', 'Analyst', 'Communicator', 'Entrepreneur', 'Manager']),
+  "clarityLevel": zod.enum(['Clear', 'Mixed', 'Exploratory']),
+  "summary": zod.string().max(getMyCareerSubmissionResponseReportTwoProfileSummaryMax),
+  "strengths": zod.array(zod.string().max(getMyCareerSubmissionResponseReportTwoProfileStrengthsItemMax)).min(getMyCareerSubmissionResponseReportTwoProfileStrengthsMin).max(getMyCareerSubmissionResponseReportTwoProfileStrengthsMax),
+  "risks": zod.array(zod.string().max(getMyCareerSubmissionResponseReportTwoProfileRisksItemMax)).min(getMyCareerSubmissionResponseReportTwoProfileRisksMin).max(getMyCareerSubmissionResponseReportTwoProfileRisksMax),
+  "survivalEnvironment": zod.string().max(getMyCareerSubmissionResponseReportTwoProfileSurvivalEnvironmentMax)
+}),
+  "traits": zod.object({
+  "technical": zod.object({
+  "score": zod.number().min(1).max(getMyCareerSubmissionResponseReportTwoTraitsTechnicalScoreMax),
+  "reason": zod.string().max(getMyCareerSubmissionResponseReportTwoTraitsTechnicalReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "creative": zod.object({
+  "score": zod.number().min(1).max(getMyCareerSubmissionResponseReportTwoTraitsCreativeScoreMax),
+  "reason": zod.string().max(getMyCareerSubmissionResponseReportTwoTraitsCreativeReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "people": zod.object({
+  "score": zod.number().min(1).max(getMyCareerSubmissionResponseReportTwoTraitsPeopleScoreMax),
+  "reason": zod.string().max(getMyCareerSubmissionResponseReportTwoTraitsPeopleReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "risk": zod.object({
+  "score": zod.number().min(1).max(getMyCareerSubmissionResponseReportTwoTraitsRiskScoreMax),
+  "reason": zod.string().max(getMyCareerSubmissionResponseReportTwoTraitsRiskReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "learning": zod.object({
+  "score": zod.number().min(1).max(getMyCareerSubmissionResponseReportTwoTraitsLearningScoreMax),
+  "reason": zod.string().max(getMyCareerSubmissionResponseReportTwoTraitsLearningReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+})
+}),
+  "answerPatterns": zod.object({
+  "clear": zod.array(zod.string().max(getMyCareerSubmissionResponseReportTwoAnswerPatternsClearItemMax)).max(getMyCareerSubmissionResponseReportTwoAnswerPatternsClearMax),
+  "conflicts": zod.array(zod.object({
+  "tag": zod.string().max(getMyCareerSubmissionResponseReportTwoAnswerPatternsConflictsItemTagMax),
+  "text": zod.string().max(getMyCareerSubmissionResponseReportTwoAnswerPatternsConflictsItemTextMax)
+})).max(getMyCareerSubmissionResponseReportTwoAnswerPatternsConflictsMax),
+  "worthExploring": zod.array(zod.string().max(getMyCareerSubmissionResponseReportTwoAnswerPatternsWorthExploringItemMax)).max(getMyCareerSubmissionResponseReportTwoAnswerPatternsWorthExploringMax)
+}),
+  "caliberVsEntry": zod.object({
+  "longTermCaliber": zod.string().max(getMyCareerSubmissionResponseReportTwoCaliberVsEntryLongTermCaliberMax),
+  "marketBarrier": zod.string().max(getMyCareerSubmissionResponseReportTwoCaliberVsEntryMarketBarrierMax),
+  "marketBarrierLevel": zod.enum(['Low', 'Moderate', 'High']),
+  "firstEntryRoles": zod.array(zod.string().max(getMyCareerSubmissionResponseReportTwoCaliberVsEntryFirstEntryRolesItemMax)).min(1).max(getMyCareerSubmissionResponseReportTwoCaliberVsEntryFirstEntryRolesMax),
+  "bridgePath": zod.string().max(getMyCareerSubmissionResponseReportTwoCaliberVsEntryBridgePathMax)
+}),
+  "careerFits": zod.array(zod.object({
+  "title": zod.string().max(getMyCareerSubmissionResponseReportTwoCareerFitsItemTitleMax),
+  "roleType": zod.enum(['Stepping-stone', 'Long-term fit']),
+  "salaryInrLpa": zod.union([zod.object({
+  "min": zod.number().min(getMyCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMinMin).max(getMyCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMinMax),
+  "max": zod.number().min(getMyCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMaxMin).max(getMyCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMaxMax)
 }),zod.null()]),
+  "entryDifficulty": zod.enum(['Easy to enter', 'Moderately difficult', 'Highly competitive']),
+  "careerHealth": zod.enum(['Stable', 'Fast-growth', 'High burnout', 'Oversaturated', 'High leverage']),
+  "aiThreat": zod.enum(['Low', 'Medium', 'High']),
+  "naturalFitScore": zod.number().min(1).max(getMyCareerSubmissionResponseReportTwoCareerFitsItemNaturalFitScoreMax),
+  "dailyWork": zod.string().max(getMyCareerSubmissionResponseReportTwoCareerFitsItemDailyWorkMax),
+  "whyFits": zod.string().max(getMyCareerSubmissionResponseReportTwoCareerFitsItemWhyFitsMax),
+  "fiveYearGrowth": zod.string().max(getMyCareerSubmissionResponseReportTwoCareerFitsItemFiveYearGrowthMax)
+})).min(getMyCareerSubmissionResponseReportTwoCareerFitsMin).max(getMyCareerSubmissionResponseReportTwoCareerFitsMax),
+  "careersToAvoid": zod.array(zod.object({
+  "title": zod.string().max(getMyCareerSubmissionResponseReportTwoCareersToAvoidItemTitleMax),
+  "why": zod.string().max(getMyCareerSubmissionResponseReportTwoCareersToAvoidItemWhyMax)
+})),
+  "recommendedTrack": zod.enum(['Engineering', 'Product', 'Automation', 'Startup Ops', 'Technical Business', 'Design / UI-UX', 'Hybrid Tech-Generalist']),
+  "trackDetail": zod.object({
+  "why": zod.string().max(getMyCareerSubmissionResponseReportTwoTrackDetailWhyMax),
+  "fresherDemand": zod.string().max(getMyCareerSubmissionResponseReportTwoTrackDetailFresherDemandMax),
+  "skillsToLearn": zod.array(zod.string().max(getMyCareerSubmissionResponseReportTwoTrackDetailSkillsToLearnItemMax)).min(getMyCareerSubmissionResponseReportTwoTrackDetailSkillsToLearnMin).max(getMyCareerSubmissionResponseReportTwoTrackDetailSkillsToLearnMax)
+}),
+  "roadmap": zod.array(zod.object({
+  "months": zod.string().max(getMyCareerSubmissionResponseReportTwoRoadmapItemMonthsMax),
+  "focus": zod.string().max(getMyCareerSubmissionResponseReportTwoRoadmapItemFocusMax),
+  "actions": zod.array(zod.string().max(getMyCareerSubmissionResponseReportTwoRoadmapItemActionsItemMax)).min(1).max(getMyCareerSubmissionResponseReportTwoRoadmapItemActionsMax)
+})).min(getMyCareerSubmissionResponseReportTwoRoadmapMin).max(getMyCareerSubmissionResponseReportTwoRoadmapMax),
+  "brutalTruth": zod.string().max(getMyCareerSubmissionResponseReportTwoBrutalTruthMax),
+  "workArchetype": zod.union([zod.object({
+  "name": zod.string().max(getMyCareerSubmissionResponseReportTwoWorkArchetypeOneNameMax),
+  "definition": zod.string().max(getMyCareerSubmissionResponseReportTwoWorkArchetypeOneDefinitionMax),
+  "strength": zod.enum(['Strong', 'Moderate', 'Emerging']),
+  "evidence": zod.array(zod.string().max(getMyCareerSubmissionResponseReportTwoWorkArchetypeOneEvidenceItemMax)).max(getMyCareerSubmissionResponseReportTwoWorkArchetypeOneEvidenceMax)
+}),zod.null()]).optional(),
+  "careerDirection": zod.union([zod.object({
+  "target": zod.object({
+  "title": zod.string().max(getMyCareerSubmissionResponseReportTwoCareerDirectionOneTargetTitleMax),
+  "why": zod.string().max(getMyCareerSubmissionResponseReportTwoCareerDirectionOneTargetWhyMax)
+}),
+  "entry": zod.object({
+  "title": zod.string().max(getMyCareerSubmissionResponseReportTwoCareerDirectionOneEntryTitleMax),
+  "why": zod.string().max(getMyCareerSubmissionResponseReportTwoCareerDirectionOneEntryWhyMax)
+}),
+  "route": zod.enum(['DIRECT', 'ADJACENT', 'BRIDGE']),
+  "routeWhy": zod.string().max(getMyCareerSubmissionResponseReportTwoCareerDirectionOneRouteWhyMax),
+  "barriers": zod.array(zod.string().max(getMyCareerSubmissionResponseReportTwoCareerDirectionOneBarriersItemMax)),
+  "alternativesNote": zod.union([zod.string().max(getMyCareerSubmissionResponseReportTwoCareerDirectionOneAlternativesNoteOneMax),zod.null()])
+}),zod.null()]).optional(),
+  "careerComparison": zod.union([zod.array(zod.object({
+  "title": zod.string().max(getMyCareerSubmissionResponseReportTwoCareerComparisonOneItemTitleMax),
+  "role": zod.enum(['target', 'entry', 'alternative', 'exploratory', 'cautious']),
+  "rationale": zod.string().max(getMyCareerSubmissionResponseReportTwoCareerComparisonOneItemRationaleMax),
+  "skillsToDevelop": zod.array(zod.string().max(getMyCareerSubmissionResponseReportTwoCareerComparisonOneItemSkillsToDevelopItemMax)),
+  "entryDifficulty": zod.union([zod.string().max(getMyCareerSubmissionResponseReportTwoCareerComparisonOneItemEntryDifficultyOneMax),zod.null()]),
+  "prerequisites": zod.union([zod.string().max(getMyCareerSubmissionResponseReportTwoCareerComparisonOneItemPrerequisitesOneMax),zod.null()])
+})).min(1).max(getMyCareerSubmissionResponseReportTwoCareerComparisonOneMax),zod.null()]).optional(),
+  "skillsGaps": zod.union([zod.array(zod.object({
+  "skill": zod.string().max(getMyCareerSubmissionResponseReportTwoSkillsGapsOneItemSkillMax),
+  "whyItMatters": zod.string().max(getMyCareerSubmissionResponseReportTwoSkillsGapsOneItemWhyItMattersMax),
+  "activity": zod.string().max(getMyCareerSubmissionResponseReportTwoSkillsGapsOneItemActivityMax),
+  "evidenceOfProgress": zod.string().max(getMyCareerSubmissionResponseReportTwoSkillsGapsOneItemEvidenceOfProgressMax)
+})),zod.null()]).optional()
+}),zod.null()]),
+  "strategy": zod.union([zod.object({
+  "strategyVersion": zod.string(),
+  "explanationVersion": zod.string(),
+  "targetCareer": zod.union([zod.object({
+  "id": zod.string().max(getMyCareerSubmissionResponseStrategyOneTargetCareerOneIdMax),
+  "title": zod.string().max(getMyCareerSubmissionResponseStrategyOneTargetCareerOneTitleMax)
+}),zod.null()]),
+  "bestEntryCareer": zod.union([zod.object({
+  "id": zod.string().max(getMyCareerSubmissionResponseStrategyOneBestEntryCareerOneIdMax),
+  "title": zod.string().max(getMyCareerSubmissionResponseStrategyOneBestEntryCareerOneTitleMax)
+}),zod.null()]),
+  "bridgeCareer": zod.union([zod.object({
+  "id": zod.string().max(getMyCareerSubmissionResponseStrategyOneBridgeCareerOneIdMax),
+  "title": zod.string().max(getMyCareerSubmissionResponseStrategyOneBridgeCareerOneTitleMax)
+}),zod.null()]),
+  "alternativeRoute": zod.union([zod.object({
+  "id": zod.string().max(getMyCareerSubmissionResponseStrategyOneAlternativeRouteOneIdMax),
+  "title": zod.string().max(getMyCareerSubmissionResponseStrategyOneAlternativeRouteOneTitleMax)
+}),zod.null()]),
+  "routeType": zod.union([zod.enum(['DIRECT', 'ADJACENT', 'BRIDGE']),zod.null()]),
+  "rationale": zod.object({
+  "target": zod.string(),
+  "entry": zod.string(),
+  "bridge": zod.union([zod.string(),zod.null()]),
+  "academic": zod.string(),
+  "time": zod.string()
+}),
+  "explanation": zod.object({
+  "target": zod.string(),
+  "entry": zod.string(),
+  "route": zod.string(),
+  "academic": zod.string(),
+  "time": zod.string(),
+  "bridge": zod.union([zod.string(),zod.null()]),
+  "alternative": zod.union([zod.string(),zod.null()])
+}),
+  "insufficientContext": zod.boolean()
+}),zod.null()]).describe('Deterministic entry strategy persisted with the report; null until generated (e.g. legacy reports).'),
   "error": zod.union([zod.string(),zod.null()])
 })
 
@@ -172,17 +778,351 @@ export const GetCareerSubmissionParams = zod.object({
   "id": zod.coerce.string().uuid()
 })
 
+export const getCareerSubmissionResponseReportOneProfileArchetypeMax = 80;
+
+export const getCareerSubmissionResponseReportOneProfileSummaryMax = 350;
+
+export const getCareerSubmissionResponseReportOneProfileStrengthsItemMax = 250;
+
+export const getCareerSubmissionResponseReportOneProfileStrengthsMin = 2;
+export const getCareerSubmissionResponseReportOneProfileStrengthsMax = 3;
+
+export const getCareerSubmissionResponseReportOneProfileRisksItemMax = 250;
+
+export const getCareerSubmissionResponseReportOneProfileRisksMin = 2;
+export const getCareerSubmissionResponseReportOneProfileRisksMax = 3;
+
+export const getCareerSubmissionResponseReportOneProfileSurvivalEnvironmentMax = 300;
+
 export const getCareerSubmissionResponseReportOneTraitsTechnicalScoreMax = 5;
+
+export const getCareerSubmissionResponseReportOneTraitsTechnicalReasonMax = 250;
 
 export const getCareerSubmissionResponseReportOneTraitsCreativeScoreMax = 5;
 
+export const getCareerSubmissionResponseReportOneTraitsCreativeReasonMax = 250;
+
 export const getCareerSubmissionResponseReportOneTraitsPeopleScoreMax = 5;
+
+export const getCareerSubmissionResponseReportOneTraitsPeopleReasonMax = 250;
 
 export const getCareerSubmissionResponseReportOneTraitsRiskScoreMax = 5;
 
+export const getCareerSubmissionResponseReportOneTraitsRiskReasonMax = 250;
+
 export const getCareerSubmissionResponseReportOneTraitsLearningScoreMax = 5;
 
-export const getCareerSubmissionResponseReportOneCareerFitsItemNaturalFitScoreMax = 10;
+export const getCareerSubmissionResponseReportOneTraitsLearningReasonMax = 250;
+
+export const getCareerSubmissionResponseReportOneAnswerPatternsClearItemMax = 250;
+
+export const getCareerSubmissionResponseReportOneAnswerPatternsClearMax = 5;
+
+export const getCareerSubmissionResponseReportOneAnswerPatternsConflictsItemTagMax = 60;
+
+export const getCareerSubmissionResponseReportOneAnswerPatternsConflictsItemTextMax = 300;
+
+export const getCareerSubmissionResponseReportOneAnswerPatternsConflictsMax = 5;
+
+export const getCareerSubmissionResponseReportOneAnswerPatternsWorthExploringItemMax = 250;
+
+export const getCareerSubmissionResponseReportOneAnswerPatternsWorthExploringMax = 5;
+
+export const getCareerSubmissionResponseReportOneCaliberVsEntryLongTermCaliberMax = 350;
+
+export const getCareerSubmissionResponseReportOneCaliberVsEntryMarketBarrierMax = 350;
+
+export const getCareerSubmissionResponseReportOneCaliberVsEntryFirstEntryRolesItemMax = 100;
+
+export const getCareerSubmissionResponseReportOneCaliberVsEntryFirstEntryRolesMax = 5;
+
+export const getCareerSubmissionResponseReportOneCaliberVsEntryBridgePathMax = 350;
+
+export const getCareerSubmissionResponseReportOneWorkArchetypeOneNameMax = 60;
+
+export const getCareerSubmissionResponseReportOneWorkArchetypeOneDefinitionMax = 300;
+
+export const getCareerSubmissionResponseReportOneWorkArchetypeOneEvidenceItemMax = 120;
+
+export const getCareerSubmissionResponseReportOneWorkArchetypeOneEvidenceMax = 3;
+
+export const getCareerSubmissionResponseReportOneCareerDirectionOneTargetTitleMax = 120;
+
+export const getCareerSubmissionResponseReportOneCareerDirectionOneTargetWhyMax = 500;
+
+export const getCareerSubmissionResponseReportOneCareerDirectionOneEntryTitleMax = 120;
+
+export const getCareerSubmissionResponseReportOneCareerDirectionOneEntryWhyMax = 500;
+
+export const getCareerSubmissionResponseReportOneCareerDirectionOneRouteWhyMax = 500;
+
+export const getCareerSubmissionResponseReportOneCareerDirectionOneBarriersItemMax = 300;
+
+export const getCareerSubmissionResponseReportOneCareerDirectionOneAlternativesNoteOneMax = 500;
+
+export const getCareerSubmissionResponseReportOneLongTermOptionsItemIdMax = 80;
+
+export const getCareerSubmissionResponseReportOneLongTermOptionsItemTitleMax = 120;
+
+export const getCareerSubmissionResponseReportOneLongTermOptionsItemCategoryMax = 100;
+
+export const getCareerSubmissionResponseReportOneLongTermOptionsItemRankMax = 5;
+
+export const getCareerSubmissionResponseReportOneLongTermOptionsItemRationaleMax = 500;
+
+export const getCareerSubmissionResponseReportOneLongTermOptionsMin = 5;
+export const getCareerSubmissionResponseReportOneLongTermOptionsMax = 5;
+
+export const getCareerSubmissionResponseReportOneEntryOptionsItemIdMax = 80;
+
+export const getCareerSubmissionResponseReportOneEntryOptionsItemTitleMax = 120;
+
+export const getCareerSubmissionResponseReportOneEntryOptionsItemCategoryMax = 100;
+
+export const getCareerSubmissionResponseReportOneEntryOptionsItemRankMax = 5;
+
+export const getCareerSubmissionResponseReportOneEntryOptionsItemRationaleMax = 500;
+
+export const getCareerSubmissionResponseReportOneEntryOptionsMin = 5;
+export const getCareerSubmissionResponseReportOneEntryOptionsMax = 5;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonLongTermItemIdMax = 80;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonLongTermItemTitleMax = 120;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonLongTermItemRoleInvolvesMax = 500;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonLongTermItemWhyFitMax = 500;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonLongTermItemTradeOffMax = 500;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonLongTermItemDifferentiationMax = 500;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonLongTermMin = 3;
+export const getCareerSubmissionResponseReportOneCareerComparisonLongTermMax = 3;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemIdMax = 80;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemTitleMax = 120;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemRoleInvolvesMax = 500;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemWhyFitMax = 500;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemTradeOffMax = 500;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemDifferentiationMax = 500;
+
+export const getCareerSubmissionResponseReportOneCareerComparisonEntryLevelMin = 3;
+export const getCareerSubmissionResponseReportOneCareerComparisonEntryLevelMax = 3;
+
+export const getCareerSubmissionResponseReportOneRecommendedWorkLaneWhyMax = 500;
+
+export const getCareerSubmissionResponseReportOneRecommendedWorkLanePrimaryCareerIdMax = 80;
+
+export const getCareerSubmissionResponseReportOneRecommendedWorkLanePrimaryCareerTitleMax = 120;
+
+export const getCareerSubmissionResponseReportOneRecommendedWorkLaneSupportingCareersItemIdMax = 80;
+
+export const getCareerSubmissionResponseReportOneRecommendedWorkLaneSupportingCareersItemTitleMax = 120;
+
+export const getCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteEntryCareerIdMax = 80;
+
+export const getCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteEntryCareerTitleMax = 120;
+
+export const getCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteBridgeCareerOneIdMax = 80;
+
+export const getCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteBridgeCareerOneTitleMax = 120;
+
+export const getCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteRationaleMax = 500;
+
+export const getCareerSubmissionResponseReportOneRecommendedWorkLaneExplanationMax = 600;
+
+export const getCareerSubmissionResponseReportOneRoadmapItemOrderMax = 5;
+
+export const getCareerSubmissionResponseReportOneRoadmapItemMonthRangeMax = 40;
+
+export const getCareerSubmissionResponseReportOneRoadmapItemFocusMax = 160;
+
+export const getCareerSubmissionResponseReportOneRoadmapItemActionsItemMax = 250;
+
+export const getCareerSubmissionResponseReportOneRoadmapItemActionsMax = 4;
+
+export const getCareerSubmissionResponseReportOneRoadmapItemMeasurableOutputsItemMax = 250;
+
+export const getCareerSubmissionResponseReportOneRoadmapItemMeasurableOutputsMax = 4;
+
+export const getCareerSubmissionResponseReportOneRoadmapMin = 5;
+export const getCareerSubmissionResponseReportOneRoadmapMax = 5;
+
+export const getCareerSubmissionResponseReportOneMentorNoteObservedPatternMax = 500;
+
+export const getCareerSubmissionResponseReportOneMentorNoteRealisticRiskMax = 500;
+
+export const getCareerSubmissionResponseReportOneMentorNoteActionableExperimentMax = 500;
+
+export const getCareerSubmissionResponseReportTwoProfileArchetypeMax = 80;
+
+export const getCareerSubmissionResponseReportTwoProfileSummaryMax = 350;
+
+export const getCareerSubmissionResponseReportTwoProfileStrengthsItemMax = 250;
+
+export const getCareerSubmissionResponseReportTwoProfileStrengthsMin = 2;
+export const getCareerSubmissionResponseReportTwoProfileStrengthsMax = 3;
+
+export const getCareerSubmissionResponseReportTwoProfileRisksItemMax = 250;
+
+export const getCareerSubmissionResponseReportTwoProfileRisksMin = 2;
+export const getCareerSubmissionResponseReportTwoProfileRisksMax = 3;
+
+export const getCareerSubmissionResponseReportTwoProfileSurvivalEnvironmentMax = 300;
+
+export const getCareerSubmissionResponseReportTwoTraitsTechnicalScoreMax = 5;
+
+export const getCareerSubmissionResponseReportTwoTraitsTechnicalReasonMax = 250;
+
+export const getCareerSubmissionResponseReportTwoTraitsCreativeScoreMax = 5;
+
+export const getCareerSubmissionResponseReportTwoTraitsCreativeReasonMax = 250;
+
+export const getCareerSubmissionResponseReportTwoTraitsPeopleScoreMax = 5;
+
+export const getCareerSubmissionResponseReportTwoTraitsPeopleReasonMax = 250;
+
+export const getCareerSubmissionResponseReportTwoTraitsRiskScoreMax = 5;
+
+export const getCareerSubmissionResponseReportTwoTraitsRiskReasonMax = 250;
+
+export const getCareerSubmissionResponseReportTwoTraitsLearningScoreMax = 5;
+
+export const getCareerSubmissionResponseReportTwoTraitsLearningReasonMax = 250;
+
+export const getCareerSubmissionResponseReportTwoAnswerPatternsClearItemMax = 250;
+
+export const getCareerSubmissionResponseReportTwoAnswerPatternsClearMax = 5;
+
+export const getCareerSubmissionResponseReportTwoAnswerPatternsConflictsItemTagMax = 60;
+
+export const getCareerSubmissionResponseReportTwoAnswerPatternsConflictsItemTextMax = 300;
+
+export const getCareerSubmissionResponseReportTwoAnswerPatternsConflictsMax = 5;
+
+export const getCareerSubmissionResponseReportTwoAnswerPatternsWorthExploringItemMax = 250;
+
+export const getCareerSubmissionResponseReportTwoAnswerPatternsWorthExploringMax = 5;
+
+export const getCareerSubmissionResponseReportTwoCaliberVsEntryLongTermCaliberMax = 350;
+
+export const getCareerSubmissionResponseReportTwoCaliberVsEntryMarketBarrierMax = 350;
+
+export const getCareerSubmissionResponseReportTwoCaliberVsEntryFirstEntryRolesItemMax = 100;
+
+export const getCareerSubmissionResponseReportTwoCaliberVsEntryFirstEntryRolesMax = 5;
+
+export const getCareerSubmissionResponseReportTwoCaliberVsEntryBridgePathMax = 350;
+
+export const getCareerSubmissionResponseReportTwoCareerFitsItemTitleMax = 120;
+
+export const getCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMinMin = 0;
+export const getCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMinMax = 100;
+
+export const getCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMaxMin = 0;
+export const getCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMaxMax = 100;
+
+export const getCareerSubmissionResponseReportTwoCareerFitsItemNaturalFitScoreMax = 10;
+
+export const getCareerSubmissionResponseReportTwoCareerFitsItemDailyWorkMax = 300;
+
+export const getCareerSubmissionResponseReportTwoCareerFitsItemWhyFitsMax = 300;
+
+export const getCareerSubmissionResponseReportTwoCareerFitsItemFiveYearGrowthMax = 300;
+
+export const getCareerSubmissionResponseReportTwoCareerFitsMin = 4;
+export const getCareerSubmissionResponseReportTwoCareerFitsMax = 6;
+
+export const getCareerSubmissionResponseReportTwoCareersToAvoidItemTitleMax = 120;
+
+export const getCareerSubmissionResponseReportTwoCareersToAvoidItemWhyMax = 300;
+
+export const getCareerSubmissionResponseReportTwoTrackDetailWhyMax = 350;
+
+export const getCareerSubmissionResponseReportTwoTrackDetailFresherDemandMax = 150;
+
+export const getCareerSubmissionResponseReportTwoTrackDetailSkillsToLearnItemMax = 80;
+
+export const getCareerSubmissionResponseReportTwoTrackDetailSkillsToLearnMin = 4;
+export const getCareerSubmissionResponseReportTwoTrackDetailSkillsToLearnMax = 8;
+
+export const getCareerSubmissionResponseReportTwoRoadmapItemMonthsMax = 20;
+
+export const getCareerSubmissionResponseReportTwoRoadmapItemFocusMax = 120;
+
+export const getCareerSubmissionResponseReportTwoRoadmapItemActionsItemMax = 200;
+
+export const getCareerSubmissionResponseReportTwoRoadmapItemActionsMax = 3;
+
+export const getCareerSubmissionResponseReportTwoRoadmapMin = 5;
+export const getCareerSubmissionResponseReportTwoRoadmapMax = 5;
+
+export const getCareerSubmissionResponseReportTwoBrutalTruthMax = 500;
+
+export const getCareerSubmissionResponseReportTwoWorkArchetypeOneNameMax = 60;
+
+export const getCareerSubmissionResponseReportTwoWorkArchetypeOneDefinitionMax = 300;
+
+export const getCareerSubmissionResponseReportTwoWorkArchetypeOneEvidenceItemMax = 120;
+
+export const getCareerSubmissionResponseReportTwoWorkArchetypeOneEvidenceMax = 3;
+
+export const getCareerSubmissionResponseReportTwoCareerDirectionOneTargetTitleMax = 120;
+
+export const getCareerSubmissionResponseReportTwoCareerDirectionOneTargetWhyMax = 500;
+
+export const getCareerSubmissionResponseReportTwoCareerDirectionOneEntryTitleMax = 120;
+
+export const getCareerSubmissionResponseReportTwoCareerDirectionOneEntryWhyMax = 500;
+
+export const getCareerSubmissionResponseReportTwoCareerDirectionOneRouteWhyMax = 500;
+
+export const getCareerSubmissionResponseReportTwoCareerDirectionOneBarriersItemMax = 300;
+
+export const getCareerSubmissionResponseReportTwoCareerDirectionOneAlternativesNoteOneMax = 500;
+
+export const getCareerSubmissionResponseReportTwoCareerComparisonOneItemTitleMax = 120;
+
+export const getCareerSubmissionResponseReportTwoCareerComparisonOneItemRationaleMax = 500;
+
+export const getCareerSubmissionResponseReportTwoCareerComparisonOneItemSkillsToDevelopItemMax = 80;
+
+export const getCareerSubmissionResponseReportTwoCareerComparisonOneItemEntryDifficultyOneMax = 60;
+
+export const getCareerSubmissionResponseReportTwoCareerComparisonOneItemPrerequisitesOneMax = 300;
+
+export const getCareerSubmissionResponseReportTwoCareerComparisonOneMax = 8;
+
+export const getCareerSubmissionResponseReportTwoSkillsGapsOneItemSkillMax = 80;
+
+export const getCareerSubmissionResponseReportTwoSkillsGapsOneItemWhyItMattersMax = 300;
+
+export const getCareerSubmissionResponseReportTwoSkillsGapsOneItemActivityMax = 300;
+
+export const getCareerSubmissionResponseReportTwoSkillsGapsOneItemEvidenceOfProgressMax = 300;
+
+export const getCareerSubmissionResponseStrategyOneTargetCareerOneIdMax = 80;
+
+export const getCareerSubmissionResponseStrategyOneTargetCareerOneTitleMax = 120;
+
+export const getCareerSubmissionResponseStrategyOneBestEntryCareerOneIdMax = 80;
+
+export const getCareerSubmissionResponseStrategyOneBestEntryCareerOneTitleMax = 120;
+
+export const getCareerSubmissionResponseStrategyOneBridgeCareerOneIdMax = 80;
+
+export const getCareerSubmissionResponseStrategyOneBridgeCareerOneTitleMax = 120;
+
+export const getCareerSubmissionResponseStrategyOneAlternativeRouteOneIdMax = 80;
+
+export const getCareerSubmissionResponseStrategyOneAlternativeRouteOneTitleMax = 120;
 
 
 
@@ -192,88 +1132,309 @@ export const GetCareerSubmissionResponse = zod.object({
   "submittedAt": zod.coerce.date(),
   "report": zod.union([zod.object({
   "profile": zod.object({
-  "archetype": zod.string(),
+  "archetype": zod.string().max(getCareerSubmissionResponseReportOneProfileArchetypeMax),
   "workerType": zod.enum(['Specialist', 'Operator', 'Builder', 'Analyst', 'Communicator', 'Entrepreneur', 'Manager']),
   "clarityLevel": zod.enum(['Clear', 'Mixed', 'Exploratory']),
-  "summary": zod.string(),
-  "strengths": zod.array(zod.string()),
-  "risks": zod.array(zod.string()),
-  "survivalEnvironment": zod.string()
+  "summary": zod.string().max(getCareerSubmissionResponseReportOneProfileSummaryMax),
+  "strengths": zod.array(zod.string().max(getCareerSubmissionResponseReportOneProfileStrengthsItemMax)).min(getCareerSubmissionResponseReportOneProfileStrengthsMin).max(getCareerSubmissionResponseReportOneProfileStrengthsMax),
+  "risks": zod.array(zod.string().max(getCareerSubmissionResponseReportOneProfileRisksItemMax)).min(getCareerSubmissionResponseReportOneProfileRisksMin).max(getCareerSubmissionResponseReportOneProfileRisksMax),
+  "survivalEnvironment": zod.string().max(getCareerSubmissionResponseReportOneProfileSurvivalEnvironmentMax)
 }),
   "traits": zod.object({
   "technical": zod.object({
   "score": zod.number().min(1).max(getCareerSubmissionResponseReportOneTraitsTechnicalScoreMax),
-  "reason": zod.string(),
+  "reason": zod.string().max(getCareerSubmissionResponseReportOneTraitsTechnicalReasonMax),
   "label": zod.enum(['Low', 'Medium', 'High'])
 }),
   "creative": zod.object({
   "score": zod.number().min(1).max(getCareerSubmissionResponseReportOneTraitsCreativeScoreMax),
-  "reason": zod.string(),
+  "reason": zod.string().max(getCareerSubmissionResponseReportOneTraitsCreativeReasonMax),
   "label": zod.enum(['Low', 'Medium', 'High'])
 }),
   "people": zod.object({
   "score": zod.number().min(1).max(getCareerSubmissionResponseReportOneTraitsPeopleScoreMax),
-  "reason": zod.string(),
+  "reason": zod.string().max(getCareerSubmissionResponseReportOneTraitsPeopleReasonMax),
   "label": zod.enum(['Low', 'Medium', 'High'])
 }),
   "risk": zod.object({
   "score": zod.number().min(1).max(getCareerSubmissionResponseReportOneTraitsRiskScoreMax),
-  "reason": zod.string(),
+  "reason": zod.string().max(getCareerSubmissionResponseReportOneTraitsRiskReasonMax),
   "label": zod.enum(['Low', 'Medium', 'High'])
 }),
   "learning": zod.object({
   "score": zod.number().min(1).max(getCareerSubmissionResponseReportOneTraitsLearningScoreMax),
-  "reason": zod.string(),
+  "reason": zod.string().max(getCareerSubmissionResponseReportOneTraitsLearningReasonMax),
   "label": zod.enum(['Low', 'Medium', 'High'])
 })
 }),
   "answerPatterns": zod.object({
-  "clear": zod.array(zod.string()),
+  "clear": zod.array(zod.string().max(getCareerSubmissionResponseReportOneAnswerPatternsClearItemMax)).max(getCareerSubmissionResponseReportOneAnswerPatternsClearMax),
   "conflicts": zod.array(zod.object({
-  "tag": zod.string(),
-  "text": zod.string()
-})),
-  "worthExploring": zod.array(zod.string())
+  "tag": zod.string().max(getCareerSubmissionResponseReportOneAnswerPatternsConflictsItemTagMax),
+  "text": zod.string().max(getCareerSubmissionResponseReportOneAnswerPatternsConflictsItemTextMax)
+})).max(getCareerSubmissionResponseReportOneAnswerPatternsConflictsMax),
+  "worthExploring": zod.array(zod.string().max(getCareerSubmissionResponseReportOneAnswerPatternsWorthExploringItemMax)).max(getCareerSubmissionResponseReportOneAnswerPatternsWorthExploringMax)
 }),
   "caliberVsEntry": zod.object({
-  "longTermCaliber": zod.string(),
-  "marketBarrier": zod.string(),
+  "longTermCaliber": zod.string().max(getCareerSubmissionResponseReportOneCaliberVsEntryLongTermCaliberMax),
+  "marketBarrier": zod.string().max(getCareerSubmissionResponseReportOneCaliberVsEntryMarketBarrierMax),
   "marketBarrierLevel": zod.enum(['Low', 'Moderate', 'High']),
-  "firstEntryRoles": zod.array(zod.string()),
-  "bridgePath": zod.string()
+  "firstEntryRoles": zod.array(zod.string().max(getCareerSubmissionResponseReportOneCaliberVsEntryFirstEntryRolesItemMax)).min(1).max(getCareerSubmissionResponseReportOneCaliberVsEntryFirstEntryRolesMax),
+  "bridgePath": zod.string().max(getCareerSubmissionResponseReportOneCaliberVsEntryBridgePathMax)
 }),
-  "careerFits": zod.array(zod.object({
-  "title": zod.string(),
-  "roleType": zod.enum(['Stepping-stone', 'Long-term fit']),
-  "salaryInrLpa": zod.object({
-  "min": zod.number(),
-  "max": zod.number()
+  "workArchetype": zod.union([zod.object({
+  "name": zod.string().max(getCareerSubmissionResponseReportOneWorkArchetypeOneNameMax),
+  "definition": zod.string().max(getCareerSubmissionResponseReportOneWorkArchetypeOneDefinitionMax),
+  "strength": zod.enum(['Strong', 'Moderate', 'Emerging']),
+  "evidence": zod.array(zod.string().max(getCareerSubmissionResponseReportOneWorkArchetypeOneEvidenceItemMax)).max(getCareerSubmissionResponseReportOneWorkArchetypeOneEvidenceMax)
+}),zod.null()]).describe('Deterministic work archetype set by the server for new reports; absent in legacy reports.'),
+  "careerDirection": zod.union([zod.object({
+  "target": zod.object({
+  "title": zod.string().max(getCareerSubmissionResponseReportOneCareerDirectionOneTargetTitleMax),
+  "why": zod.string().max(getCareerSubmissionResponseReportOneCareerDirectionOneTargetWhyMax)
 }),
-  "entryDifficulty": zod.enum(['Easy to enter', 'Moderately difficult', 'Highly competitive']),
-  "careerHealth": zod.enum(['Growing', 'Stable', 'Declining']),
-  "aiThreat": zod.enum(['Low', 'Medium', 'High']),
-  "naturalFitScore": zod.number().min(1).max(getCareerSubmissionResponseReportOneCareerFitsItemNaturalFitScoreMax),
-  "dailyWork": zod.string(),
-  "whyFits": zod.string(),
-  "fiveYearGrowth": zod.string()
+  "entry": zod.object({
+  "title": zod.string().max(getCareerSubmissionResponseReportOneCareerDirectionOneEntryTitleMax),
+  "why": zod.string().max(getCareerSubmissionResponseReportOneCareerDirectionOneEntryWhyMax)
+}),
+  "route": zod.enum(['DIRECT', 'ADJACENT', 'BRIDGE']),
+  "routeWhy": zod.string().max(getCareerSubmissionResponseReportOneCareerDirectionOneRouteWhyMax),
+  "barriers": zod.array(zod.string().max(getCareerSubmissionResponseReportOneCareerDirectionOneBarriersItemMax)),
+  "alternativesNote": zod.union([zod.string().max(getCareerSubmissionResponseReportOneCareerDirectionOneAlternativesNoteOneMax),zod.null()])
+}),zod.null()]).describe('Deterministic career direction composed by the server for new reports; absent in legacy reports.'),
+  "longTermOptions": zod.array(zod.object({
+  "id": zod.string().max(getCareerSubmissionResponseReportOneLongTermOptionsItemIdMax),
+  "title": zod.string().max(getCareerSubmissionResponseReportOneLongTermOptionsItemTitleMax),
+  "category": zod.string().max(getCareerSubmissionResponseReportOneLongTermOptionsItemCategoryMax),
+  "rank": zod.number().min(1).max(getCareerSubmissionResponseReportOneLongTermOptionsItemRankMax),
+  "score": zod.number(),
+  "fitScore": zod.number(),
+  "rationale": zod.string().max(getCareerSubmissionResponseReportOneLongTermOptionsItemRationaleMax)
+})).min(getCareerSubmissionResponseReportOneLongTermOptionsMin).max(getCareerSubmissionResponseReportOneLongTermOptionsMax),
+  "entryOptions": zod.array(zod.object({
+  "id": zod.string().max(getCareerSubmissionResponseReportOneEntryOptionsItemIdMax),
+  "title": zod.string().max(getCareerSubmissionResponseReportOneEntryOptionsItemTitleMax),
+  "category": zod.string().max(getCareerSubmissionResponseReportOneEntryOptionsItemCategoryMax),
+  "rank": zod.number().min(1).max(getCareerSubmissionResponseReportOneEntryOptionsItemRankMax),
+  "score": zod.number(),
+  "fitScore": zod.number(),
+  "rationale": zod.string().max(getCareerSubmissionResponseReportOneEntryOptionsItemRationaleMax),
+  "accessibility": zod.enum(['VERY_HIGH', 'HIGH', 'MEDIUM', 'MODERATE', 'LOW', 'VERY_LOW']),
+  "alignment": zod.enum(['STRONG', 'MODERATE', 'NEUTRAL', 'WEAK']),
+  "runwayWeeks": zod.number()
+})).min(getCareerSubmissionResponseReportOneEntryOptionsMin).max(getCareerSubmissionResponseReportOneEntryOptionsMax),
+  "careerComparison": zod.object({
+  "longTerm": zod.array(zod.object({
+  "id": zod.string().max(getCareerSubmissionResponseReportOneCareerComparisonLongTermItemIdMax),
+  "title": zod.string().max(getCareerSubmissionResponseReportOneCareerComparisonLongTermItemTitleMax),
+  "roleInvolves": zod.string().max(getCareerSubmissionResponseReportOneCareerComparisonLongTermItemRoleInvolvesMax),
+  "whyFit": zod.string().max(getCareerSubmissionResponseReportOneCareerComparisonLongTermItemWhyFitMax),
+  "tradeOff": zod.string().max(getCareerSubmissionResponseReportOneCareerComparisonLongTermItemTradeOffMax),
+  "differentiation": zod.string().max(getCareerSubmissionResponseReportOneCareerComparisonLongTermItemDifferentiationMax)
+})).min(getCareerSubmissionResponseReportOneCareerComparisonLongTermMin).max(getCareerSubmissionResponseReportOneCareerComparisonLongTermMax),
+  "entryLevel": zod.array(zod.object({
+  "id": zod.string().max(getCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemIdMax),
+  "title": zod.string().max(getCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemTitleMax),
+  "roleInvolves": zod.string().max(getCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemRoleInvolvesMax),
+  "whyFit": zod.string().max(getCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemWhyFitMax),
+  "tradeOff": zod.string().max(getCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemTradeOffMax),
+  "differentiation": zod.string().max(getCareerSubmissionResponseReportOneCareerComparisonEntryLevelItemDifferentiationMax)
+})).min(getCareerSubmissionResponseReportOneCareerComparisonEntryLevelMin).max(getCareerSubmissionResponseReportOneCareerComparisonEntryLevelMax)
+}),
+  "recommendedWorkLane": zod.object({
+  "lane": zod.enum(['Engineering', 'Product', 'Automation', 'Startup Ops', 'Technical Business', 'Design / UI-UX', 'Hybrid Tech-Generalist']),
+  "why": zod.string().max(getCareerSubmissionResponseReportOneRecommendedWorkLaneWhyMax),
+  "primaryCareer": zod.object({
+  "id": zod.string().max(getCareerSubmissionResponseReportOneRecommendedWorkLanePrimaryCareerIdMax),
+  "title": zod.string().max(getCareerSubmissionResponseReportOneRecommendedWorkLanePrimaryCareerTitleMax)
+}),
+  "supportingCareers": zod.array(zod.object({
+  "id": zod.string().max(getCareerSubmissionResponseReportOneRecommendedWorkLaneSupportingCareersItemIdMax),
+  "title": zod.string().max(getCareerSubmissionResponseReportOneRecommendedWorkLaneSupportingCareersItemTitleMax)
 })),
-  "careersToAvoid": zod.array(zod.object({
-  "title": zod.string(),
-  "why": zod.string()
-})),
-  "recommendedTrack": zod.enum(['Engineering', 'Product', 'Automation', 'Startup Ops', 'Technical Business', 'Hybrid Tech-Generalist', 'Business Analyst']),
-  "trackDetail": zod.object({
-  "why": zod.string(),
-  "fresherDemand": zod.string(),
-  "skillsToLearn": zod.array(zod.string())
+  "entryRoute": zod.object({
+  "routeType": zod.enum(['DIRECT', 'ADJACENT', 'BRIDGE']),
+  "entryCareer": zod.object({
+  "id": zod.string().max(getCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteEntryCareerIdMax),
+  "title": zod.string().max(getCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteEntryCareerTitleMax)
+}),
+  "bridgeCareer": zod.union([zod.object({
+  "id": zod.string().max(getCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteBridgeCareerOneIdMax),
+  "title": zod.string().max(getCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteBridgeCareerOneTitleMax)
+}),zod.null()]),
+  "rationale": zod.string().max(getCareerSubmissionResponseReportOneRecommendedWorkLaneEntryRouteRationaleMax)
+}),
+  "explanation": zod.string().max(getCareerSubmissionResponseReportOneRecommendedWorkLaneExplanationMax)
 }),
   "roadmap": zod.array(zod.object({
-  "months": zod.string(),
-  "focus": zod.string(),
-  "actions": zod.array(zod.string())
-})),
-  "brutalTruth": zod.string()
+  "order": zod.number().min(1).max(getCareerSubmissionResponseReportOneRoadmapItemOrderMax),
+  "monthRange": zod.string().max(getCareerSubmissionResponseReportOneRoadmapItemMonthRangeMax),
+  "focus": zod.string().max(getCareerSubmissionResponseReportOneRoadmapItemFocusMax),
+  "actions": zod.array(zod.string().max(getCareerSubmissionResponseReportOneRoadmapItemActionsItemMax)).min(1).max(getCareerSubmissionResponseReportOneRoadmapItemActionsMax),
+  "measurableOutputs": zod.array(zod.string().max(getCareerSubmissionResponseReportOneRoadmapItemMeasurableOutputsItemMax)).min(1).max(getCareerSubmissionResponseReportOneRoadmapItemMeasurableOutputsMax)
+})).min(getCareerSubmissionResponseReportOneRoadmapMin).max(getCareerSubmissionResponseReportOneRoadmapMax),
+  "mentorNote": zod.object({
+  "observedPattern": zod.string().max(getCareerSubmissionResponseReportOneMentorNoteObservedPatternMax),
+  "realisticRisk": zod.string().max(getCareerSubmissionResponseReportOneMentorNoteRealisticRiskMax),
+  "actionableExperiment": zod.string().max(getCareerSubmissionResponseReportOneMentorNoteActionableExperimentMax)
+}),
+  "recommendedTrack": zod.enum(['Engineering', 'Product', 'Automation', 'Startup Ops', 'Technical Business', 'Design / UI-UX', 'Hybrid Tech-Generalist'])
+}),zod.object({
+  "profile": zod.object({
+  "archetype": zod.string().max(getCareerSubmissionResponseReportTwoProfileArchetypeMax),
+  "workerType": zod.enum(['Specialist', 'Operator', 'Builder', 'Analyst', 'Communicator', 'Entrepreneur', 'Manager']),
+  "clarityLevel": zod.enum(['Clear', 'Mixed', 'Exploratory']),
+  "summary": zod.string().max(getCareerSubmissionResponseReportTwoProfileSummaryMax),
+  "strengths": zod.array(zod.string().max(getCareerSubmissionResponseReportTwoProfileStrengthsItemMax)).min(getCareerSubmissionResponseReportTwoProfileStrengthsMin).max(getCareerSubmissionResponseReportTwoProfileStrengthsMax),
+  "risks": zod.array(zod.string().max(getCareerSubmissionResponseReportTwoProfileRisksItemMax)).min(getCareerSubmissionResponseReportTwoProfileRisksMin).max(getCareerSubmissionResponseReportTwoProfileRisksMax),
+  "survivalEnvironment": zod.string().max(getCareerSubmissionResponseReportTwoProfileSurvivalEnvironmentMax)
+}),
+  "traits": zod.object({
+  "technical": zod.object({
+  "score": zod.number().min(1).max(getCareerSubmissionResponseReportTwoTraitsTechnicalScoreMax),
+  "reason": zod.string().max(getCareerSubmissionResponseReportTwoTraitsTechnicalReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "creative": zod.object({
+  "score": zod.number().min(1).max(getCareerSubmissionResponseReportTwoTraitsCreativeScoreMax),
+  "reason": zod.string().max(getCareerSubmissionResponseReportTwoTraitsCreativeReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "people": zod.object({
+  "score": zod.number().min(1).max(getCareerSubmissionResponseReportTwoTraitsPeopleScoreMax),
+  "reason": zod.string().max(getCareerSubmissionResponseReportTwoTraitsPeopleReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "risk": zod.object({
+  "score": zod.number().min(1).max(getCareerSubmissionResponseReportTwoTraitsRiskScoreMax),
+  "reason": zod.string().max(getCareerSubmissionResponseReportTwoTraitsRiskReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "learning": zod.object({
+  "score": zod.number().min(1).max(getCareerSubmissionResponseReportTwoTraitsLearningScoreMax),
+  "reason": zod.string().max(getCareerSubmissionResponseReportTwoTraitsLearningReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+})
+}),
+  "answerPatterns": zod.object({
+  "clear": zod.array(zod.string().max(getCareerSubmissionResponseReportTwoAnswerPatternsClearItemMax)).max(getCareerSubmissionResponseReportTwoAnswerPatternsClearMax),
+  "conflicts": zod.array(zod.object({
+  "tag": zod.string().max(getCareerSubmissionResponseReportTwoAnswerPatternsConflictsItemTagMax),
+  "text": zod.string().max(getCareerSubmissionResponseReportTwoAnswerPatternsConflictsItemTextMax)
+})).max(getCareerSubmissionResponseReportTwoAnswerPatternsConflictsMax),
+  "worthExploring": zod.array(zod.string().max(getCareerSubmissionResponseReportTwoAnswerPatternsWorthExploringItemMax)).max(getCareerSubmissionResponseReportTwoAnswerPatternsWorthExploringMax)
+}),
+  "caliberVsEntry": zod.object({
+  "longTermCaliber": zod.string().max(getCareerSubmissionResponseReportTwoCaliberVsEntryLongTermCaliberMax),
+  "marketBarrier": zod.string().max(getCareerSubmissionResponseReportTwoCaliberVsEntryMarketBarrierMax),
+  "marketBarrierLevel": zod.enum(['Low', 'Moderate', 'High']),
+  "firstEntryRoles": zod.array(zod.string().max(getCareerSubmissionResponseReportTwoCaliberVsEntryFirstEntryRolesItemMax)).min(1).max(getCareerSubmissionResponseReportTwoCaliberVsEntryFirstEntryRolesMax),
+  "bridgePath": zod.string().max(getCareerSubmissionResponseReportTwoCaliberVsEntryBridgePathMax)
+}),
+  "careerFits": zod.array(zod.object({
+  "title": zod.string().max(getCareerSubmissionResponseReportTwoCareerFitsItemTitleMax),
+  "roleType": zod.enum(['Stepping-stone', 'Long-term fit']),
+  "salaryInrLpa": zod.union([zod.object({
+  "min": zod.number().min(getCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMinMin).max(getCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMinMax),
+  "max": zod.number().min(getCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMaxMin).max(getCareerSubmissionResponseReportTwoCareerFitsItemSalaryInrLpaOneMaxMax)
 }),zod.null()]),
+  "entryDifficulty": zod.enum(['Easy to enter', 'Moderately difficult', 'Highly competitive']),
+  "careerHealth": zod.enum(['Stable', 'Fast-growth', 'High burnout', 'Oversaturated', 'High leverage']),
+  "aiThreat": zod.enum(['Low', 'Medium', 'High']),
+  "naturalFitScore": zod.number().min(1).max(getCareerSubmissionResponseReportTwoCareerFitsItemNaturalFitScoreMax),
+  "dailyWork": zod.string().max(getCareerSubmissionResponseReportTwoCareerFitsItemDailyWorkMax),
+  "whyFits": zod.string().max(getCareerSubmissionResponseReportTwoCareerFitsItemWhyFitsMax),
+  "fiveYearGrowth": zod.string().max(getCareerSubmissionResponseReportTwoCareerFitsItemFiveYearGrowthMax)
+})).min(getCareerSubmissionResponseReportTwoCareerFitsMin).max(getCareerSubmissionResponseReportTwoCareerFitsMax),
+  "careersToAvoid": zod.array(zod.object({
+  "title": zod.string().max(getCareerSubmissionResponseReportTwoCareersToAvoidItemTitleMax),
+  "why": zod.string().max(getCareerSubmissionResponseReportTwoCareersToAvoidItemWhyMax)
+})),
+  "recommendedTrack": zod.enum(['Engineering', 'Product', 'Automation', 'Startup Ops', 'Technical Business', 'Design / UI-UX', 'Hybrid Tech-Generalist']),
+  "trackDetail": zod.object({
+  "why": zod.string().max(getCareerSubmissionResponseReportTwoTrackDetailWhyMax),
+  "fresherDemand": zod.string().max(getCareerSubmissionResponseReportTwoTrackDetailFresherDemandMax),
+  "skillsToLearn": zod.array(zod.string().max(getCareerSubmissionResponseReportTwoTrackDetailSkillsToLearnItemMax)).min(getCareerSubmissionResponseReportTwoTrackDetailSkillsToLearnMin).max(getCareerSubmissionResponseReportTwoTrackDetailSkillsToLearnMax)
+}),
+  "roadmap": zod.array(zod.object({
+  "months": zod.string().max(getCareerSubmissionResponseReportTwoRoadmapItemMonthsMax),
+  "focus": zod.string().max(getCareerSubmissionResponseReportTwoRoadmapItemFocusMax),
+  "actions": zod.array(zod.string().max(getCareerSubmissionResponseReportTwoRoadmapItemActionsItemMax)).min(1).max(getCareerSubmissionResponseReportTwoRoadmapItemActionsMax)
+})).min(getCareerSubmissionResponseReportTwoRoadmapMin).max(getCareerSubmissionResponseReportTwoRoadmapMax),
+  "brutalTruth": zod.string().max(getCareerSubmissionResponseReportTwoBrutalTruthMax),
+  "workArchetype": zod.union([zod.object({
+  "name": zod.string().max(getCareerSubmissionResponseReportTwoWorkArchetypeOneNameMax),
+  "definition": zod.string().max(getCareerSubmissionResponseReportTwoWorkArchetypeOneDefinitionMax),
+  "strength": zod.enum(['Strong', 'Moderate', 'Emerging']),
+  "evidence": zod.array(zod.string().max(getCareerSubmissionResponseReportTwoWorkArchetypeOneEvidenceItemMax)).max(getCareerSubmissionResponseReportTwoWorkArchetypeOneEvidenceMax)
+}),zod.null()]).optional(),
+  "careerDirection": zod.union([zod.object({
+  "target": zod.object({
+  "title": zod.string().max(getCareerSubmissionResponseReportTwoCareerDirectionOneTargetTitleMax),
+  "why": zod.string().max(getCareerSubmissionResponseReportTwoCareerDirectionOneTargetWhyMax)
+}),
+  "entry": zod.object({
+  "title": zod.string().max(getCareerSubmissionResponseReportTwoCareerDirectionOneEntryTitleMax),
+  "why": zod.string().max(getCareerSubmissionResponseReportTwoCareerDirectionOneEntryWhyMax)
+}),
+  "route": zod.enum(['DIRECT', 'ADJACENT', 'BRIDGE']),
+  "routeWhy": zod.string().max(getCareerSubmissionResponseReportTwoCareerDirectionOneRouteWhyMax),
+  "barriers": zod.array(zod.string().max(getCareerSubmissionResponseReportTwoCareerDirectionOneBarriersItemMax)),
+  "alternativesNote": zod.union([zod.string().max(getCareerSubmissionResponseReportTwoCareerDirectionOneAlternativesNoteOneMax),zod.null()])
+}),zod.null()]).optional(),
+  "careerComparison": zod.union([zod.array(zod.object({
+  "title": zod.string().max(getCareerSubmissionResponseReportTwoCareerComparisonOneItemTitleMax),
+  "role": zod.enum(['target', 'entry', 'alternative', 'exploratory', 'cautious']),
+  "rationale": zod.string().max(getCareerSubmissionResponseReportTwoCareerComparisonOneItemRationaleMax),
+  "skillsToDevelop": zod.array(zod.string().max(getCareerSubmissionResponseReportTwoCareerComparisonOneItemSkillsToDevelopItemMax)),
+  "entryDifficulty": zod.union([zod.string().max(getCareerSubmissionResponseReportTwoCareerComparisonOneItemEntryDifficultyOneMax),zod.null()]),
+  "prerequisites": zod.union([zod.string().max(getCareerSubmissionResponseReportTwoCareerComparisonOneItemPrerequisitesOneMax),zod.null()])
+})).min(1).max(getCareerSubmissionResponseReportTwoCareerComparisonOneMax),zod.null()]).optional(),
+  "skillsGaps": zod.union([zod.array(zod.object({
+  "skill": zod.string().max(getCareerSubmissionResponseReportTwoSkillsGapsOneItemSkillMax),
+  "whyItMatters": zod.string().max(getCareerSubmissionResponseReportTwoSkillsGapsOneItemWhyItMattersMax),
+  "activity": zod.string().max(getCareerSubmissionResponseReportTwoSkillsGapsOneItemActivityMax),
+  "evidenceOfProgress": zod.string().max(getCareerSubmissionResponseReportTwoSkillsGapsOneItemEvidenceOfProgressMax)
+})),zod.null()]).optional()
+}),zod.null()]),
+  "strategy": zod.union([zod.object({
+  "strategyVersion": zod.string(),
+  "explanationVersion": zod.string(),
+  "targetCareer": zod.union([zod.object({
+  "id": zod.string().max(getCareerSubmissionResponseStrategyOneTargetCareerOneIdMax),
+  "title": zod.string().max(getCareerSubmissionResponseStrategyOneTargetCareerOneTitleMax)
+}),zod.null()]),
+  "bestEntryCareer": zod.union([zod.object({
+  "id": zod.string().max(getCareerSubmissionResponseStrategyOneBestEntryCareerOneIdMax),
+  "title": zod.string().max(getCareerSubmissionResponseStrategyOneBestEntryCareerOneTitleMax)
+}),zod.null()]),
+  "bridgeCareer": zod.union([zod.object({
+  "id": zod.string().max(getCareerSubmissionResponseStrategyOneBridgeCareerOneIdMax),
+  "title": zod.string().max(getCareerSubmissionResponseStrategyOneBridgeCareerOneTitleMax)
+}),zod.null()]),
+  "alternativeRoute": zod.union([zod.object({
+  "id": zod.string().max(getCareerSubmissionResponseStrategyOneAlternativeRouteOneIdMax),
+  "title": zod.string().max(getCareerSubmissionResponseStrategyOneAlternativeRouteOneTitleMax)
+}),zod.null()]),
+  "routeType": zod.union([zod.enum(['DIRECT', 'ADJACENT', 'BRIDGE']),zod.null()]),
+  "rationale": zod.object({
+  "target": zod.string(),
+  "entry": zod.string(),
+  "bridge": zod.union([zod.string(),zod.null()]),
+  "academic": zod.string(),
+  "time": zod.string()
+}),
+  "explanation": zod.object({
+  "target": zod.string(),
+  "entry": zod.string(),
+  "route": zod.string(),
+  "academic": zod.string(),
+  "time": zod.string(),
+  "bridge": zod.union([zod.string(),zod.null()]),
+  "alternative": zod.union([zod.string(),zod.null()])
+}),
+  "insufficientContext": zod.boolean()
+}),zod.null()]).describe('Deterministic entry strategy persisted with the report; null until generated (e.g. legacy reports).'),
   "error": zod.union([zod.string(),zod.null()])
 })
 
@@ -284,6 +1445,675 @@ export const GetCareerSubmissionResponse = zod.object({
  */
 export const RetryCareerSubmissionParams = zod.object({
   "id": zod.coerce.string().uuid()
+})
+
+
+/**
+ * Compatibility alias for GET /submissions/{id}. Students can read only their own report.
+ * @summary Get the signed-in student's submission status and report
+ */
+export const GetCareerResultParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const getCareerResultResponseReportOneProfileArchetypeMax = 80;
+
+export const getCareerResultResponseReportOneProfileSummaryMax = 350;
+
+export const getCareerResultResponseReportOneProfileStrengthsItemMax = 250;
+
+export const getCareerResultResponseReportOneProfileStrengthsMin = 2;
+export const getCareerResultResponseReportOneProfileStrengthsMax = 3;
+
+export const getCareerResultResponseReportOneProfileRisksItemMax = 250;
+
+export const getCareerResultResponseReportOneProfileRisksMin = 2;
+export const getCareerResultResponseReportOneProfileRisksMax = 3;
+
+export const getCareerResultResponseReportOneProfileSurvivalEnvironmentMax = 300;
+
+export const getCareerResultResponseReportOneTraitsTechnicalScoreMax = 5;
+
+export const getCareerResultResponseReportOneTraitsTechnicalReasonMax = 250;
+
+export const getCareerResultResponseReportOneTraitsCreativeScoreMax = 5;
+
+export const getCareerResultResponseReportOneTraitsCreativeReasonMax = 250;
+
+export const getCareerResultResponseReportOneTraitsPeopleScoreMax = 5;
+
+export const getCareerResultResponseReportOneTraitsPeopleReasonMax = 250;
+
+export const getCareerResultResponseReportOneTraitsRiskScoreMax = 5;
+
+export const getCareerResultResponseReportOneTraitsRiskReasonMax = 250;
+
+export const getCareerResultResponseReportOneTraitsLearningScoreMax = 5;
+
+export const getCareerResultResponseReportOneTraitsLearningReasonMax = 250;
+
+export const getCareerResultResponseReportOneAnswerPatternsClearItemMax = 250;
+
+export const getCareerResultResponseReportOneAnswerPatternsClearMax = 5;
+
+export const getCareerResultResponseReportOneAnswerPatternsConflictsItemTagMax = 60;
+
+export const getCareerResultResponseReportOneAnswerPatternsConflictsItemTextMax = 300;
+
+export const getCareerResultResponseReportOneAnswerPatternsConflictsMax = 5;
+
+export const getCareerResultResponseReportOneAnswerPatternsWorthExploringItemMax = 250;
+
+export const getCareerResultResponseReportOneAnswerPatternsWorthExploringMax = 5;
+
+export const getCareerResultResponseReportOneCaliberVsEntryLongTermCaliberMax = 350;
+
+export const getCareerResultResponseReportOneCaliberVsEntryMarketBarrierMax = 350;
+
+export const getCareerResultResponseReportOneCaliberVsEntryFirstEntryRolesItemMax = 100;
+
+export const getCareerResultResponseReportOneCaliberVsEntryFirstEntryRolesMax = 5;
+
+export const getCareerResultResponseReportOneCaliberVsEntryBridgePathMax = 350;
+
+export const getCareerResultResponseReportOneWorkArchetypeOneNameMax = 60;
+
+export const getCareerResultResponseReportOneWorkArchetypeOneDefinitionMax = 300;
+
+export const getCareerResultResponseReportOneWorkArchetypeOneEvidenceItemMax = 120;
+
+export const getCareerResultResponseReportOneWorkArchetypeOneEvidenceMax = 3;
+
+export const getCareerResultResponseReportOneCareerDirectionOneTargetTitleMax = 120;
+
+export const getCareerResultResponseReportOneCareerDirectionOneTargetWhyMax = 500;
+
+export const getCareerResultResponseReportOneCareerDirectionOneEntryTitleMax = 120;
+
+export const getCareerResultResponseReportOneCareerDirectionOneEntryWhyMax = 500;
+
+export const getCareerResultResponseReportOneCareerDirectionOneRouteWhyMax = 500;
+
+export const getCareerResultResponseReportOneCareerDirectionOneBarriersItemMax = 300;
+
+export const getCareerResultResponseReportOneCareerDirectionOneAlternativesNoteOneMax = 500;
+
+export const getCareerResultResponseReportOneLongTermOptionsItemIdMax = 80;
+
+export const getCareerResultResponseReportOneLongTermOptionsItemTitleMax = 120;
+
+export const getCareerResultResponseReportOneLongTermOptionsItemCategoryMax = 100;
+
+export const getCareerResultResponseReportOneLongTermOptionsItemRankMax = 5;
+
+export const getCareerResultResponseReportOneLongTermOptionsItemRationaleMax = 500;
+
+export const getCareerResultResponseReportOneLongTermOptionsMin = 5;
+export const getCareerResultResponseReportOneLongTermOptionsMax = 5;
+
+export const getCareerResultResponseReportOneEntryOptionsItemIdMax = 80;
+
+export const getCareerResultResponseReportOneEntryOptionsItemTitleMax = 120;
+
+export const getCareerResultResponseReportOneEntryOptionsItemCategoryMax = 100;
+
+export const getCareerResultResponseReportOneEntryOptionsItemRankMax = 5;
+
+export const getCareerResultResponseReportOneEntryOptionsItemRationaleMax = 500;
+
+export const getCareerResultResponseReportOneEntryOptionsMin = 5;
+export const getCareerResultResponseReportOneEntryOptionsMax = 5;
+
+export const getCareerResultResponseReportOneCareerComparisonLongTermItemIdMax = 80;
+
+export const getCareerResultResponseReportOneCareerComparisonLongTermItemTitleMax = 120;
+
+export const getCareerResultResponseReportOneCareerComparisonLongTermItemRoleInvolvesMax = 500;
+
+export const getCareerResultResponseReportOneCareerComparisonLongTermItemWhyFitMax = 500;
+
+export const getCareerResultResponseReportOneCareerComparisonLongTermItemTradeOffMax = 500;
+
+export const getCareerResultResponseReportOneCareerComparisonLongTermItemDifferentiationMax = 500;
+
+export const getCareerResultResponseReportOneCareerComparisonLongTermMin = 3;
+export const getCareerResultResponseReportOneCareerComparisonLongTermMax = 3;
+
+export const getCareerResultResponseReportOneCareerComparisonEntryLevelItemIdMax = 80;
+
+export const getCareerResultResponseReportOneCareerComparisonEntryLevelItemTitleMax = 120;
+
+export const getCareerResultResponseReportOneCareerComparisonEntryLevelItemRoleInvolvesMax = 500;
+
+export const getCareerResultResponseReportOneCareerComparisonEntryLevelItemWhyFitMax = 500;
+
+export const getCareerResultResponseReportOneCareerComparisonEntryLevelItemTradeOffMax = 500;
+
+export const getCareerResultResponseReportOneCareerComparisonEntryLevelItemDifferentiationMax = 500;
+
+export const getCareerResultResponseReportOneCareerComparisonEntryLevelMin = 3;
+export const getCareerResultResponseReportOneCareerComparisonEntryLevelMax = 3;
+
+export const getCareerResultResponseReportOneRecommendedWorkLaneWhyMax = 500;
+
+export const getCareerResultResponseReportOneRecommendedWorkLanePrimaryCareerIdMax = 80;
+
+export const getCareerResultResponseReportOneRecommendedWorkLanePrimaryCareerTitleMax = 120;
+
+export const getCareerResultResponseReportOneRecommendedWorkLaneSupportingCareersItemIdMax = 80;
+
+export const getCareerResultResponseReportOneRecommendedWorkLaneSupportingCareersItemTitleMax = 120;
+
+export const getCareerResultResponseReportOneRecommendedWorkLaneEntryRouteEntryCareerIdMax = 80;
+
+export const getCareerResultResponseReportOneRecommendedWorkLaneEntryRouteEntryCareerTitleMax = 120;
+
+export const getCareerResultResponseReportOneRecommendedWorkLaneEntryRouteBridgeCareerOneIdMax = 80;
+
+export const getCareerResultResponseReportOneRecommendedWorkLaneEntryRouteBridgeCareerOneTitleMax = 120;
+
+export const getCareerResultResponseReportOneRecommendedWorkLaneEntryRouteRationaleMax = 500;
+
+export const getCareerResultResponseReportOneRecommendedWorkLaneExplanationMax = 600;
+
+export const getCareerResultResponseReportOneRoadmapItemOrderMax = 5;
+
+export const getCareerResultResponseReportOneRoadmapItemMonthRangeMax = 40;
+
+export const getCareerResultResponseReportOneRoadmapItemFocusMax = 160;
+
+export const getCareerResultResponseReportOneRoadmapItemActionsItemMax = 250;
+
+export const getCareerResultResponseReportOneRoadmapItemActionsMax = 4;
+
+export const getCareerResultResponseReportOneRoadmapItemMeasurableOutputsItemMax = 250;
+
+export const getCareerResultResponseReportOneRoadmapItemMeasurableOutputsMax = 4;
+
+export const getCareerResultResponseReportOneRoadmapMin = 5;
+export const getCareerResultResponseReportOneRoadmapMax = 5;
+
+export const getCareerResultResponseReportOneMentorNoteObservedPatternMax = 500;
+
+export const getCareerResultResponseReportOneMentorNoteRealisticRiskMax = 500;
+
+export const getCareerResultResponseReportOneMentorNoteActionableExperimentMax = 500;
+
+export const getCareerResultResponseReportTwoProfileArchetypeMax = 80;
+
+export const getCareerResultResponseReportTwoProfileSummaryMax = 350;
+
+export const getCareerResultResponseReportTwoProfileStrengthsItemMax = 250;
+
+export const getCareerResultResponseReportTwoProfileStrengthsMin = 2;
+export const getCareerResultResponseReportTwoProfileStrengthsMax = 3;
+
+export const getCareerResultResponseReportTwoProfileRisksItemMax = 250;
+
+export const getCareerResultResponseReportTwoProfileRisksMin = 2;
+export const getCareerResultResponseReportTwoProfileRisksMax = 3;
+
+export const getCareerResultResponseReportTwoProfileSurvivalEnvironmentMax = 300;
+
+export const getCareerResultResponseReportTwoTraitsTechnicalScoreMax = 5;
+
+export const getCareerResultResponseReportTwoTraitsTechnicalReasonMax = 250;
+
+export const getCareerResultResponseReportTwoTraitsCreativeScoreMax = 5;
+
+export const getCareerResultResponseReportTwoTraitsCreativeReasonMax = 250;
+
+export const getCareerResultResponseReportTwoTraitsPeopleScoreMax = 5;
+
+export const getCareerResultResponseReportTwoTraitsPeopleReasonMax = 250;
+
+export const getCareerResultResponseReportTwoTraitsRiskScoreMax = 5;
+
+export const getCareerResultResponseReportTwoTraitsRiskReasonMax = 250;
+
+export const getCareerResultResponseReportTwoTraitsLearningScoreMax = 5;
+
+export const getCareerResultResponseReportTwoTraitsLearningReasonMax = 250;
+
+export const getCareerResultResponseReportTwoAnswerPatternsClearItemMax = 250;
+
+export const getCareerResultResponseReportTwoAnswerPatternsClearMax = 5;
+
+export const getCareerResultResponseReportTwoAnswerPatternsConflictsItemTagMax = 60;
+
+export const getCareerResultResponseReportTwoAnswerPatternsConflictsItemTextMax = 300;
+
+export const getCareerResultResponseReportTwoAnswerPatternsConflictsMax = 5;
+
+export const getCareerResultResponseReportTwoAnswerPatternsWorthExploringItemMax = 250;
+
+export const getCareerResultResponseReportTwoAnswerPatternsWorthExploringMax = 5;
+
+export const getCareerResultResponseReportTwoCaliberVsEntryLongTermCaliberMax = 350;
+
+export const getCareerResultResponseReportTwoCaliberVsEntryMarketBarrierMax = 350;
+
+export const getCareerResultResponseReportTwoCaliberVsEntryFirstEntryRolesItemMax = 100;
+
+export const getCareerResultResponseReportTwoCaliberVsEntryFirstEntryRolesMax = 5;
+
+export const getCareerResultResponseReportTwoCaliberVsEntryBridgePathMax = 350;
+
+export const getCareerResultResponseReportTwoCareerFitsItemTitleMax = 120;
+
+export const getCareerResultResponseReportTwoCareerFitsItemSalaryInrLpaOneMinMin = 0;
+export const getCareerResultResponseReportTwoCareerFitsItemSalaryInrLpaOneMinMax = 100;
+
+export const getCareerResultResponseReportTwoCareerFitsItemSalaryInrLpaOneMaxMin = 0;
+export const getCareerResultResponseReportTwoCareerFitsItemSalaryInrLpaOneMaxMax = 100;
+
+export const getCareerResultResponseReportTwoCareerFitsItemNaturalFitScoreMax = 10;
+
+export const getCareerResultResponseReportTwoCareerFitsItemDailyWorkMax = 300;
+
+export const getCareerResultResponseReportTwoCareerFitsItemWhyFitsMax = 300;
+
+export const getCareerResultResponseReportTwoCareerFitsItemFiveYearGrowthMax = 300;
+
+export const getCareerResultResponseReportTwoCareerFitsMin = 4;
+export const getCareerResultResponseReportTwoCareerFitsMax = 6;
+
+export const getCareerResultResponseReportTwoCareersToAvoidItemTitleMax = 120;
+
+export const getCareerResultResponseReportTwoCareersToAvoidItemWhyMax = 300;
+
+export const getCareerResultResponseReportTwoTrackDetailWhyMax = 350;
+
+export const getCareerResultResponseReportTwoTrackDetailFresherDemandMax = 150;
+
+export const getCareerResultResponseReportTwoTrackDetailSkillsToLearnItemMax = 80;
+
+export const getCareerResultResponseReportTwoTrackDetailSkillsToLearnMin = 4;
+export const getCareerResultResponseReportTwoTrackDetailSkillsToLearnMax = 8;
+
+export const getCareerResultResponseReportTwoRoadmapItemMonthsMax = 20;
+
+export const getCareerResultResponseReportTwoRoadmapItemFocusMax = 120;
+
+export const getCareerResultResponseReportTwoRoadmapItemActionsItemMax = 200;
+
+export const getCareerResultResponseReportTwoRoadmapItemActionsMax = 3;
+
+export const getCareerResultResponseReportTwoRoadmapMin = 5;
+export const getCareerResultResponseReportTwoRoadmapMax = 5;
+
+export const getCareerResultResponseReportTwoBrutalTruthMax = 500;
+
+export const getCareerResultResponseReportTwoWorkArchetypeOneNameMax = 60;
+
+export const getCareerResultResponseReportTwoWorkArchetypeOneDefinitionMax = 300;
+
+export const getCareerResultResponseReportTwoWorkArchetypeOneEvidenceItemMax = 120;
+
+export const getCareerResultResponseReportTwoWorkArchetypeOneEvidenceMax = 3;
+
+export const getCareerResultResponseReportTwoCareerDirectionOneTargetTitleMax = 120;
+
+export const getCareerResultResponseReportTwoCareerDirectionOneTargetWhyMax = 500;
+
+export const getCareerResultResponseReportTwoCareerDirectionOneEntryTitleMax = 120;
+
+export const getCareerResultResponseReportTwoCareerDirectionOneEntryWhyMax = 500;
+
+export const getCareerResultResponseReportTwoCareerDirectionOneRouteWhyMax = 500;
+
+export const getCareerResultResponseReportTwoCareerDirectionOneBarriersItemMax = 300;
+
+export const getCareerResultResponseReportTwoCareerDirectionOneAlternativesNoteOneMax = 500;
+
+export const getCareerResultResponseReportTwoCareerComparisonOneItemTitleMax = 120;
+
+export const getCareerResultResponseReportTwoCareerComparisonOneItemRationaleMax = 500;
+
+export const getCareerResultResponseReportTwoCareerComparisonOneItemSkillsToDevelopItemMax = 80;
+
+export const getCareerResultResponseReportTwoCareerComparisonOneItemEntryDifficultyOneMax = 60;
+
+export const getCareerResultResponseReportTwoCareerComparisonOneItemPrerequisitesOneMax = 300;
+
+export const getCareerResultResponseReportTwoCareerComparisonOneMax = 8;
+
+export const getCareerResultResponseReportTwoSkillsGapsOneItemSkillMax = 80;
+
+export const getCareerResultResponseReportTwoSkillsGapsOneItemWhyItMattersMax = 300;
+
+export const getCareerResultResponseReportTwoSkillsGapsOneItemActivityMax = 300;
+
+export const getCareerResultResponseReportTwoSkillsGapsOneItemEvidenceOfProgressMax = 300;
+
+export const getCareerResultResponseStrategyOneTargetCareerOneIdMax = 80;
+
+export const getCareerResultResponseStrategyOneTargetCareerOneTitleMax = 120;
+
+export const getCareerResultResponseStrategyOneBestEntryCareerOneIdMax = 80;
+
+export const getCareerResultResponseStrategyOneBestEntryCareerOneTitleMax = 120;
+
+export const getCareerResultResponseStrategyOneBridgeCareerOneIdMax = 80;
+
+export const getCareerResultResponseStrategyOneBridgeCareerOneTitleMax = 120;
+
+export const getCareerResultResponseStrategyOneAlternativeRouteOneIdMax = 80;
+
+export const getCareerResultResponseStrategyOneAlternativeRouteOneTitleMax = 120;
+
+
+
+export const GetCareerResultResponse = zod.object({
+  "id": zod.string().uuid(),
+  "status": zod.enum(['pending', 'processing', 'done', 'failed']),
+  "submittedAt": zod.coerce.date(),
+  "report": zod.union([zod.object({
+  "profile": zod.object({
+  "archetype": zod.string().max(getCareerResultResponseReportOneProfileArchetypeMax),
+  "workerType": zod.enum(['Specialist', 'Operator', 'Builder', 'Analyst', 'Communicator', 'Entrepreneur', 'Manager']),
+  "clarityLevel": zod.enum(['Clear', 'Mixed', 'Exploratory']),
+  "summary": zod.string().max(getCareerResultResponseReportOneProfileSummaryMax),
+  "strengths": zod.array(zod.string().max(getCareerResultResponseReportOneProfileStrengthsItemMax)).min(getCareerResultResponseReportOneProfileStrengthsMin).max(getCareerResultResponseReportOneProfileStrengthsMax),
+  "risks": zod.array(zod.string().max(getCareerResultResponseReportOneProfileRisksItemMax)).min(getCareerResultResponseReportOneProfileRisksMin).max(getCareerResultResponseReportOneProfileRisksMax),
+  "survivalEnvironment": zod.string().max(getCareerResultResponseReportOneProfileSurvivalEnvironmentMax)
+}),
+  "traits": zod.object({
+  "technical": zod.object({
+  "score": zod.number().min(1).max(getCareerResultResponseReportOneTraitsTechnicalScoreMax),
+  "reason": zod.string().max(getCareerResultResponseReportOneTraitsTechnicalReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "creative": zod.object({
+  "score": zod.number().min(1).max(getCareerResultResponseReportOneTraitsCreativeScoreMax),
+  "reason": zod.string().max(getCareerResultResponseReportOneTraitsCreativeReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "people": zod.object({
+  "score": zod.number().min(1).max(getCareerResultResponseReportOneTraitsPeopleScoreMax),
+  "reason": zod.string().max(getCareerResultResponseReportOneTraitsPeopleReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "risk": zod.object({
+  "score": zod.number().min(1).max(getCareerResultResponseReportOneTraitsRiskScoreMax),
+  "reason": zod.string().max(getCareerResultResponseReportOneTraitsRiskReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "learning": zod.object({
+  "score": zod.number().min(1).max(getCareerResultResponseReportOneTraitsLearningScoreMax),
+  "reason": zod.string().max(getCareerResultResponseReportOneTraitsLearningReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+})
+}),
+  "answerPatterns": zod.object({
+  "clear": zod.array(zod.string().max(getCareerResultResponseReportOneAnswerPatternsClearItemMax)).max(getCareerResultResponseReportOneAnswerPatternsClearMax),
+  "conflicts": zod.array(zod.object({
+  "tag": zod.string().max(getCareerResultResponseReportOneAnswerPatternsConflictsItemTagMax),
+  "text": zod.string().max(getCareerResultResponseReportOneAnswerPatternsConflictsItemTextMax)
+})).max(getCareerResultResponseReportOneAnswerPatternsConflictsMax),
+  "worthExploring": zod.array(zod.string().max(getCareerResultResponseReportOneAnswerPatternsWorthExploringItemMax)).max(getCareerResultResponseReportOneAnswerPatternsWorthExploringMax)
+}),
+  "caliberVsEntry": zod.object({
+  "longTermCaliber": zod.string().max(getCareerResultResponseReportOneCaliberVsEntryLongTermCaliberMax),
+  "marketBarrier": zod.string().max(getCareerResultResponseReportOneCaliberVsEntryMarketBarrierMax),
+  "marketBarrierLevel": zod.enum(['Low', 'Moderate', 'High']),
+  "firstEntryRoles": zod.array(zod.string().max(getCareerResultResponseReportOneCaliberVsEntryFirstEntryRolesItemMax)).min(1).max(getCareerResultResponseReportOneCaliberVsEntryFirstEntryRolesMax),
+  "bridgePath": zod.string().max(getCareerResultResponseReportOneCaliberVsEntryBridgePathMax)
+}),
+  "workArchetype": zod.union([zod.object({
+  "name": zod.string().max(getCareerResultResponseReportOneWorkArchetypeOneNameMax),
+  "definition": zod.string().max(getCareerResultResponseReportOneWorkArchetypeOneDefinitionMax),
+  "strength": zod.enum(['Strong', 'Moderate', 'Emerging']),
+  "evidence": zod.array(zod.string().max(getCareerResultResponseReportOneWorkArchetypeOneEvidenceItemMax)).max(getCareerResultResponseReportOneWorkArchetypeOneEvidenceMax)
+}),zod.null()]).describe('Deterministic work archetype set by the server for new reports; absent in legacy reports.'),
+  "careerDirection": zod.union([zod.object({
+  "target": zod.object({
+  "title": zod.string().max(getCareerResultResponseReportOneCareerDirectionOneTargetTitleMax),
+  "why": zod.string().max(getCareerResultResponseReportOneCareerDirectionOneTargetWhyMax)
+}),
+  "entry": zod.object({
+  "title": zod.string().max(getCareerResultResponseReportOneCareerDirectionOneEntryTitleMax),
+  "why": zod.string().max(getCareerResultResponseReportOneCareerDirectionOneEntryWhyMax)
+}),
+  "route": zod.enum(['DIRECT', 'ADJACENT', 'BRIDGE']),
+  "routeWhy": zod.string().max(getCareerResultResponseReportOneCareerDirectionOneRouteWhyMax),
+  "barriers": zod.array(zod.string().max(getCareerResultResponseReportOneCareerDirectionOneBarriersItemMax)),
+  "alternativesNote": zod.union([zod.string().max(getCareerResultResponseReportOneCareerDirectionOneAlternativesNoteOneMax),zod.null()])
+}),zod.null()]).describe('Deterministic career direction composed by the server for new reports; absent in legacy reports.'),
+  "longTermOptions": zod.array(zod.object({
+  "id": zod.string().max(getCareerResultResponseReportOneLongTermOptionsItemIdMax),
+  "title": zod.string().max(getCareerResultResponseReportOneLongTermOptionsItemTitleMax),
+  "category": zod.string().max(getCareerResultResponseReportOneLongTermOptionsItemCategoryMax),
+  "rank": zod.number().min(1).max(getCareerResultResponseReportOneLongTermOptionsItemRankMax),
+  "score": zod.number(),
+  "fitScore": zod.number(),
+  "rationale": zod.string().max(getCareerResultResponseReportOneLongTermOptionsItemRationaleMax)
+})).min(getCareerResultResponseReportOneLongTermOptionsMin).max(getCareerResultResponseReportOneLongTermOptionsMax),
+  "entryOptions": zod.array(zod.object({
+  "id": zod.string().max(getCareerResultResponseReportOneEntryOptionsItemIdMax),
+  "title": zod.string().max(getCareerResultResponseReportOneEntryOptionsItemTitleMax),
+  "category": zod.string().max(getCareerResultResponseReportOneEntryOptionsItemCategoryMax),
+  "rank": zod.number().min(1).max(getCareerResultResponseReportOneEntryOptionsItemRankMax),
+  "score": zod.number(),
+  "fitScore": zod.number(),
+  "rationale": zod.string().max(getCareerResultResponseReportOneEntryOptionsItemRationaleMax),
+  "accessibility": zod.enum(['VERY_HIGH', 'HIGH', 'MEDIUM', 'MODERATE', 'LOW', 'VERY_LOW']),
+  "alignment": zod.enum(['STRONG', 'MODERATE', 'NEUTRAL', 'WEAK']),
+  "runwayWeeks": zod.number()
+})).min(getCareerResultResponseReportOneEntryOptionsMin).max(getCareerResultResponseReportOneEntryOptionsMax),
+  "careerComparison": zod.object({
+  "longTerm": zod.array(zod.object({
+  "id": zod.string().max(getCareerResultResponseReportOneCareerComparisonLongTermItemIdMax),
+  "title": zod.string().max(getCareerResultResponseReportOneCareerComparisonLongTermItemTitleMax),
+  "roleInvolves": zod.string().max(getCareerResultResponseReportOneCareerComparisonLongTermItemRoleInvolvesMax),
+  "whyFit": zod.string().max(getCareerResultResponseReportOneCareerComparisonLongTermItemWhyFitMax),
+  "tradeOff": zod.string().max(getCareerResultResponseReportOneCareerComparisonLongTermItemTradeOffMax),
+  "differentiation": zod.string().max(getCareerResultResponseReportOneCareerComparisonLongTermItemDifferentiationMax)
+})).min(getCareerResultResponseReportOneCareerComparisonLongTermMin).max(getCareerResultResponseReportOneCareerComparisonLongTermMax),
+  "entryLevel": zod.array(zod.object({
+  "id": zod.string().max(getCareerResultResponseReportOneCareerComparisonEntryLevelItemIdMax),
+  "title": zod.string().max(getCareerResultResponseReportOneCareerComparisonEntryLevelItemTitleMax),
+  "roleInvolves": zod.string().max(getCareerResultResponseReportOneCareerComparisonEntryLevelItemRoleInvolvesMax),
+  "whyFit": zod.string().max(getCareerResultResponseReportOneCareerComparisonEntryLevelItemWhyFitMax),
+  "tradeOff": zod.string().max(getCareerResultResponseReportOneCareerComparisonEntryLevelItemTradeOffMax),
+  "differentiation": zod.string().max(getCareerResultResponseReportOneCareerComparisonEntryLevelItemDifferentiationMax)
+})).min(getCareerResultResponseReportOneCareerComparisonEntryLevelMin).max(getCareerResultResponseReportOneCareerComparisonEntryLevelMax)
+}),
+  "recommendedWorkLane": zod.object({
+  "lane": zod.enum(['Engineering', 'Product', 'Automation', 'Startup Ops', 'Technical Business', 'Design / UI-UX', 'Hybrid Tech-Generalist']),
+  "why": zod.string().max(getCareerResultResponseReportOneRecommendedWorkLaneWhyMax),
+  "primaryCareer": zod.object({
+  "id": zod.string().max(getCareerResultResponseReportOneRecommendedWorkLanePrimaryCareerIdMax),
+  "title": zod.string().max(getCareerResultResponseReportOneRecommendedWorkLanePrimaryCareerTitleMax)
+}),
+  "supportingCareers": zod.array(zod.object({
+  "id": zod.string().max(getCareerResultResponseReportOneRecommendedWorkLaneSupportingCareersItemIdMax),
+  "title": zod.string().max(getCareerResultResponseReportOneRecommendedWorkLaneSupportingCareersItemTitleMax)
+})),
+  "entryRoute": zod.object({
+  "routeType": zod.enum(['DIRECT', 'ADJACENT', 'BRIDGE']),
+  "entryCareer": zod.object({
+  "id": zod.string().max(getCareerResultResponseReportOneRecommendedWorkLaneEntryRouteEntryCareerIdMax),
+  "title": zod.string().max(getCareerResultResponseReportOneRecommendedWorkLaneEntryRouteEntryCareerTitleMax)
+}),
+  "bridgeCareer": zod.union([zod.object({
+  "id": zod.string().max(getCareerResultResponseReportOneRecommendedWorkLaneEntryRouteBridgeCareerOneIdMax),
+  "title": zod.string().max(getCareerResultResponseReportOneRecommendedWorkLaneEntryRouteBridgeCareerOneTitleMax)
+}),zod.null()]),
+  "rationale": zod.string().max(getCareerResultResponseReportOneRecommendedWorkLaneEntryRouteRationaleMax)
+}),
+  "explanation": zod.string().max(getCareerResultResponseReportOneRecommendedWorkLaneExplanationMax)
+}),
+  "roadmap": zod.array(zod.object({
+  "order": zod.number().min(1).max(getCareerResultResponseReportOneRoadmapItemOrderMax),
+  "monthRange": zod.string().max(getCareerResultResponseReportOneRoadmapItemMonthRangeMax),
+  "focus": zod.string().max(getCareerResultResponseReportOneRoadmapItemFocusMax),
+  "actions": zod.array(zod.string().max(getCareerResultResponseReportOneRoadmapItemActionsItemMax)).min(1).max(getCareerResultResponseReportOneRoadmapItemActionsMax),
+  "measurableOutputs": zod.array(zod.string().max(getCareerResultResponseReportOneRoadmapItemMeasurableOutputsItemMax)).min(1).max(getCareerResultResponseReportOneRoadmapItemMeasurableOutputsMax)
+})).min(getCareerResultResponseReportOneRoadmapMin).max(getCareerResultResponseReportOneRoadmapMax),
+  "mentorNote": zod.object({
+  "observedPattern": zod.string().max(getCareerResultResponseReportOneMentorNoteObservedPatternMax),
+  "realisticRisk": zod.string().max(getCareerResultResponseReportOneMentorNoteRealisticRiskMax),
+  "actionableExperiment": zod.string().max(getCareerResultResponseReportOneMentorNoteActionableExperimentMax)
+}),
+  "recommendedTrack": zod.enum(['Engineering', 'Product', 'Automation', 'Startup Ops', 'Technical Business', 'Design / UI-UX', 'Hybrid Tech-Generalist'])
+}),zod.object({
+  "profile": zod.object({
+  "archetype": zod.string().max(getCareerResultResponseReportTwoProfileArchetypeMax),
+  "workerType": zod.enum(['Specialist', 'Operator', 'Builder', 'Analyst', 'Communicator', 'Entrepreneur', 'Manager']),
+  "clarityLevel": zod.enum(['Clear', 'Mixed', 'Exploratory']),
+  "summary": zod.string().max(getCareerResultResponseReportTwoProfileSummaryMax),
+  "strengths": zod.array(zod.string().max(getCareerResultResponseReportTwoProfileStrengthsItemMax)).min(getCareerResultResponseReportTwoProfileStrengthsMin).max(getCareerResultResponseReportTwoProfileStrengthsMax),
+  "risks": zod.array(zod.string().max(getCareerResultResponseReportTwoProfileRisksItemMax)).min(getCareerResultResponseReportTwoProfileRisksMin).max(getCareerResultResponseReportTwoProfileRisksMax),
+  "survivalEnvironment": zod.string().max(getCareerResultResponseReportTwoProfileSurvivalEnvironmentMax)
+}),
+  "traits": zod.object({
+  "technical": zod.object({
+  "score": zod.number().min(1).max(getCareerResultResponseReportTwoTraitsTechnicalScoreMax),
+  "reason": zod.string().max(getCareerResultResponseReportTwoTraitsTechnicalReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "creative": zod.object({
+  "score": zod.number().min(1).max(getCareerResultResponseReportTwoTraitsCreativeScoreMax),
+  "reason": zod.string().max(getCareerResultResponseReportTwoTraitsCreativeReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "people": zod.object({
+  "score": zod.number().min(1).max(getCareerResultResponseReportTwoTraitsPeopleScoreMax),
+  "reason": zod.string().max(getCareerResultResponseReportTwoTraitsPeopleReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "risk": zod.object({
+  "score": zod.number().min(1).max(getCareerResultResponseReportTwoTraitsRiskScoreMax),
+  "reason": zod.string().max(getCareerResultResponseReportTwoTraitsRiskReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+}),
+  "learning": zod.object({
+  "score": zod.number().min(1).max(getCareerResultResponseReportTwoTraitsLearningScoreMax),
+  "reason": zod.string().max(getCareerResultResponseReportTwoTraitsLearningReasonMax),
+  "label": zod.enum(['Low', 'Medium', 'High'])
+})
+}),
+  "answerPatterns": zod.object({
+  "clear": zod.array(zod.string().max(getCareerResultResponseReportTwoAnswerPatternsClearItemMax)).max(getCareerResultResponseReportTwoAnswerPatternsClearMax),
+  "conflicts": zod.array(zod.object({
+  "tag": zod.string().max(getCareerResultResponseReportTwoAnswerPatternsConflictsItemTagMax),
+  "text": zod.string().max(getCareerResultResponseReportTwoAnswerPatternsConflictsItemTextMax)
+})).max(getCareerResultResponseReportTwoAnswerPatternsConflictsMax),
+  "worthExploring": zod.array(zod.string().max(getCareerResultResponseReportTwoAnswerPatternsWorthExploringItemMax)).max(getCareerResultResponseReportTwoAnswerPatternsWorthExploringMax)
+}),
+  "caliberVsEntry": zod.object({
+  "longTermCaliber": zod.string().max(getCareerResultResponseReportTwoCaliberVsEntryLongTermCaliberMax),
+  "marketBarrier": zod.string().max(getCareerResultResponseReportTwoCaliberVsEntryMarketBarrierMax),
+  "marketBarrierLevel": zod.enum(['Low', 'Moderate', 'High']),
+  "firstEntryRoles": zod.array(zod.string().max(getCareerResultResponseReportTwoCaliberVsEntryFirstEntryRolesItemMax)).min(1).max(getCareerResultResponseReportTwoCaliberVsEntryFirstEntryRolesMax),
+  "bridgePath": zod.string().max(getCareerResultResponseReportTwoCaliberVsEntryBridgePathMax)
+}),
+  "careerFits": zod.array(zod.object({
+  "title": zod.string().max(getCareerResultResponseReportTwoCareerFitsItemTitleMax),
+  "roleType": zod.enum(['Stepping-stone', 'Long-term fit']),
+  "salaryInrLpa": zod.union([zod.object({
+  "min": zod.number().min(getCareerResultResponseReportTwoCareerFitsItemSalaryInrLpaOneMinMin).max(getCareerResultResponseReportTwoCareerFitsItemSalaryInrLpaOneMinMax),
+  "max": zod.number().min(getCareerResultResponseReportTwoCareerFitsItemSalaryInrLpaOneMaxMin).max(getCareerResultResponseReportTwoCareerFitsItemSalaryInrLpaOneMaxMax)
+}),zod.null()]),
+  "entryDifficulty": zod.enum(['Easy to enter', 'Moderately difficult', 'Highly competitive']),
+  "careerHealth": zod.enum(['Stable', 'Fast-growth', 'High burnout', 'Oversaturated', 'High leverage']),
+  "aiThreat": zod.enum(['Low', 'Medium', 'High']),
+  "naturalFitScore": zod.number().min(1).max(getCareerResultResponseReportTwoCareerFitsItemNaturalFitScoreMax),
+  "dailyWork": zod.string().max(getCareerResultResponseReportTwoCareerFitsItemDailyWorkMax),
+  "whyFits": zod.string().max(getCareerResultResponseReportTwoCareerFitsItemWhyFitsMax),
+  "fiveYearGrowth": zod.string().max(getCareerResultResponseReportTwoCareerFitsItemFiveYearGrowthMax)
+})).min(getCareerResultResponseReportTwoCareerFitsMin).max(getCareerResultResponseReportTwoCareerFitsMax),
+  "careersToAvoid": zod.array(zod.object({
+  "title": zod.string().max(getCareerResultResponseReportTwoCareersToAvoidItemTitleMax),
+  "why": zod.string().max(getCareerResultResponseReportTwoCareersToAvoidItemWhyMax)
+})),
+  "recommendedTrack": zod.enum(['Engineering', 'Product', 'Automation', 'Startup Ops', 'Technical Business', 'Design / UI-UX', 'Hybrid Tech-Generalist']),
+  "trackDetail": zod.object({
+  "why": zod.string().max(getCareerResultResponseReportTwoTrackDetailWhyMax),
+  "fresherDemand": zod.string().max(getCareerResultResponseReportTwoTrackDetailFresherDemandMax),
+  "skillsToLearn": zod.array(zod.string().max(getCareerResultResponseReportTwoTrackDetailSkillsToLearnItemMax)).min(getCareerResultResponseReportTwoTrackDetailSkillsToLearnMin).max(getCareerResultResponseReportTwoTrackDetailSkillsToLearnMax)
+}),
+  "roadmap": zod.array(zod.object({
+  "months": zod.string().max(getCareerResultResponseReportTwoRoadmapItemMonthsMax),
+  "focus": zod.string().max(getCareerResultResponseReportTwoRoadmapItemFocusMax),
+  "actions": zod.array(zod.string().max(getCareerResultResponseReportTwoRoadmapItemActionsItemMax)).min(1).max(getCareerResultResponseReportTwoRoadmapItemActionsMax)
+})).min(getCareerResultResponseReportTwoRoadmapMin).max(getCareerResultResponseReportTwoRoadmapMax),
+  "brutalTruth": zod.string().max(getCareerResultResponseReportTwoBrutalTruthMax),
+  "workArchetype": zod.union([zod.object({
+  "name": zod.string().max(getCareerResultResponseReportTwoWorkArchetypeOneNameMax),
+  "definition": zod.string().max(getCareerResultResponseReportTwoWorkArchetypeOneDefinitionMax),
+  "strength": zod.enum(['Strong', 'Moderate', 'Emerging']),
+  "evidence": zod.array(zod.string().max(getCareerResultResponseReportTwoWorkArchetypeOneEvidenceItemMax)).max(getCareerResultResponseReportTwoWorkArchetypeOneEvidenceMax)
+}),zod.null()]).optional(),
+  "careerDirection": zod.union([zod.object({
+  "target": zod.object({
+  "title": zod.string().max(getCareerResultResponseReportTwoCareerDirectionOneTargetTitleMax),
+  "why": zod.string().max(getCareerResultResponseReportTwoCareerDirectionOneTargetWhyMax)
+}),
+  "entry": zod.object({
+  "title": zod.string().max(getCareerResultResponseReportTwoCareerDirectionOneEntryTitleMax),
+  "why": zod.string().max(getCareerResultResponseReportTwoCareerDirectionOneEntryWhyMax)
+}),
+  "route": zod.enum(['DIRECT', 'ADJACENT', 'BRIDGE']),
+  "routeWhy": zod.string().max(getCareerResultResponseReportTwoCareerDirectionOneRouteWhyMax),
+  "barriers": zod.array(zod.string().max(getCareerResultResponseReportTwoCareerDirectionOneBarriersItemMax)),
+  "alternativesNote": zod.union([zod.string().max(getCareerResultResponseReportTwoCareerDirectionOneAlternativesNoteOneMax),zod.null()])
+}),zod.null()]).optional(),
+  "careerComparison": zod.union([zod.array(zod.object({
+  "title": zod.string().max(getCareerResultResponseReportTwoCareerComparisonOneItemTitleMax),
+  "role": zod.enum(['target', 'entry', 'alternative', 'exploratory', 'cautious']),
+  "rationale": zod.string().max(getCareerResultResponseReportTwoCareerComparisonOneItemRationaleMax),
+  "skillsToDevelop": zod.array(zod.string().max(getCareerResultResponseReportTwoCareerComparisonOneItemSkillsToDevelopItemMax)),
+  "entryDifficulty": zod.union([zod.string().max(getCareerResultResponseReportTwoCareerComparisonOneItemEntryDifficultyOneMax),zod.null()]),
+  "prerequisites": zod.union([zod.string().max(getCareerResultResponseReportTwoCareerComparisonOneItemPrerequisitesOneMax),zod.null()])
+})).min(1).max(getCareerResultResponseReportTwoCareerComparisonOneMax),zod.null()]).optional(),
+  "skillsGaps": zod.union([zod.array(zod.object({
+  "skill": zod.string().max(getCareerResultResponseReportTwoSkillsGapsOneItemSkillMax),
+  "whyItMatters": zod.string().max(getCareerResultResponseReportTwoSkillsGapsOneItemWhyItMattersMax),
+  "activity": zod.string().max(getCareerResultResponseReportTwoSkillsGapsOneItemActivityMax),
+  "evidenceOfProgress": zod.string().max(getCareerResultResponseReportTwoSkillsGapsOneItemEvidenceOfProgressMax)
+})),zod.null()]).optional()
+}),zod.null()]),
+  "strategy": zod.union([zod.object({
+  "strategyVersion": zod.string(),
+  "explanationVersion": zod.string(),
+  "targetCareer": zod.union([zod.object({
+  "id": zod.string().max(getCareerResultResponseStrategyOneTargetCareerOneIdMax),
+  "title": zod.string().max(getCareerResultResponseStrategyOneTargetCareerOneTitleMax)
+}),zod.null()]),
+  "bestEntryCareer": zod.union([zod.object({
+  "id": zod.string().max(getCareerResultResponseStrategyOneBestEntryCareerOneIdMax),
+  "title": zod.string().max(getCareerResultResponseStrategyOneBestEntryCareerOneTitleMax)
+}),zod.null()]),
+  "bridgeCareer": zod.union([zod.object({
+  "id": zod.string().max(getCareerResultResponseStrategyOneBridgeCareerOneIdMax),
+  "title": zod.string().max(getCareerResultResponseStrategyOneBridgeCareerOneTitleMax)
+}),zod.null()]),
+  "alternativeRoute": zod.union([zod.object({
+  "id": zod.string().max(getCareerResultResponseStrategyOneAlternativeRouteOneIdMax),
+  "title": zod.string().max(getCareerResultResponseStrategyOneAlternativeRouteOneTitleMax)
+}),zod.null()]),
+  "routeType": zod.union([zod.enum(['DIRECT', 'ADJACENT', 'BRIDGE']),zod.null()]),
+  "rationale": zod.object({
+  "target": zod.string(),
+  "entry": zod.string(),
+  "bridge": zod.union([zod.string(),zod.null()]),
+  "academic": zod.string(),
+  "time": zod.string()
+}),
+  "explanation": zod.object({
+  "target": zod.string(),
+  "entry": zod.string(),
+  "route": zod.string(),
+  "academic": zod.string(),
+  "time": zod.string(),
+  "bridge": zod.union([zod.string(),zod.null()]),
+  "alternative": zod.union([zod.string(),zod.null()])
+}),
+  "insufficientContext": zod.boolean()
+}),zod.null()]).describe('Deterministic entry strategy persisted with the report; null until generated (e.g. legacy reports).'),
+  "error": zod.union([zod.string(),zod.null()])
 })
 
 
@@ -343,6 +2173,10 @@ export const GetInstitutionDashboardResponse = zod.object({
   "label": zod.string(),
   "count": zod.number()
 })),
+  "longTermCaliberDistribution": zod.array(zod.object({
+  "label": zod.string(),
+  "count": zod.number()
+})).describe('Most common long-term caliber directions in the selected cohort.'),
   "careersToAvoid": zod.array(zod.object({
   "label": zod.string(),
   "count": zod.number()

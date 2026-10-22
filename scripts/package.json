@@ -5,7 +5,26 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
+    "seed:demo": "tsx ./src/seedDemo.ts",
+    "test:batch1": "tsx --test --import ../artifacts/api-server/src/lib/testEnv.ts ../artifacts/api-server/src/lib/studentContext.test.ts ../artifacts/career-discovery/src/lib/assessmentDraft.test.ts",
+    "test:batch2": "tsx --test --import ../artifacts/api-server/src/lib/testEnv.ts ../artifacts/api-server/src/lib/careerStrategy/strategy.test.ts",
+    "test:archetype": "tsx --test --import ../artifacts/api-server/src/lib/testEnv.ts ../artifacts/api-server/src/lib/careerStrategy/archetype.test.ts",
+    "test:direction": "tsx --test --import ../artifacts/api-server/src/lib/testEnv.ts ../artifacts/api-server/src/lib/careerStrategy/careerDirection.test.ts ../artifacts/career-discovery/src/lib/reportShape.test.ts",
+    "test:batch3": "tsx --test --import ../artifacts/api-server/src/lib/testEnv.ts ../artifacts/api-server/src/lib/careerStrategy/explanation.test.ts",
+    "test:batch4": "tsx --test --import ../artifacts/api-server/src/lib/testEnv.ts ../artifacts/api-server/src/lib/strategyRecord.test.ts ../artifacts/career-discovery/src/lib/careerPathModel.test.ts",
+    "test:batch5": "tsx --test --import ../artifacts/api-server/src/lib/testEnv.ts ../artifacts/api-server/src/lib/hardening.test.ts ../artifacts/api-server/src/lib/careerReportSchema.test.ts",
+    "test:providers": "tsx --test --import ../artifacts/api-server/src/lib/testEnv.ts ../artifacts/api-server/src/lib/ai/aiProvider.test.ts",
+    "test:geminischema": "tsx --test --import ../artifacts/api-server/src/lib/testEnv.ts ../artifacts/api-server/src/lib/ai/geminiJsonSchema.test.ts",
+    "test:retryfix": "tsx --test --import ../artifacts/api-server/src/lib/testEnv.ts ../artifacts/api-server/src/lib/generationAttempts.test.ts",
+    "test:preview": "tsx --test --import ../artifacts/api-server/src/lib/testEnv.ts ../artifacts/career-discovery/src/lib/previewIsolation.test.ts",
+    "test:navigation": "tsx --test --import ../artifacts/api-server/src/lib/testEnv.ts ../artifacts/career-discovery/src/lib/assessmentNavigation.test.ts",
+    "test:all": "tsx --test --import ../artifacts/api-server/src/lib/testEnv.ts ../artifacts/api-server/src/lib/studentContext.test.ts ../artifacts/career-discovery/src/lib/assessmentDraft.test.ts ../artifacts/career-discovery/src/lib/assessmentNavigation.test.ts ../artifacts/api-server/src/lib/careerStrategy/strategy.test.ts ../artifacts/api-server/src/lib/careerStrategy/archetype.test.ts ../artifacts/api-server/src/lib/careerStrategy/careerDirection.test.ts ../artifacts/api-server/src/lib/careerStrategy/explanation.test.ts ../artifacts/api-server/src/lib/strategyRecord.test.ts ../artifacts/career-discovery/src/lib/careerPathModel.test.ts ../artifacts/career-discovery/src/lib/reportShape.test.ts ../artifacts/career-discovery/src/lib/previewIsolation.test.ts ../artifacts/api-server/src/lib/careerStrategy/ranking.test.ts ../artifacts/api-server/src/lib/hardening.test.ts ../artifacts/api-server/src/lib/careerReportSchema.test.ts ../artifacts/api-server/src/lib/ai/aiProvider.test.ts ../artifacts/api-server/src/lib/ai/geminiJsonSchema.test.ts ../artifacts/api-server/src/lib/generationAttempts.test.ts ../lib/db/src/poolErrorHandler.test.ts ../artifacts/api-server/src/lib/careerDashboard.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@workspace/api-zod": "workspace:*",
+    "@workspace/db": "workspace:*",
+    "drizzle-orm": "catalog:"
   },
   "devDependencies": {
     "@types/node": "catalog:",

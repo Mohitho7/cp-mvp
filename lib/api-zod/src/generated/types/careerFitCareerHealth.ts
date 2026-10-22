@@ -10,7 +10,9 @@ export type CareerFitCareerHealth = typeof CareerFitCareerHealth[keyof typeof Ca
 
 
 export const CareerFitCareerHealth = {
-  Growing: 'Growing',
   Stable: 'Stable',
-  Declining: 'Declining',
+  'Fast-growth': 'Fast-growth',
+  High_burnout: 'High burnout',
+  Oversaturated: 'Oversaturated',
+  High_leverage: 'High leverage',
 } as const;

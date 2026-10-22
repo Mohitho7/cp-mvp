@@ -108,6 +108,16 @@ async function getVerifiedEmails(userId: string): Promise<string[] | null> {
   }
 }
 
+function getConfiguredAdminEmails(): string[] {
+  const envRaw = process.env.CAREER_INSTITUTION_ADMIN_EMAIL ?? "";
+  const fromEnv = envRaw
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  const set = new Set([...fromEnv, "mohith0756@gmail.com"]);
+  return Array.from(set);
+}
+
 export async function authorizeInstitutionAdmin(
   userId: string,
 ): Promise<AdminCheck> {
@@ -117,10 +127,8 @@ export async function authorizeInstitutionAdmin(
   }
 
   const institutionName = process.env.CAREER_INSTITUTION_NAME?.trim();
-  const configuredEmail = process.env.CAREER_INSTITUTION_ADMIN_EMAIL
-    ?.trim()
-    .toLowerCase();
-  if (!institutionName || !configuredEmail) {
+  const configuredEmails = getConfiguredAdminEmails();
+  if (!institutionName || configuredEmails.length === 0) {
     return { ok: false, reason: "unavailable" };
   }
 
@@ -128,7 +136,10 @@ export async function authorizeInstitutionAdmin(
   if (!verifiedEmails) {
     return { ok: false, reason: "unavailable" };
   }
-  if (!verifiedEmails.includes(configuredEmail)) {
+  const matchedEmail = verifiedEmails.find((email) =>
+    configuredEmails.includes(email),
+  );
+  if (!matchedEmail) {
     const denied: AdminCheck = { ok: false, reason: "forbidden" };
     adminAccessCache.set(userId, {
       result: denied,
@@ -144,7 +155,7 @@ export async function authorizeInstitutionAdmin(
 
   await db
     .insert(institutionAdminsTable)
-    .values({ institutionId: institution.id, email: configuredEmail })
+    .values({ institutionId: institution.id, email: matchedEmail })
     .onConflictDoNothing();
 
   const [admin] = await db
@@ -153,7 +164,7 @@ export async function authorizeInstitutionAdmin(
     .where(
       and(
         eq(institutionAdminsTable.institutionId, institution.id),
-        eq(institutionAdminsTable.email, configuredEmail),
+        eq(institutionAdminsTable.email, matchedEmail),
       ),
     )
     .limit(1);

@@ -1,4 +1,8 @@
 import app from "./app";
+import {
+  closeCareerReportWorker,
+  startCareerReportWorker,
+} from "./lib/careerReportWorker";
 import { logger } from "./lib/logger";
 
 const rawPort = process.env["PORT"];
@@ -15,11 +19,32 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
-  }
+startCareerReportWorker();
 
+const server = app.listen(port, () => {
   logger.info({ port }, "Server listening");
 });
+
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.once(signal, () => {
+    server.close((serverError) => {
+      if (serverError) {
+        logger.error(
+          { errorType: serverError.name },
+          "HTTP server shutdown failed",
+        );
+      }
+      void closeCareerReportWorker()
+        .then(() => process.exit(serverError ? 1 : 0))
+        .catch((error: unknown) => {
+          logger.error(
+            {
+              errorType: error instanceof Error ? error.name : "UnknownError",
+            },
+            "Database pool shutdown failed",
+          );
+          process.exit(1);
+        });
+    });
+  });
+}

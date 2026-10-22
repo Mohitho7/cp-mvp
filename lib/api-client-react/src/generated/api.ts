@@ -190,6 +190,78 @@ export const useCreateCareerSubmission = <TError = ErrorType<void>,
       return useMutation(getCreateCareerSubmissionMutationOptions(options));
     }
 
+export const getSubmitCareerAssessmentUrl = () => {
+
+
+
+
+  return `/api/submit`
+}
+
+/**
+ * Compatibility alias for POST /submissions. Requires an authenticated student and explicit consent to share aggregate assessment data with their institution.
+ * @summary Save a student's answers and queue a report
+ */
+export const submitCareerAssessment = async (careerSubmissionInput: CareerSubmissionInput, options?: RequestInit): Promise<CareerSubmissionAccepted> => {
+
+  return customFetch<CareerSubmissionAccepted>(getSubmitCareerAssessmentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      careerSubmissionInput,)
+  }
+);}
+
+
+
+
+export const getSubmitCareerAssessmentMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitCareerAssessment>>, TError,{data: BodyType<CareerSubmissionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitCareerAssessment>>, TError,{data: BodyType<CareerSubmissionInput>}, TContext> => {
+
+const mutationKey = ['submitCareerAssessment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitCareerAssessment>>, {data: BodyType<CareerSubmissionInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  submitCareerAssessment(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitCareerAssessmentMutationResult = NonNullable<Awaited<ReturnType<typeof submitCareerAssessment>>>
+    export type SubmitCareerAssessmentMutationBody = BodyType<CareerSubmissionInput>
+    export type SubmitCareerAssessmentMutationError = ErrorType<void>
+
+    /**
+ * @summary Save a student's answers and queue a report
+ */
+export const useSubmitCareerAssessment = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitCareerAssessment>>, TError,{data: BodyType<CareerSubmissionInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitCareerAssessment>>,
+        TError,
+        {data: BodyType<CareerSubmissionInput>},
+        TContext
+      > => {
+      return useMutation(getSubmitCareerAssessmentMutationOptions(options));
+    }
+
 export const getGetMyCareerSubmissionUrl = () => {
 
 
@@ -416,6 +488,84 @@ export const useRetryCareerSubmission = <TError = ErrorType<void>,
       > => {
       return useMutation(getRetryCareerSubmissionMutationOptions(options));
     }
+
+export const getGetCareerResultUrl = (id: string,) => {
+
+
+
+
+  return `/api/result/${id}`
+}
+
+/**
+ * Compatibility alias for GET /submissions/{id}. Students can read only their own report.
+ * @summary Get the signed-in student's submission status and report
+ */
+export const getCareerResult = async (id: string, options?: RequestInit): Promise<CareerSubmissionResult> => {
+
+  return customFetch<CareerSubmissionResult>(getGetCareerResultUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCareerResultQueryKey = (id: string,) => {
+    return [
+    `/api/result/${id}`
+    ] as const;
+    }
+
+
+export const getGetCareerResultQueryOptions = <TData = Awaited<ReturnType<typeof getCareerResult>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCareerResult>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCareerResultQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCareerResult>>> = ({ signal }) => getCareerResult(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCareerResult>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCareerResultQueryResult = NonNullable<Awaited<ReturnType<typeof getCareerResult>>>
+export type GetCareerResultQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the signed-in student's submission status and report
+ */
+
+export function useGetCareerResult<TData = Awaited<ReturnType<typeof getCareerResult>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCareerResult>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCareerResultQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetInstitutionDashboardUrl = (params?: GetInstitutionDashboardParams,) => {
   const normalizedParams = new URLSearchParams();

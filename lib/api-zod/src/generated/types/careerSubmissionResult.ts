@@ -6,12 +6,16 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { CareerReport } from './careerReport';
+import type { CareerStrategy } from './careerStrategy';
 import type { CareerSubmissionResultStatus } from './careerSubmissionResultStatus';
+import type { LegacyCareerReport } from './legacyCareerReport';
 
 export interface CareerSubmissionResult {
   id: string;
   status: CareerSubmissionResultStatus;
   submittedAt: Date;
-  report: CareerReport | null;
+  report: CareerReport | LegacyCareerReport | null;
+  /** Deterministic entry strategy persisted with the report; null until generated (e.g. legacy reports). */
+  strategy: CareerStrategy | null;
   error: string | null;
 }

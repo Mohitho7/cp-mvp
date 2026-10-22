@@ -7,23 +7,44 @@
  */
 import type { AnswerPatterns } from './answerPatterns';
 import type { CaliberVsEntry } from './caliberVsEntry';
-import type { CareerFit } from './careerFit';
+import type { CareerComparison } from './careerComparison';
+import type { CareerDirection } from './careerDirection';
 import type { CareerProfile } from './careerProfile';
 import type { CareerReportRecommendedTrack } from './careerReportRecommendedTrack';
-import type { CareerToAvoid } from './careerToAvoid';
 import type { CareerTraits } from './careerTraits';
-import type { RoadmapStep } from './roadmapStep';
-import type { TrackDetail } from './trackDetail';
+import type { EntryLevelCareerOption } from './entryLevelCareerOption';
+import type { LongTermCareerOption } from './longTermCareerOption';
+import type { MentorNote } from './mentorNote';
+import type { RoadmapMilestone } from './roadmapMilestone';
+import type { WorkArchetype } from './workArchetype';
+import type { WorkLaneRecommendation } from './workLaneRecommendation';
 
 export interface CareerReport {
   profile: CareerProfile;
   traits: CareerTraits;
   answerPatterns: AnswerPatterns;
   caliberVsEntry: CaliberVsEntry;
-  careerFits: CareerFit[];
-  careersToAvoid: CareerToAvoid[];
+  /** Deterministic work archetype set by the server for new reports; absent in legacy reports. */
+  workArchetype: WorkArchetype | null;
+  /** Deterministic career direction composed by the server for new reports; absent in legacy reports. */
+  careerDirection: CareerDirection | null;
+  /**
+     * @minItems 5
+     * @maxItems 5
+     */
+  longTermOptions: LongTermCareerOption[];
+  /**
+     * @minItems 5
+     * @maxItems 5
+     */
+  entryOptions: EntryLevelCareerOption[];
+  careerComparison: CareerComparison;
+  recommendedWorkLane: WorkLaneRecommendation;
+  /**
+     * @minItems 5
+     * @maxItems 5
+     */
+  roadmap: RoadmapMilestone[];
+  mentorNote: MentorNote;
   recommendedTrack: CareerReportRecommendedTrack;
-  trackDetail: TrackDetail;
-  roadmap: RoadmapStep[];
-  brutalTruth: string;
 }

@@ -15,6 +15,6 @@ export const CareerReportRecommendedTrack = {
   Automation: 'Automation',
   Startup_Ops: 'Startup Ops',
   Technical_Business: 'Technical Business',
+  'Design_/_UI-UX': 'Design / UI-UX',
   'Hybrid_Tech-Generalist': 'Hybrid Tech-Generalist',
-  Business_Analyst: 'Business Analyst',
 } as const;

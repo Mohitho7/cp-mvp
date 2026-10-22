@@ -1,4 +1,9 @@
-import express, { type Express } from "express";
+import express, {
+  type Express,
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
 import cors from "cors";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
@@ -47,5 +52,25 @@ app.use(
 );
 
 app.use("/api", router);
+
+app.use((error: unknown, _req: Request, res: Response, next: NextFunction) => {
+  if (res.headersSent) {
+    next(error);
+    return;
+  }
+
+  if (error instanceof SyntaxError && "body" in error) {
+    res.status(400).json({ error: "Request body must contain valid JSON." });
+    return;
+  }
+
+  logger.error(
+    {
+      errorType: error instanceof Error ? error.name : "UnknownError",
+    },
+    "API request failed",
+  );
+  res.status(500).json({ error: "The request could not be completed." });
+});
 
 export default app;

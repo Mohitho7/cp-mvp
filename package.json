@@ -1,39 +1,16 @@
 {
-  "name": "career-pathfinder",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "description": "AI-powered career discovery for students + privacy-safe institution analytics. Vercel + PostgreSQL + Clerk + OpenAI.",
-  "engines": {
-    "node": ">=20"
-  },
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
   "scripts": {
-    "dev:web": "vite --config web/vite.config.ts",
-    "build": "vite build --config web/vite.config.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p web/tsconfig.json --noEmit",
-    "test": "tsc -p tsconfig.test.json && node --test .test-dist/tests/*.test.js",
-    "db:migrate": "tsc -p tsconfig.test.json && node .test-dist/src/migrate.js",
-    "seed:demo": "tsc -p tsconfig.test.json && node .test-dist/src/seed.js"
+    "preinstall": "node -e \"const fs = require('fs'); ['package-lock.json', 'yarn.lock'].forEach(f => { try { fs.unlinkSync(f); } catch {} }); const ua = process.env.npm_config_user_agent || ''; if (ua && !ua.startsWith('pnpm/')) { console.error('Use pnpm instead'); process.exit(1); }\"",
+    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
-  "dependencies": {
-    "@clerk/backend": "3.22.0",
-    "@clerk/react": "6.17.5",
-    "@clerk/themes": "2.2.29",
-    "@tanstack/react-query": "5.100.9",
-    "drizzle-orm": "0.45.2",
-    "lucide-react": "0.545.0",
-    "openai": "7.28.0",
-    "pg": "8.20.0",
-    "react": "19.1.4",
-    "react-dom": "19.1.4",
-    "wouter": "3.10.0",
-    "zod": "3.25.76",
-    "zod-to-json-schema": "3.25.2"
-  },
-  "devDependencies": {    "@types/node": "25.6.2",
-    "@types/react": "19.2.14",
-    "@types/react-dom": "19.2.3",
-    "typescript": "5.9.3",
-    "vite": "7.3.3"
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.8.3",
+    "typescript": "~5.9.3"
   }
 }

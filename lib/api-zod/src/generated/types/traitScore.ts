@@ -13,6 +13,7 @@ export interface TraitScore {
      * @maximum 5
      */
   score: number;
+  /** @maxLength 250 */
   reason: string;
   label: TraitScoreLabel;
 }

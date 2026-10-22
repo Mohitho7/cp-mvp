@@ -27,6 +27,8 @@ export interface InstitutionDashboard {
   topCareers: DistributionCount[];
   entryRoles: DistributionCount[];
   marketBarrierDistribution: DistributionCount[];
+  /** Most common long-term caliber directions in the selected cohort. */
+  longTermCaliberDistribution: DistributionCount[];
   careersToAvoid: DistributionCount[];
   commonConflicts: ConflictCount[];
   departmentOptions: string[];

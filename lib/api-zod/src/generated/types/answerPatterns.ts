@@ -8,7 +8,10 @@
 import type { AnswerConflict } from './answerConflict';
 
 export interface AnswerPatterns {
+  /** @maxItems 5 */
   clear: string[];
+  /** @maxItems 5 */
   conflicts: AnswerConflict[];
+  /** @maxItems 5 */
   worthExploring: string[];
 }

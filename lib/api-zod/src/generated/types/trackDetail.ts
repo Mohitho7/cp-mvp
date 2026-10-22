@@ -7,7 +7,13 @@
  */
 
 export interface TrackDetail {
+  /** @maxLength 350 */
   why: string;
+  /** @maxLength 150 */
   fresherDemand: string;
+  /**
+     * @minItems 4
+     * @maxItems 8
+     */
   skillsToLearn: string[];
 }

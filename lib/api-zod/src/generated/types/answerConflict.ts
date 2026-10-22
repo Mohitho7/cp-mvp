@@ -7,6 +7,8 @@
  */
 
 export interface AnswerConflict {
+  /** @maxLength 60 */
   tag: string;
+  /** @maxLength 300 */
   text: string;
 }

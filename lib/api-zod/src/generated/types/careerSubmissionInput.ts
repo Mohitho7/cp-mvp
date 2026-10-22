@@ -15,5 +15,18 @@ export interface CareerSubmissionInput {
   year: string;
   /** @maxLength 40 */
   batch: string;
+  /**
+     * Student's degree/programme as free text.
+     * @maxLength 100
+     */
+  degree: string;
+  /** Expected graduation year (validated server-side against a dynamic window). */
+  graduationYear: number;
+  /**
+     * Realistic weekly hours the student can dedicate to career preparation.
+     * @minimum 1
+     * @maximum 60
+     */
+  availableHoursPerWeek: number;
   consent: true;
 }

@@ -7,6 +7,8 @@
  */
 
 export interface CareerToAvoid {
+  /** @maxLength 120 */
   title: string;
+  /** @maxLength 300 */
   why: string;
 }

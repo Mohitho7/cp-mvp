@@ -3,8 +3,19 @@ import { useCreateCareerSubmission, useHealthCheck } from "@workspace/api-client
 import type { CareerSubmissionInput } from "@workspace/api-client-react";
 import { useAuth, SignIn, SignUp } from "@clerk/react";
 import { Link, useLocation } from "wouter";
-import { AlertCircle, ArrowRight, Check, LockKeyhole, Send } from "lucide-react";
+import { AlertCircle, ArrowRight, Check, Clock3, LockKeyhole, Send } from "lucide-react";
 import { Brand, PageFrame } from "@/components/Brand";
+import {
+  DRAFT_STORAGE_KEY,
+  graduationYearOptions,
+  readAssessmentDraft,
+  writeAssessmentDraft,
+} from "@/lib/assessmentDraft";
+import {
+  isAssessmentStartRequested,
+  resolveAssessmentInitialState,
+} from "@/lib/assessmentNavigation";
+
 
 const QUESTIONS = [
   {
@@ -189,210 +200,31 @@ const QUESTIONS = [
 
 const SECTIONS = ["Who You Are", "Your Work Style", "Life & Environment", "Your Direction", "The Real You"];
 
-const FIELDS = [
-  "Software Engineer / Software Developer",
-  "Cloud / DevOps / Security Engineer",
-  "Data Analyst / Scientist / AI & ML Engineer",
-  "Full Stack Developer",
-  "VLSI / Semiconductor Engineer",
-  "Embedded Systems / IoT Design Engineer",
-  "EV / Power Systems / Automation Engineer",
-  "Design / CAE / Manufacturing Engineer",
-];
-
-function buildMasterPrompt(answers: (string | string[] | null)[], userType: string | null) {
-  const role = userType === "student" ? "student" : userType === "employee" ? "working professional" : userType === "switcher" ? "career switcher" : "person";
-
-  const fmt = (ans: string | string[] | null) => {
-    if (!ans || (Array.isArray(ans) && ans.length === 0) || ans === "(skipped)") return "(not answered)";
-    return Array.isArray(ans) ? ans.join(" | ") : ans;
-  };
-
-  return `You are a brutally honest senior career strategist who understands the REAL fresher hiring market in India and globally. A ${role} has completed a 13-question career discovery assessment.
-
-Your job is NOT to give trendy internet career advice or motivational suggestions. Your job is to determine:
-1. Which careers ACTUALLY hire undergraduate freshers today
-2. Which roles match the person's psychology and work style
-3. Which paths are realistically achievable within 6–18 months
-4. Which careers are oversaturated, unrealistic, or socially hyped
-5. Which roles lead to strong long-term leverage, income, and freedom
-
-━━━ MARKET REALISM RULES (apply throughout) ━━━
-- Separate "future potential roles" from "realistic fresher jobs"
-- Do NOT recommend fantasy startup titles unless freshers genuinely get hired into them
-- Do NOT over-recommend AI roles unless the profile strongly supports deep technical ability
-- Be extremely realistic about the Indian job market
-- Prioritize careers with actual hiring demand
-- For every career, label: Easy to enter / Moderately difficult / Highly competitive
-- For every career, label: Stable / Fast-growth / High burnout / Oversaturated / High leverage
-- Be honest about salary progression and difficulty — do NOT inflate salaries unrealistically
-- Do NOT assume interest in startups, AI, apps, or technology automatically means the person should become a software engineer
-- Distinguish between: (a) people who enjoy deep engineering work daily, and (b) people who enjoy using technology to build businesses, systems, products, or leverage
-- If the person prefers low-code/no-code, automation, or avoiding deep coding, treat that as a MAJOR signal — not a minor detail
-- Do NOT recommend software engineering, AI/ML, or full-stack development solely because the person likes AI tools, startups, or apps
-- Only recommend engineering-heavy careers if the person shows: tolerance for deep technical work, enjoyment of coding itself, long attention span for debugging, and willingness to spend years mastering technical depth
-- Before recommending careers, determine whether the person is primarily: a technical engineer, a business operator, a product builder, a creative strategist, or a hybrid generalist
-- The report MUST also consider realistic non-engineering tech careers — Product Operations, Startup Operations, Founder's Office, Automation Specialist, Technical Product Support, No-Code Builder, Product Management track, Growth/Systems roles — if they better match the person's psychology
-
-━━━ CAREER CALIBER VS ENTRY REALITY RULES ━━━
-The report MUST clearly separate:
-1. The person's NATURAL LONG-TERM CALIBER — what they are psychologically best suited for long-term
-2. The REALISTIC FRESHER ENTRY PATH — the actual jobs undergraduate freshers are realistically hired into today
-
-Many people are naturally suited for higher-leverage roles (Product Management, Startup Operations, Founder's Office, Entrepreneurship, Automation Consulting, Strategy, Product Building) but freshers are usually NOT directly hired into these. If this mismatch exists: explicitly explain it, do NOT hide it, and create a bridge path.
-
-The report must explain: "Your real caliber appears to be X" → "But companies require experience before hiring for X" → "So your realistic starting point is Y" → "While working in Y, build deliberately toward X"
-
-Distinguish between: survival jobs, stepping-stone jobs, and true long-term fit. Do NOT pretend the first job and long-term career identity are always the same.
-
-━━━ THEIR COMPLETE PROFILE ━━━
-
-[ WHO THEY ARE ]
-What drives their satisfaction → ${fmt(answers[0])}
-Natural role in teams → ${fmt(answers[1])}
-What they naturally spend time on → ${fmt(answers[2])}
-
-[ WORK STYLE ]
-Tasks that drain them less → ${fmt(answers[3])}
-Coding comfort level → ${fmt(answers[4])}
-How they learn best → ${fmt(answers[5])}
-
-[ LIFE & ENVIRONMENT ]
-Preferred work environment → ${fmt(answers[6])}
-Things that drain them quickly → ${fmt(answers[7])}
-What success in their 20s looks like → ${fmt(answers[8])}
-
-[ DIRECTION ]
-Most interesting areas → ${fmt(answers[9])}
-Life vision after 30s → ${fmt(answers[10])}
-Continuous learning comfort → ${fmt(answers[11])}
-
-[ THE REAL THEM ]
-Dream work with no judgment → ${fmt(answers[12])}
-
-━━━ GENERATE THIS EXACT REPORT ━━━
-
-## SECTION 1 — PROFILE SNAPSHOT & CORE PERSONALITY ANALYSIS
-**Archetype:** A 2-3 word title (e.g. "The Systematic Operator", "The Curious Builder")
-**Worker Type:** Identify which ONE best fits — Specialist / Operator / Builder / Analyst / Communicator / Entrepreneur / Manager — and explain why in one sentence using their actual answers.
-**Summary:** 2 sentences on who they are professionally, based strictly on their answers.
-**Clarity Level:** Clear / Mixed / Exploratory — one sentence explaining why.
-**Biggest Strengths:** 2-3 bullet points pulled from their actual answers.
-**Biggest Risks:** 2-3 honest risks — what could derail them if they don't address it.
-**Realistic Survival Environment:** What kind of workplace would this person NOT quit within 6 months, based on their answers.
-
-## SECTION 2 — TRAIT RATINGS
-Rate each trait 1-5 based strictly on their answers. Use filled blocks █ and empty blocks ░ out of 5. Add a Low/Medium/High label and one sentence from their actual answers explaining the rating.
-
-**Technical Inclination** [█░ blocks] Low/Medium/High — reason
-**Creative Drive** [█░ blocks] Low/Medium/High — reason
-**People Orientation** [█░ blocks] Low/Medium/High — reason
-**Risk Appetite** [█░ blocks] Low/Medium/High — reason
-**Learning Agility** [█░ blocks] Low/Medium/High — reason
-
-## SECTION 3 — WHAT YOUR ANSWERS REVEAL
-✅ **Clear patterns** → What shows up consistently across multiple answers — be specific, name the answers
-⚠️ **Conflicting answers** → Where answers conflict or create tension — be honest, not diplomatic
-🔍 **Worth exploring** → Areas their answers hint at but they haven't consciously considered yet
-
-## SECTION 4 — LONG-TERM CALIBER VS ENTRY REALITY
-This section MUST be brutally honest about the gap between what this person is naturally wired for and what the market will actually hire them for as a fresher.
-
-**Their real long-term caliber:**
-Based strictly on their answers, what kind of role is this person psychologically best suited for long-term? (Be specific — e.g. "You are wired to be a product builder / operator / systems thinker / founder-type / strategist — not a line-level engineer.")
-
-**Why the market won't hand them that immediately:**
-Explain plainly which experience barriers, credibility barriers, or seniority requirements prevent freshers from entering that role directly. Do not sugarcoat it.
-
-**Their realistic first-entry job:**
-Name the specific job title(s) a fresh graduate with their profile can actually get hired for today — not what sounds good, what hiring managers actually post and select freshers for.
-
-**The bridge path:**
-Explain how they should use that first job as a deliberate stepping stone. What skills, projects, networks, or proof points should they be building while in that role so they can transition to their real caliber within 3-5 years?
-
-## SECTION 5 — REALISTIC FRESHER CAREER FITS
-Give ONLY 4-5 careers that: (a) regularly hire undergraduate freshers, (b) can realistically be entered within 6–18 months, (c) match their psychology. For each:
-
-**[Career Title]**
-→ **Role type:** Long-term fit / Stepping-stone role / Realistic market-entry only — one line explanation
-→ **What freshers actually do daily:** Specific day-to-day reality — talk like someone who has seen people work in this job
-→ **Why it fits this person:** Directly reference 2-3 of their specific answers — make the connection explicit
-→ **Real fresher salary in India:** Honest range (e.g. ₹3–5 LPA), not inflated
-→ **Entry difficulty:** Easy / Moderately difficult / Highly competitive
-→ **Career health:** Stable / Fast-growth / High burnout / Oversaturated / High leverage
-→ **AI/automation threat:** Low / Medium / High — one line reason
-→ **5-year growth:** Where does this role realistically lead after 5 years
-→ **Natural fit or forced:** Is this person naturally wired for it, or would they be pushing against their grain
-
-## SECTION 6 — CAREERS THEY SHOULD AVOID
-Give 2-3 careers. For each:
-
-**[Career Title]**
-**Why avoid:** Name the specific answers that reveal this mismatch — careers they may be romantically attracted to but are realistically unsuited for, careers that conflict with their energy, or careers likely to burn them out based on what they said
-
-## SECTION 7 — BEST-FIT TECH CAREER TRACK
-Do NOT default to engineering. First assess whether this person is primarily a: technical engineer / business operator / product builder / creative strategist / hybrid generalist — then pick the most honest track.
-
-Pick exactly ONE track from:
-- Engineering (Software / Cloud / DevOps / Data / Embedded / VLSI / EV / CAE)
-- Product (Product Management / Product Operations / Technical Product Support)
-- Automation (No-Code Builder / Automation Specialist / Workflow Engineer)
-- Startup Operations (Founder's Office / Operations / Growth / Systems)
-- Technical Business (Pre-Sales / Solutions / RevOps / CRM / ERP Consulting)
-- Design / UI-UX
-- Hybrid Tech-Generalist
-
-**Recommended Track:** [One from above]
-**Why this track — not engineering (or why engineering IS justified):** Directly reference their coding comfort, drain triggers, and work style answers. Be explicit about whether you are recommending engineering or a non-engineering track and why.
-**Natural alignment or requires forced discipline:** Honest assessment.
-**Market demand for freshers in India:** Strong / Moderate / Weak — one line.
-**Why it fits their profile:** 3-4 sentences referencing specific answers.
-
-**Entry-level jobs freshers actually get hired for in this track:**
-List 5-7 real job titles. For each:
-→ **[Job Title]** — What you do on day 1 | Realistic salary India/global | Where freshers typically get hired
-
-**What to actually learn (specific, not vague):**
-List 4-6 exact tools, languages, platforms, or certifications — name them precisely
-
-## SECTION 8 — REALISTIC 12-MONTH ROADMAP
-Month-by-month plan. IMPORTANT: No fake productivity advice. No endless course lists. Focus on projects, internships, networking, practical skills, portfolio, interview readiness. Name exact tools and technologies.
-
-**Months 1-2:** Foundation
-**Months 3-4:** First project + visibility
-**Months 5-6:** Internship hunting / freelance / open source
-**Months 7-9:** Portfolio + networking
-**Months 10-12:** Interview prep + job applications
-
-## SECTION 9 — THE BRUTAL TRUTH
-3-4 sentences. No motivational poster language. Tell them:
-- What they are specifically underestimating based on their answers
-- Where they are likely wasting time right now
-- What will realistically happen if they stay unfocused for another year
-- What specific type of discipline this person needs — not generic "be consistent", but tailored to their actual work style answers
-
-Talk like a mentor who genuinely wants them to avoid wasting 5 years.
-
-━━━ STYLE RULES ━━━
-- Write like a sharp mentor who has actually seen people succeed and fail in these jobs
-- Be specific — reference their actual answers throughout, never vague generalizations
-- Be honest about conflicting answers — confusion is useful data, not a problem to hide
-- Zero corporate buzzwords, zero motivational fluff, zero inflated salaries
-- Every section must feel written for THIS specific person, not a template`;
-}
-
 export default function CareerDiscovery() {
-  const [screen, setScreen] = useState<"intro" | "quiz" | "result">("intro");
-  const [currentQ, setCurrentQ] = useState(0);
-  const [answers, setAnswers] = useState<(string | string[] | null)[]>(Array(QUESTIONS.length).fill(null));
-  const [textInput, setTextInput] = useState("");
-  const [masterPrompt, setMasterPrompt] = useState("");
-  const [copied, setCopied] = useState(false);
-  const [userType, setUserType] = useState<string | null>("student");
-  const [department, setDepartment] = useState("");
-  const [year, setYear] = useState("");
-  const [batch, setBatch] = useState("");
-  const [consent, setConsent] = useState(false);
+  const [location] = useLocation();
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  const startRequested = isAssessmentStartRequested(search, location);
+
+  const [initialDraft] = useState(() => readAssessmentDraft(localStorage, QUESTIONS.length));
+  const initialState = resolveAssessmentInitialState({
+    isStarting: startRequested,
+    draft: initialDraft,
+  });
+
+  const hasSavedDraftAnswers = initialState.hasSavedAnswers;
+  const [screen, setScreen] = useState<"intro" | "quiz" | "result">(initialState.screen);
+  const [currentQ, setCurrentQ] = useState(initialState.currentQ);
+  const [answers, setAnswers] = useState<(string | string[] | null)[]>(initialDraft?.answers ?? Array(QUESTIONS.length).fill(null));
+  const [textInput, setTextInput] = useState(initialDraft?.textInput ?? "");
+  const [userType, setUserType] = useState<string | null>(initialDraft?.userType ?? "student");
+  const [department, setDepartment] = useState(initialDraft?.department ?? "");
+  const [year, setYear] = useState(initialDraft?.year ?? "");
+  const [batch, setBatch] = useState(initialDraft?.batch ?? "");
+  const [degree, setDegree] = useState(initialDraft?.degree ?? "");
+  const [graduationYear, setGraduationYear] = useState<number | null>(initialDraft?.graduationYear ?? null);
+  const [availableHoursPerWeek, setAvailableHoursPerWeek] = useState<number | null>(initialDraft?.availableHoursPerWeek ?? null);
+  const [consent, setConsent] = useState(initialDraft?.consent ?? false);
+  const [draftSaveError, setDraftSaveError] = useState(false);
   const [submissionId, setSubmissionId] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [authMode, setAuthMode] = useState<"sign-in" | "sign-up">("sign-in");
@@ -401,6 +233,35 @@ export default function CareerDiscovery() {
   const health = useHealthCheck();
   const [, setLocation] = useLocation();
   const resultRef = useRef<HTMLDivElement>(null);
+  const resultHeadingRef = useRef<HTMLHeadingElement>(null);
+  const draftClearedRef = useRef(false);
+
+  useEffect(() => {
+    if (startRequested && screen === "intro") {
+      setScreen(initialDraft?.screen === "result" ? "result" : "quiz");
+    }
+  }, [startRequested]);
+
+  useEffect(() => {
+    if (screen === "intro" || draftClearedRef.current) return;
+
+    const saved = writeAssessmentDraft(localStorage, {
+      version: 1,
+      screen,
+      currentQ,
+      answers,
+      textInput,
+      userType,
+      department,
+      year,
+      batch,
+      degree,
+      graduationYear,
+      availableHoursPerWeek,
+      consent,
+    });
+    setDraftSaveError(!saved);
+  }, [screen, currentQ, answers, textInput, userType, department, year, batch, degree, graduationYear, availableHoursPerWeek, consent]);
 
   const q = QUESTIONS[currentQ];
   const progress = ((currentQ + 1) / QUESTIONS.length) * 100;
@@ -449,11 +310,18 @@ export default function CareerDiscovery() {
       setCurrentQ((p) => p + 1);
       setTextInput("");
     } else {
-      setMasterPrompt(buildMasterPrompt(finalAnswers, userType));
       setScreen("result");
-      setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
     }
   }
+
+  useEffect(() => {
+    if (screen !== "result") return;
+    const frame = window.requestAnimationFrame(() => {
+      resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      resultHeadingRef.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [screen]);
 
   useEffect(() => {
     if (screen !== "quiz") return;
@@ -479,31 +347,55 @@ export default function CareerDiscovery() {
     }
   }
 
-  function handleCopy() {
-    navigator.clipboard?.writeText(masterPrompt).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    });
-  }
-
-  function handleRetake() {
-    setScreen("intro");
+  function resetAssessmentState(targetScreen: "intro" | "quiz" = "intro") {
+    draftClearedRef.current = false;
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch {
+      setDraftSaveError(true);
+    }
+    setScreen(targetScreen);
     setCurrentQ(0);
     setAnswers(Array(QUESTIONS.length).fill(null));
-    setMasterPrompt("");
     setTextInput("");
     setUserType("student");
-    setCopied(false);
     setDepartment("");
     setYear("");
     setBatch("");
+    setDegree("");
+    setGraduationYear(null);
+    setAvailableHoursPerWeek(null);
     setConsent(false);
     setSubmissionId("");
     setSubmitError("");
   }
 
+  function handleRetake() {
+    resetAssessmentState("intro");
+  }
+
+  function handleRestartFromQuestion1() {
+    resetAssessmentState("quiz");
+  }
+
+  const graduationYearChoices = graduationYearOptions();
+  const degreeTrimmed = degree.trim();
+  const isStudentContextValid =
+    degreeTrimmed.length > 0 &&
+    degreeTrimmed.length <= 100 &&
+    graduationYear !== null &&
+    graduationYearChoices.includes(graduationYear) &&
+    availableHoursPerWeek !== null &&
+    Number.isInteger(availableHoursPerWeek) &&
+    availableHoursPerWeek >= 1 &&
+    availableHoursPerWeek <= 60;
+
   function handleSubmitAssessment() {
     setSubmitError("");
+    if (graduationYear === null || availableHoursPerWeek === null || !isStudentContextValid) {
+      setSubmitError("Please complete the student context section: your degree, graduation year, and realistic weekly hours.");
+      return;
+    }
     const payload: CareerSubmissionInput = {
       answers: {
         q1: answers[0], q2: answers[1], q3: answers[2], q4: answers[3],
@@ -511,84 +403,137 @@ export default function CareerDiscovery() {
         q9: answers[8], q10: answers[9], q11: answers[10], q12: answers[11],
         q13: typeof answers[12] === "string" && answers[12] !== "(skipped)" ? answers[12] : "",
       },
-      department, year, batch, consent: true,
+      department, year, batch,
+      degree: degreeTrimmed,
+      graduationYear,
+      availableHoursPerWeek,
+      consent: true,
     };
     submission.mutate({ data: payload }, {
       onSuccess: (accepted) => {
-        localStorage.setItem("careerDiscoverySubmissionId", accepted.id);
+        draftClearedRef.current = true;
+        try {
+          localStorage.setItem("careerDiscoverySubmissionId", accepted.id);
+          localStorage.removeItem(DRAFT_STORAGE_KEY);
+        } catch {
+          setDraftSaveError(true);
+        }
         setSubmissionId(accepted.id);
         setLocation(`/student/status/${accepted.id}`);
       },
-      onError: () => setSubmitError("We couldn't save your answers just now. Your responses are still on this screen—please try again."),
+      onError: (err: unknown) => {
+        const status = (err as { status?: number })?.status;
+        if (status === 409) {
+          setSubmitError("You already have an existing submission. Redirecting to your report...");
+          setLocation("/student/status");
+          return;
+        }
+        setSubmitError("We couldn't save your answers just now. Your responses are still on this screen—please try again.");
+      },
     });
   }
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=DM+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
         *{box-sizing:border-box;margin:0;padding:0;}
-        html,body{background:#0e0c09;}
-        ::-webkit-scrollbar{width:4px;}
-        ::-webkit-scrollbar-track{background:#1a1710;}
-        ::-webkit-scrollbar-thumb{background:#3a3520;border-radius:2px;}
-        .root{min-height:100vh;background:#0e0c09;font-family:'Plus Jakarta Sans',sans-serif;color:#e8e0d0;position:relative;overflow-x:hidden;}
-        .grain{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23filter)'/%3E%3C/svg%3E");}
-        .glow{position:fixed;width:500px;height:500px;border-radius:50%;filter:blur(130px);pointer-events:none;z-index:0;opacity:0.09;}
-        .card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:18px;}
-         .question-subtext{color:#8a8070;font-size:0.8rem;font-weight:400;line-height:1.55;margin-top:0.45rem;}
-        .option-btn{width:100%;text-align:left;padding:0.82rem 1.1rem;border-radius:12px;border:1.5px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.025);color:#b8b0a0;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.86rem;cursor:pointer;transition:all 0.16s ease;display:flex;align-items:center;gap:0.7rem;}
-        .option-btn:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.18);color:#e8e0d0;transform:translateX(3px);}
-        .action-btn{padding:0.88rem 2rem;border-radius:50px;border:none;font-family:'Syne',sans-serif;font-size:0.86rem;font-weight:700;cursor:pointer;letter-spacing:0.04em;transition:all 0.2s ease;display:flex;align-items:center;gap:0.5rem;}
-        .action-btn:disabled{opacity:0.25;cursor:not-allowed;}
-        textarea{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.08);border-radius:12px;color:#e8e0d0;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.88rem;padding:1rem;width:100%;resize:none;outline:none;transition:border-color 0.2s;line-height:1.6;}
-        textarea:focus{border-color:rgba(245,200,66,0.3);}
-        textarea::placeholder{color:#3a3020;}
-        .prompt-box{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.07);border-radius:14px;color:#8a8070;font-family:'DM Mono',monospace;font-size:0.73rem;line-height:1.8;padding:1.2rem;width:100%;overflow-y:auto;max-height:320px;white-space:pre-wrap;word-break:break-word;user-select:text;}
-        .chip{padding:0.5rem 1.2rem;border-radius:50px;border:1.5px solid rgba(255,255,255,0.08);background:transparent;color:#6a6050;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.8rem;cursor:pointer;transition:all 0.18s;}
-        .chip:hover{border-color:rgba(255,255,255,0.18);color:#c8c0b0;}
-        .chip.active{background:rgba(245,200,66,0.1);border-color:rgba(245,200,66,0.35);color:#f0e080;}
-        .step-num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:0.68rem;flex-shrink:0;}
-        .tag{font-family:'DM Mono',monospace;font-size:0.62rem;color:#3a3020;letter-spacing:0.1em;}
+        html,body{background:var(--cp-bg, #F7F4EC);color:var(--cp-text, #171A15);}
+        ::-webkit-scrollbar{width:6px;}
+        ::-webkit-scrollbar-track{background:#EFECE3;}
+        ::-webkit-scrollbar-thumb{background:#D9DED5;border-radius:3px;}
+        .root{min-height:100vh;background:var(--cp-bg, #F7F4EC);font-family:var(--font-body, 'Plus Jakarta Sans', sans-serif);color:var(--cp-text, #171A15);position:relative;overflow-x:hidden;}
+        .grain-overlay{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:0.02;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23filter)'/%3E%3C/svg%3E");}
+        .card{background:#FFFFFF;border:1px solid var(--cp-border-subtle, #E6EAE3);border-radius:18px;box-shadow:0 2px 8px rgba(23, 26, 21, 0.05);}
+        .question-subtext{color:var(--cp-muted, #60665B);font-size:0.9rem;font-weight:400;line-height:1.6;margin-top:0.45rem;}
+        .option-btn{width:100%;text-align:left;padding:0.9rem 1.15rem;border-radius:12px;border:1.5px solid var(--cp-border-subtle, #E6EAE3);background:#FFFFFF;color:var(--cp-text, #171A15);font-family:var(--font-body, 'Plus Jakarta Sans', sans-serif);font-size:0.9rem;cursor:pointer;transition:all 0.16s ease;display:flex;align-items:center;gap:0.75rem;box-shadow:0 1px 3px rgba(23, 26, 21, 0.04);}
+        .option-btn:hover{background:#FBF9F2;border-color:var(--cp-border, #D9DED5);transform:translateY(-1px);}
+        .option-btn.selected{border-color:var(--cp-primary, #E7B93F) !important;background:var(--cp-primary-soft, #FBF4DE) !important;color:#171A15 !important;font-weight:600;box-shadow:0 2px 8px rgba(231, 185, 63, 0.2);}
+        .action-btn{padding:0.88rem 2.2rem;border-radius:50px;border:none;font-family:var(--font-body, 'Plus Jakarta Sans', sans-serif);font-size:0.9rem;font-weight:700;cursor:pointer;letter-spacing:0.02em;transition:all 0.2s ease;display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;}
+        .action-btn:disabled{opacity:0.35;cursor:not-allowed;}
+        textarea{background:#FFFFFF;border:1.5px solid var(--cp-border, #D9DED5);border-radius:12px;color:var(--cp-text, #171A15);font-family:var(--font-body, 'Plus Jakarta Sans', sans-serif);font-size:0.9rem;padding:1rem;width:100%;resize:none;outline:none;transition:border-color 0.2s, box-shadow 0.2s;line-height:1.6;}
+        textarea:focus{border-color:var(--cp-primary, #E7B93F);box-shadow:0 0 0 3px var(--cp-primary-soft, #FBF4DE);}
+        textarea::placeholder{color:var(--cp-text-faint, #889082);}
+        .chip{padding:0.5rem 1.2rem;border-radius:50px;border:1.5px solid var(--cp-border, #D9DED5);background:#FFFFFF;color:var(--cp-text-secondary, #3D4439);font-family:var(--font-body, 'Plus Jakarta Sans', sans-serif);font-size:0.82rem;cursor:pointer;transition:all 0.18s;box-shadow:0 1px 2px rgba(23, 26, 21, 0.04);}
+        .chip:hover{border-color:var(--cp-primary, #E7B93F);background:#FBF9F2;}
+        .chip.active{background:var(--cp-primary-soft, #FBF4DE);border-color:var(--cp-primary, #E7B93F);color:#7A510A;font-weight:600;}
+        .tag{font-family:var(--font-mono, 'DM Mono', monospace);font-size:0.7rem;color:var(--cp-muted, #60665B);letter-spacing:0.1em;font-weight:600;}
       `}</style>
 
       <div className="root">
-        <div className="grain" />
-        <div className="glow" style={{ background: "#f5c842", top: "-80px", right: "-80px" }} />
-        <div className="glow" style={{ background: "#5bc4a0", bottom: "-80px", left: "-80px" }} />
-        {screen === "intro" && <header className="home-topbar"><Brand /><div className="header-links">{isSignedIn ? <Link href="/student/status" data-testid="link-student-status">My report</Link> : <Link href="/sign-in" data-testid="link-home-signin">Student sign in</Link>}<Link href="/institution/dashboard" data-testid="link-institution-dashboard">Institution view</Link></div></header>}
-
-        {/* ── INTRO ── */}
+        <div className="grain-overlay" />
         {screen === "intro" && (
-          <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "2rem", position: "relative", zIndex: 1 }}>
-            <div style={{ maxWidth: 540, width: "100%", textAlign: "center" }}>
-              <div style={{ display: "inline-block", background: "rgba(245,200,66,0.07)", border: "1px solid rgba(245,200,66,0.18)", borderRadius: "50px", padding: "0.38rem 1rem", marginBottom: "1.8rem" }}>
-                <span className="tag" style={{ color: "#f5c842" }}>CAREER DISCOVERY · BETA</span>
+          <header className="home-topbar">
+            <Brand />
+            <div className="header-links">
+              {isSignedIn ? (
+                <Link href="/student/status" data-testid="link-student-status" className="button button-primary" style={{ padding: "8px 18px", fontSize: "12px" }}>
+                  My Report
+                </Link>
+              ) : (
+                <>
+                  <Link href="/sign-in" data-testid="link-home-signin" style={{ color: "var(--cp-text, #171A15)", fontWeight: 600 }}>
+                    Sign In
+                  </Link>
+                  <button
+                    onClick={() => setScreen("quiz")}
+                    data-testid="button-start-assessment-nav"
+                    className="button button-primary"
+                    style={{ padding: "8px 18px", fontSize: "12px" }}
+                  >
+                    Start Your Career Path
+                  </button>
+                </>
+              )}
+            </div>
+          </header>
+        )}
+
+        {/* ── INTRO HERO (Source of Truth Brand Theme) ── */}
+        {screen === "intro" && (
+          <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "6.5rem 1.5rem 3rem", position: "relative", zIndex: 1, textAlign: "center" }}>
+            <div style={{ maxWidth: 860, width: "100%", margin: "0 auto" }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", marginBottom: "1.8rem" }}>
+                <span style={{ color: "#E7B93F", fontSize: "12px" }}>•</span>
+                <span className="tag" style={{ color: "#8F7220", letterSpacing: "0.14em" }}>THE LONGITUDINAL CAREER OPERATING SYSTEM</span>
               </div>
 
-              <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(1.9rem, 5.5vw, 3rem)", fontWeight: 800, lineHeight: 1.1, marginBottom: "1.1rem", letterSpacing: "-0.02em" }}>
-                Find careers you've{" "}
-                <span style={{ color: "#f5c842" }}>never heard of</span>
-                {" "}that actually fit you.
+              <h1 style={{ fontFamily: "var(--font-display, 'Playfair Display', Georgia, serif)", fontSize: "clamp(2.4rem, 6.5vw, 4.2rem)", fontWeight: 800, lineHeight: 1.12, marginBottom: "1.5rem", letterSpacing: "-0.03em", color: "#171A15" }}>
+                Career Pathfinder does not recommend careers.{" "}
+                <em style={{ fontStyle: "italic", color: "#DFB235", fontWeight: 700 }}>It builds them.</em>
               </h1>
 
-              <p style={{ color: "#8f8777", fontSize: "0.88rem", lineHeight: 1.85, marginBottom: "2rem" }}>
-                13 candid questions about how you think, work, and want to live. Get practical career direction built for HITAM students—without forcing every answer toward software engineering.
+              <p style={{ color: "#60665B", fontSize: "clamp(1rem, 2vw, 1.15rem)", lineHeight: 1.7, marginBottom: "2.4rem", maxWidth: 660, marginLeft: "auto", marginRight: "auto" }}>
+                Most career advice gives you a generic label and leaves you with guesswork. Career Pathfinder turns direction into an actionable, verifiable path from your first semester to placement readiness.
               </p>
 
-              <p className="tag" style={{ margin: "0 auto 2rem", color: "#9a907b" }}>BUILT FOR HITAM UNDERGRADUATES · NO ANSWER IS A WRONG TURN</p>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "1rem", flexWrap: "wrap", marginBottom: "2rem" }}>
+                <button
+                  className="button button-primary"
+                  onClick={() => setScreen("quiz")}
+                  data-testid="button-start-assessment"
+                  style={{ padding: "0.95rem 2.4rem", fontSize: "0.95rem", borderRadius: "9999px" }}
+                >
+                  Start Your Career Path →
+                </button>
+                <button
+                  className="button button-subtle"
+                  onClick={() => setScreen("quiz")}
+                  style={{ padding: "0.95rem 2rem", fontSize: "0.95rem", borderRadius: "9999px" }}
+                >
+                  Explore How It Works
+                </button>
+              </div>
 
-              <button className="action-btn" onClick={() => setScreen("quiz")} data-testid="button-start-assessment" style={{ background: "#f5c842", color: "#0e0c09", margin: "0 auto", padding: "1rem 2.8rem", fontSize: "0.92rem" }}>
-                Begin your discovery →
-              </button>
+              <p style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "#889082", fontSize: "0.82rem", fontFamily: "var(--font-mono, 'DM Mono', monospace)" }}>
+                <span style={{ color: "#DFB235" }}>✦</span> From uncertainty to a career you can prove.
+              </p>
 
-              <p className="tag" style={{ marginTop: "1.1rem", color: "#827c6e" }}>ABOUT 5 MIN · 13 QUESTIONS · STUDENT ACCOUNT TO SAVE</p>
-
-              <div style={{ marginTop: "2.5rem" }}>
-                <p className="tag" style={{ marginBottom: "0.75rem", color: "#827c6e" }}>A STARTING POINT, NOT A BOX TO PUT YOU IN</p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", justifyContent: "center" }}>
-                  {["Software Engineering", "Cloud / DevOps", "Data / AI & ML", "Full Stack", "VLSI / Semiconductor", "Embedded / IoT", "EV / Power Systems", "Design / CAE / Mfg"].map((f) => (
-                    <span key={f} style={{ fontFamily: "'DM Mono', monospace", fontSize: "0.62rem", color: "#2a2010", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "50px", padding: "0.22rem 0.65rem" }}>{f}</span>
+              <div style={{ marginTop: "3.5rem", paddingTop: "2.5rem", borderTop: "1px solid var(--cp-border-subtle, #E6EAE3)" }}>
+                <p className="tag" style={{ marginBottom: "1rem", color: "#889082" }}>BUILT FOR HITAM UNDERGRADUATES · 13 PRACTICAL QUESTIONS · SAVED ON THIS DEVICE</p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "center" }}>
+                  {["Software Engineering", "Cloud & DevOps", "Data Science & Analytics", "Product & Strategy", "AI & Automation", "UX/UI Design", "Cybersecurity", "Operations & Projects"].map((f) => (
+                    <span key={f} style={{ fontFamily: "var(--font-mono, monospace)", fontSize: "0.72rem", color: "#3D4439", background: "#FFFFFF", border: "1px solid var(--cp-border, #D9DED5)", borderRadius: "50px", padding: "0.35rem 0.9rem", boxShadow: "0 1px 2px rgba(23, 26, 21, 0.04)" }}>{f}</span>
                   ))}
                 </div>
               </div>
@@ -598,57 +543,104 @@ export default function CareerDiscovery() {
 
         {/* ── QUIZ ── */}
         {screen === "quiz" && q && (
-          <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", position: "relative", zIndex: 1 }}>
+          <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", position: "relative", zIndex: 1, background: "var(--cp-bg, #F7F4EC)" }}>
             <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100 }}>
-              <div style={{ height: "3px", background: "#1a1710" }}>
-                <div style={{ height: "100%", width: `${progress}%`, background: accentColor, transition: "width 0.4s ease, background 0.6s ease", borderRadius: "0 2px 2px 0" }} />
+              <div style={{ height: "4px", background: "#EFECE3" }}>
+                <div style={{ height: "100%", width: `${progress}%`, background: "var(--cp-primary, #E7B93F)", transition: "width 0.4s ease", borderRadius: "0 2px 2px 0" }} />
               </div>
-              <div style={{ background: "rgba(14,12,9,0.93)", backdropFilter: "blur(12px)", padding: "0.72rem 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.55rem" }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: accentColor, display: "inline-block", transition: "background 0.6s" }} />
-                  <span className="tag" style={{ color: accentColor, transition: "color 0.6s" }}>{q.section.toUpperCase()}</span>
+              <div style={{ background: "rgba(247, 244, 236, 0.94)", backdropFilter: "blur(12px)", padding: "0.8rem 1.8rem", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--cp-border-subtle, #E6EAE3)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#E7B93F", display: "inline-block" }} />
+                  <span className="tag" style={{ color: "#8F7220" }}>{q.section.toUpperCase()}</span>
                 </div>
-                <span className="tag">{currentQ + 1} / {QUESTIONS.length}</span>
+                <span className="tag" style={{ color: "#60665B" }}>{currentQ + 1} / {QUESTIONS.length}</span>
               </div>
             </div>
 
-            <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "5.2rem 1rem 6.5rem", overflowY: "auto" }}>
-              <div key={currentQ} style={{ maxWidth: 530, width: "100%", animation: "slideIn 0.28s ease forwards" }}>
+            <div style={{ flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", padding: "5.8rem 1rem 7rem", overflowY: "auto" }}>
+              <div key={currentQ} style={{ maxWidth: 580, width: "100%", animation: "slideIn 0.28s ease forwards" }}>
                 <style>{`@keyframes slideIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}`}</style>
 
-                <div style={{ marginBottom: "1.7rem" }}>
-                  <div style={{ display: "flex", gap: "0.35rem", marginBottom: "1rem" }}>
+                {hasSavedDraftAnswers && (
+                  <div
+                    className="draft-resume-banner"
+                    data-testid="draft-resume-banner"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      flexWrap: "wrap",
+                      gap: "0.75rem",
+                      background: "#FFFDF8",
+                      border: "1px solid var(--cp-border, #D9DED5)",
+                      borderLeft: "4px solid var(--cp-primary, #E7B93F)",
+                      borderRadius: "12px",
+                      padding: "0.75rem 1rem",
+                      marginBottom: "1rem",
+                      fontSize: "0.85rem",
+                      color: "var(--cp-text, #171A15)",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <Clock3 size={15} style={{ color: "#8F7220", flexShrink: 0 }} />
+                      <span>
+                        Resuming saved answers (Question {currentQ + 1} of {QUESTIONS.length})
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRestartFromQuestion1}
+                      className="quiet-link"
+                      style={{
+                        fontSize: "0.8rem",
+                        color: "#8F7220",
+                        fontWeight: 600,
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                        padding: "2px 6px",
+                      }}
+                      data-testid="button-restart-assessment"
+                    >
+                      Restart from Question 1
+                    </button>
+                  </div>
+                )}
+
+                <div className="card" style={{ padding: "clamp(22px, 4vw, 32px)", marginBottom: "1.2rem" }}>
+                  <div style={{ display: "flex", gap: "0.35rem", marginBottom: "1.2rem" }}>
                     {SECTIONS.map((s, i) => (
-                      <div key={s} style={{ flex: 1, height: "2px", borderRadius: 1, background: i <= sectionIndex ? accentColor : "rgba(255,255,255,0.05)", transition: "background 0.6s" }} />
+                      <div key={s} style={{ flex: 1, height: "3px", borderRadius: 2, background: i <= sectionIndex ? "#E7B93F" : "#EFECE3", transition: "background 0.4s ease" }} />
                     ))}
                   </div>
-                  <h2 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(1.1rem, 3.8vw, 1.45rem)", fontWeight: 700, lineHeight: 1.3, marginBottom: "0.4rem", letterSpacing: "-0.01em" }}>{q.question}</h2>
+                  <h2 style={{ fontFamily: "var(--font-display, 'Playfair Display', Georgia, serif)", fontSize: "clamp(1.25rem, 3.8vw, 1.65rem)", fontWeight: 700, lineHeight: 1.3, marginBottom: "0.4rem", letterSpacing: "-0.015em", color: "#171A15" }}>{q.question}</h2>
                   {q.subtext && <p className="question-subtext">{q.subtext}</p>}
-                  {q.type === "multi" && <p className="tag" style={{ marginTop: "0.5rem" }}>SELECT ALL THAT APPLY</p>}
+                  {q.type === "multi" && <p className="tag" style={{ marginTop: "0.6rem", color: "#8F7220" }}>SELECT ALL THAT APPLY</p>}
                   {q.type === "multi3" && (
-                    <p className="tag" style={{ marginTop: "0.5rem", color: Array.isArray(currentAnswer) && currentAnswer.length === 3 ? accentColor : "#3a3020" }}>
+                    <p className="tag" style={{ marginTop: "0.6rem", color: Array.isArray(currentAnswer) && currentAnswer.length === 3 ? "#8F7220" : "#60665B" }}>
                       PICK UP TO 3 — {Array.isArray(currentAnswer) ? currentAnswer.length : 0}/3 SELECTED
                     </p>
                   )}
                 </div>
 
                 {q.type !== "text" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.42rem" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                     {q.options!.map((opt) => {
                       const atLimit = q.type === "multi3" && Array.isArray(currentAnswer) && currentAnswer.length >= 3 && !isSelected(opt.label);
                       return (
                       <button
                         key={opt.label}
-                        className="option-btn"
+                        className={`option-btn ${isSelected(opt.label) ? "selected" : ""}`}
                         onClick={() => selectOption(opt.label)}
                         data-testid={`option-answer-${currentQ + 1}-${opt.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
-                        style={isSelected(opt.label)
-                          ? { borderColor: `${accentColor}65`, background: `${accentColor}12`, color: "#f0e8c0" }
-                          : atLimit ? { opacity: 0.3, cursor: "not-allowed" } : {}}
+                        role={q.type === "single" ? "radio" : "checkbox"}
+                        aria-checked={isSelected(opt.label)}
+                        style={atLimit ? { opacity: 0.4, cursor: "not-allowed" } : {}}
                       >
-                         <span className="option-mark" aria-hidden="true"><span /></span>
-                        <span>{opt.label}</span>
-                        {isSelected(opt.label) && <span style={{ marginLeft: "auto", color: accentColor, fontSize: "0.72rem", fontWeight: 700 }}>✓</span>}
+                         <span className={`option-mark ${q.type === "single" ? "option-mark-radio" : "option-mark-check"} ${isSelected(opt.label) ? "is-selected" : ""}`} aria-hidden="true"><span /></span>
+                        <span style={{ fontSize: "0.92rem", lineHeight: 1.45 }}>{opt.label}</span>
+                        {isSelected(opt.label) && <span style={{ marginLeft: "auto", color: "#8F7220", fontSize: "0.85rem", fontWeight: 700 }}>✓</span>}
                       </button>
                       );
                     })}
@@ -656,115 +648,84 @@ export default function CareerDiscovery() {
                 )}
 
                 {q.type === "text" && (
-                  <div>
-                    <textarea aria-label={q.question} rows={4} placeholder={q.placeholder} value={textInput} onChange={(e) => setTextInput(e.target.value)} data-testid="input-dream-work" style={{ borderColor: textInput ? "rgba(245,200,66,0.28)" : undefined }} />
-                    <p className="tag" style={{ marginTop: "0.5rem" }}>OPTIONAL — skip if you're unsure</p>
+                  <div className="card" style={{ padding: "20px" }}>
+                    <label htmlFor="input-dream-work" className="sr-only">
+                      {q.question}
+                    </label>
+                    <textarea
+                      id="input-dream-work"
+                      aria-label={q.question}
+                      aria-describedby="q13-hint"
+                      rows={5}
+                      maxLength={2000}
+                      placeholder={q.placeholder}
+                      value={textInput}
+                      onChange={(e) => setTextInput(e.target.value)}
+                      data-testid="input-dream-work"
+                    />
+                    <div id="q13-hint" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.6rem" }}>
+                      <p className="tag">OPTIONAL — skip if you're unsure</p>
+                      {textInput.length > 0 && (
+                        <span className="tag" style={{ color: textInput.length >= 1900 ? "#C55B5B" : "#889082" }}>
+                          {textInput.length} / 2000
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
             </div>
 
-            <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(14,12,9,0.95)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(255,255,255,0.04)", padding: "0.9rem 1.4rem", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 100 }}>
-              <button onClick={handleBack} style={{ background: "transparent", border: "1.5px solid rgba(255,255,255,0.06)", color: "#3a3020", fontFamily: "'Plus Jakarta Sans', sans-serif", fontSize: "0.8rem", padding: "0.58rem 1.1rem", borderRadius: "50px", cursor: "pointer" }}>
+            <div className="quiz-footer" style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "rgba(247, 244, 236, 0.96)", backdropFilter: "blur(12px)", borderTop: "1px solid var(--cp-border-subtle, #E6EAE3)", padding: "0.9rem 1.6rem", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 100 }}>
+              <button type="button" onClick={handleBack} className="quiz-back-btn" data-testid="button-quiz-back" aria-label="Back to previous question">
                 ← Back
               </button>
-              <button className="action-btn" onClick={handleNext} disabled={!canProceed()} data-testid="button-next-question" style={{ background: canProceed() ? accentColor : "#181510", color: canProceed() ? "#0e0c09" : "#2a2010", transition: "all 0.3s ease" }}>
-                {currentQ === QUESTIONS.length - 1 ? "Build My Profile →" : "Next →"}
+              <span className="quiz-progress-note" role={draftSaveError ? "alert" : "status"}>
+                {draftSaveError ? "Progress could not be saved. Keep this page open." : "Progress saved on this device"}
+              </span>
+              <button
+                className={`button button-primary ${currentQ === QUESTIONS.length - 1 ? "final-step-button" : ""}`}
+                onClick={handleNext}
+                disabled={!canProceed()}
+                data-testid="button-next-question"
+                aria-label={currentQ === QUESTIONS.length - 1 ? "Build my profile and continue" : "Next question"}
+                style={{
+                  minWidth: currentQ === QUESTIONS.length - 1 ? "220px" : "120px",
+                  padding: "0.85rem 1.8rem",
+                  fontSize: "0.92rem",
+                }}
+              >
+                {currentQ === QUESTIONS.length - 1 ? <>Build My Profile <ArrowRight size={18} /></> : "Next →"}
               </button>
             </div>
           </div>
         )}
 
-        {/* ── RESULT ── */}
-        {screen === "result" && false && (
-          <div style={{ minHeight: "100vh", position: "relative", zIndex: 1, padding: "2rem 1rem 5rem" }} ref={resultRef}>
-            <div style={{ maxWidth: 640, margin: "0 auto" }}>
-
-              <div style={{ textAlign: "center", marginBottom: "2.2rem", paddingTop: "0.5rem" }}>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "rgba(91,196,160,0.07)", border: "1px solid rgba(91,196,160,0.18)", borderRadius: "50px", padding: "0.38rem 1rem", marginBottom: "1.1rem" }}>
-                  <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#5bc4a0", display: "inline-block" }} />
-                  <span className="tag" style={{ color: "#5bc4a0" }}>PROFILE PROMPT READY</span>
-                </div>
-                <h1 style={{ fontFamily: "'Syne', sans-serif", fontSize: "clamp(1.4rem, 4.5vw, 1.9rem)", fontWeight: 800, letterSpacing: "-0.02em", marginBottom: "0.55rem" }}>Your career profile is built.</h1>
-                <p style={{ color: "#4a4030", fontSize: "0.85rem", lineHeight: 1.75, maxWidth: 500, margin: "0 auto" }}>
-                  Copy the prompt and paste it into ChatGPT. The AI will read your full profile and recommend your best-fit engineering domain, explain why, and list the exact fresher jobs you can land.
-                </p>
-              </div>
-
-              {/* Steps */}
-              <div className="card" style={{ padding: "1.3rem 1.5rem", marginBottom: "1rem" }}>
-                <p className="tag" style={{ marginBottom: "1rem" }}>HOW TO USE THIS</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.7rem" }}>
-                  {[
-                    { n: "01", text: "Copy the prompt below", color: "#f5c842" },
-                    { n: "02", text: "Open ChatGPT in a new tab", color: "#5bc4a0" },
-                    { n: "03", text: "Start a new chat and paste it", color: "#7eb8f7" },
-                    { n: "04", text: "Read your full personalized career report", color: "#e07af5" },
-                  ].map(({ n, text, color }) => (
-                    <div key={n} style={{ display: "flex", alignItems: "center", gap: "0.85rem" }}>
-                      <div className="step-num" style={{ background: `${color}15`, border: `1px solid ${color}35`, color }}>{n}</div>
-                      <span style={{ color: "#7a7060", fontSize: "0.84rem" }}>{text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Prompt */}
-              <div style={{ marginBottom: "1rem" }}>
-                <p className="tag" style={{ marginBottom: "0.55rem" }}>YOUR MASTER PROMPT</p>
-                <div className="prompt-box">{masterPrompt}</div>
-              </div>
-
-              {/* Buttons */}
-              <div style={{ display: "flex", gap: "0.7rem", flexWrap: "wrap", marginBottom: "1.2rem" }}>
-                <button className="action-btn" onClick={handleCopy} style={{ background: copied ? "#5bc4a0" : "#f5c842", color: "#0e0c09", flex: 1, justifyContent: "center", minWidth: 140 }}>
-                  {copied ? "✓ Copied!" : "📋 Copy Prompt"}
-                </button>
-                <button className="action-btn" onClick={() => window.open("https://chatgpt.com", "_blank")} style={{ background: "rgba(255,255,255,0.04)", border: "1.5px solid rgba(255,255,255,0.09)", color: "#b0a890", flex: 1, justifyContent: "center", minWidth: 140 }}>
-                  Open ChatGPT ↗
-                </button>
-              </div>
-
-              {/* What you'll get */}
-              <div className="card" style={{ padding: "1.3rem 1.5rem" }}>
-                <p className="tag" style={{ marginBottom: "0.9rem" }}>WHAT YOUR REPORT WILL INCLUDE</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
-                  {[
-                    ["🏷️", "Profile Snapshot & Core Personality", "Archetype, worker type, strengths, risks, survival environment"],
-                    ["📊", "Trait Ratings", "5 dimensions rated from your actual answers with █░ bars"],
-                    ["🔍", "What Your Answers Reveal", "Clear patterns, conflicting answers, and unexplored areas — honestly"],
-                    ["🎯", "Long-Term Caliber vs Entry Reality", "What you're wired for long-term vs what the market actually hires freshers into — with a bridge path"],
-                    ["💼", "Realistic Fresher Career Fits", "4-5 roles with role type (stepping-stone vs long-term fit), real ₹ salaries, entry difficulty, and 5-year growth"],
-                    ["🚫", "Careers to Avoid", "2-3 roles you may be attracted to but are realistically unsuited for — evidence from your answers"],
-                    ["⚡", "Best-Fit Tech Career Track", "Engineering / Product / Automation / Startup Ops / Technical Business — not forced into engineering"],
-                    ["🗓️", "Realistic 12-Month Roadmap", "Month-by-month: projects, internships, portfolio, interviews — exact tools named"],
-                    ["💬", "The Brutal Truth", "What you're underestimating, where you're wasting time, what happens if you stay unfocused"],
-                  ].map(([emoji, title, desc]) => (
-                    <div key={title} style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start" }}>
-                      <span style={{ fontSize: "0.9rem", flexShrink: 0, marginTop: "0.1rem" }}>{emoji}</span>
-                      <div>
-                        <span style={{ color: "#d0c8b8", fontSize: "0.82rem", fontWeight: 600 }}>{title}</span>
-                        <span style={{ color: "#3a3020", fontSize: "0.8rem" }}> — {desc}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ textAlign: "center", marginTop: "1.8rem" }}>
-                <button onClick={handleRetake} style={{ background: "transparent", border: "none", color: "#2a2010", fontFamily: "'DM Mono', monospace", fontSize: "0.68rem", cursor: "pointer", letterSpacing: "0.06em" }}>
-                  ← Retake quiz
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
         {screen === "result" && (
           <PageFrame>
             <header className="topbar"><Brand /><div className="topbar-right"><Link href="/sign-in" className="quiet-link" data-testid="link-sign-in">Student sign in</Link></div></header>
-            <main className="submit-main enter">
-              <Link href="/" className="back-link" onClick={(event) => { event.preventDefault(); setScreen("quiz"); setCurrentQ(12); }} data-testid="link-review-answers">← Review your answers</Link>
-              <div className="submit-heading"><span className="eyebrow">LAST STEP · HITAM STUDENTS</span><h1>Your answers deserve a useful read.</h1><p>We’ll turn your responses into a structured, practical career report. Your full report stays private to you.</p></div>
+            <main className="submit-main enter" ref={resultRef}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1rem" }}>
+                <Link href="/" className="back-link" onClick={(event) => { event.preventDefault(); setScreen("quiz"); setCurrentQ(0); }} data-testid="link-review-answers">← Review your answers</Link>
+                {hasSavedDraftAnswers && (
+                  <button
+                    type="button"
+                    onClick={handleRestartFromQuestion1}
+                    className="quiet-link"
+                    style={{ fontSize: "0.82rem", color: "#8F7220", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+                    data-testid="button-restart-assessment-result"
+                  >
+                    Restart assessment
+                  </button>
+                )}
+              </div>
+              <div className="submit-heading">
+                <span className="eyebrow">YOUR ANSWERS ARE READY · FINAL STEP</span>
+                <h1 ref={resultHeadingRef} tabIndex={-1}>Your answers are ready. One last step.</h1>
+                <p>{isSignedIn
+                  ? "Add your HITAM details and consent to create your structured, practical career report. Your personal report stays private."
+                  : "Sign in or create your student account to continue. Your answers are saved on this device while you do."}</p>
+              </div>
               {!isSignedIn ? <div className="auth-required">
                 <div className="auth-copy"><div className="auth-icon"><LockKeyhole size={19} /></div><div><h2>Sign in to save your report</h2><p>A student account keeps this report private and lets you return to it later.</p></div></div>
                 <div className="embedded-auth">{authMode === "sign-in" ? <SignIn routing="hash" signUpUrl={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/sign-up`} /> : <SignUp routing="hash" signInUrl={`${import.meta.env.BASE_URL.replace(/\/$/, "")}/sign-in`} />}</div>
@@ -776,10 +737,16 @@ export default function CareerDiscovery() {
                   <label>Academic year<select value={year} onChange={(e) => setYear(e.target.value)} data-testid="select-academic-year"><option value="">Choose your year</option>{["1st Year", "2nd Year", "3rd Year", "4th Year"].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
                   <label>Batch<select value={batch} onChange={(e) => setBatch(e.target.value)} data-testid="select-batch"><option value="">Choose your batch</option>{["2022–2026", "2023–2027", "2024–2028", "2025–2029", "Other"].map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
                 </div>
-                <label className="consent-row"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} data-testid="checkbox-consent" /><span><strong>I’m comfortable sharing anonymized answers for institution-wide insights.</strong><small>HITAM administrators see cohort aggregates only—not your report, name, or email. Your personal report remains yours.</small></span></label>
+                <div className="form-section-head"><span className="form-step">02</span><div><h2>Your student context</h2><p>Three quick facts that help tailor guidance to your situation. Nothing here is shared beyond your private report.</p></div></div>
+                <div className="student-fields student-context-fields">
+                  <label>Your degree<input type="text" value={degree} onChange={(e) => setDegree(e.target.value)} placeholder="B.Tech Computer Science" maxLength={100} data-testid="input-degree" /><span className="field-hint">e.g. B.Tech CSE, BCA, B.Sc Mathematics</span></label>
+                  <label>Expected graduation year<select value={graduationYear ?? ""} onChange={(e) => setGraduationYear(e.target.value === "" ? null : Number(e.target.value))} data-testid="select-graduation-year"><option value="">Choose graduation year</option>{graduationYearChoices.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+                  <label>Weekly hours for career preparation<input type="number" value={availableHoursPerWeek ?? ""} min={1} max={60} step={1} inputMode="numeric" onChange={(e) => setAvailableHoursPerWeek(e.target.value === "" ? null : Number(e.target.value))} placeholder="10" data-testid="input-available-hours" /><span className="field-hint">Realistic focused hours per week, e.g. 10-15. Maximum 60.</span></label>
+                </div>
+                <label className="consent-row"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} data-testid="checkbox-consent" /><span><strong>I consent to my answers being used to create my report and included in institution-level cohort aggregates.</strong><small>Administrators see report-derived patterns for groups of at least five students—not your identity, raw answers, or individual report. Your personal report remains private.</small></span></label>
                 {submitError && <div className="form-error" role="alert"><AlertCircle size={16} />{submitError}</div>}
                 {health.isError && <div className="service-warning" role="status"><AlertCircle size={15} /><span>The report service isn’t responding. Your answers are still here—check again before submitting.</span><button type="button" onClick={() => health.refetch()} data-testid="button-check-report-service">Check again</button></div>}
-                <button className="button button-primary submit-button" onClick={handleSubmitAssessment} disabled={!department || !year || !batch || !consent || submission.isPending || health.isError} data-testid="button-submit-assessment">
+                <button className="button button-primary submit-button" onClick={handleSubmitAssessment} disabled={!department || !year || !batch || !isStudentContextValid || !consent || submission.isPending || health.isError} data-testid="button-submit-assessment">
                   {submission.isPending ? "Saving your answers…" : <>Create my private report <Send size={16} /></>}
                 </button>
                 <p className="privacy-note"><LockKeyhole size={13} /> Your identity is never included in institution dashboard results.</p>
