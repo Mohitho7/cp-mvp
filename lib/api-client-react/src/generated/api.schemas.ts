@@ -713,6 +713,37 @@ export interface InstitutionDashboard {
   batchOptions: string[];
 }
 
+export interface CareerFeedbackInput {
+  /**
+     * Star rating from 1 (Not useful) to 5 (Extremely useful)
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  /**
+     * Optional improvement feedback, max 500 characters
+     * @maxLength 500
+     */
+  comment?: string | null;
+}
+
+export interface CareerFeedback {
+  id: string;
+  submissionId: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  comment?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CareerFeedbackResponse {
+  feedback: CareerFeedback | null;
+}
+
 export type GetInstitutionDashboardParams = {
 department?: string;
 year?: string;

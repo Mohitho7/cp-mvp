@@ -239,6 +239,8 @@ export default function CareerDiscovery() {
   useEffect(() => {
     if (startRequested && screen === "intro") {
       setScreen(initialDraft?.screen === "result" ? "result" : "quiz");
+    } else if (!startRequested && screen !== "intro") {
+      setScreen("intro");
     }
   }, [startRequested]);
 
@@ -338,7 +340,14 @@ export default function CareerDiscovery() {
   });
 
   function handleBack() {
-    if (currentQ === 0) { setScreen("intro"); return; }
+    if (currentQ === 0) {
+      if (location === "/assessment" || location.endsWith("/assessment")) {
+        setLocation("/");
+      } else {
+        setScreen("intro");
+      }
+      return;
+    }
     const prevQ = QUESTIONS[currentQ - 1];
     setCurrentQ((p) => p - 1);
     if (prevQ.type === "text") {
@@ -482,14 +491,14 @@ export default function CareerDiscovery() {
                   <Link href="/sign-in" data-testid="link-home-signin" style={{ color: "var(--cp-text, #171A15)", fontWeight: 600 }}>
                     Sign In
                   </Link>
-                  <button
-                    onClick={() => setScreen("quiz")}
+                  <Link
+                    href="/assessment"
                     data-testid="button-start-assessment-nav"
                     className="button button-primary"
-                    style={{ padding: "8px 18px", fontSize: "12px" }}
+                    style={{ padding: "8px 18px", fontSize: "12px", display: "inline-flex", alignItems: "center", textDecoration: "none" }}
                   >
                     Start Your Career Path
-                  </button>
+                  </Link>
                 </>
               )}
             </div>
@@ -515,17 +524,24 @@ export default function CareerDiscovery() {
               </p>
 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "1rem", flexWrap: "wrap", marginBottom: "2rem" }}>
-                <button
+                <Link
+                  href="/assessment"
                   className="button button-primary"
-                  onClick={() => setScreen("quiz")}
                   data-testid="button-start-assessment"
-                  style={{ padding: "0.95rem 2.4rem", fontSize: "0.95rem", borderRadius: "9999px" }}
+                  style={{ padding: "0.95rem 2.4rem", fontSize: "0.95rem", borderRadius: "9999px", display: "inline-flex", alignItems: "center", textDecoration: "none" }}
                 >
                   Start Your Career Path →
-                </button>
+                </Link>
                 <button
+                  type="button"
                   className="button button-subtle"
-                  onClick={() => setScreen("quiz")}
+                  onClick={() => {
+                    const el = document.getElementById("how-it-works");
+                    if (el) {
+                      el.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
+                  data-testid="button-explore-how-it-works"
                   style={{ padding: "0.95rem 2rem", fontSize: "0.95rem", borderRadius: "9999px" }}
                 >
                   Explore How It Works
@@ -536,7 +552,7 @@ export default function CareerDiscovery() {
                 <span style={{ color: "#DFB235" }}>✦</span> From uncertainty to a career you can prove.
               </p>
 
-              <div style={{ marginTop: "3.5rem", paddingTop: "2.5rem", borderTop: "1px solid var(--cp-border-subtle, #E6EAE3)" }}>
+              <div id="how-it-works" style={{ marginTop: "3.5rem", paddingTop: "2.5rem", borderTop: "1px solid var(--cp-border-subtle, #E6EAE3)" }}>
                 <p className="tag" style={{ marginBottom: "1rem", color: "#889082" }}>BUILT FOR HITAM UNDERGRADUATES · 13 PRACTICAL QUESTIONS · SAVED ON THIS DEVICE</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", justifyContent: "center" }}>
                   {["Software Engineering", "Cloud & DevOps", "Data Science & Analytics", "Product & Strategy", "AI & Automation", "UX/UI Design", "Cybersecurity", "Operations & Projects"].map((f) => (

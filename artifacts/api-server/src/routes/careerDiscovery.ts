@@ -1,5 +1,5 @@
 import { Router, type IRouter, type RequestHandler } from "express";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import {
   CreateCareerSubmissionBody,
   GetCareerSubmissionParams,
@@ -13,12 +13,14 @@ import type {
   CareerSubmissionInput,
 } from "@workspace/api-zod";
 import {
+  careerFeedbackTable,
   careerResultsTable,
   careerStrategiesTable,
   careerSubmissionsTable,
   db,
   studentsTable,
 } from "@workspace/db";
+import { logger } from "../lib/logger";
 import {
   authorizeInstitutionAdmin,
   ensureConfiguredInstitution,
@@ -34,6 +36,7 @@ import {
   toStudentContextColumns,
   validateStudentContext,
 } from "../lib/studentContext";
+import { validateFeedbackInput } from "../lib/careerFeedback";
 
 const router: IRouter = Router();
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
@@ -244,6 +247,56 @@ async function getOwnedSubmission(userId: string, submissionId?: string) {
     .limit(1);
 
   return row ?? null;
+}
+
+export async function getOwnedStudentAndSubmission(userId: string, submissionId: string) {
+  const [row] = await db
+    .select({
+      submissionId: careerSubmissionsTable.id,
+      studentId: studentsTable.id,
+      clerkUserId: studentsTable.clerkUserId,
+    })
+    .from(careerSubmissionsTable)
+    .innerJoin(
+      studentsTable,
+      eq(careerSubmissionsTable.studentId, studentsTable.id),
+    )
+    .where(
+      and(
+        eq(studentsTable.clerkUserId, userId),
+        eq(careerSubmissionsTable.id, submissionId),
+      ),
+    )
+    .limit(1);
+
+  return row ?? null;
+}
+
+let feedbackTableEnsured = false;
+export async function ensureFeedbackTable(): Promise<void> {
+  if (feedbackTableEnsured) return;
+  try {
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "career_feedback" (
+        "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+        "submission_id" uuid NOT NULL REFERENCES "career_submissions"("id") ON DELETE CASCADE,
+        "student_id" uuid NOT NULL REFERENCES "career_students"("id") ON DELETE CASCADE,
+        "rating" smallint NOT NULL,
+        "comment" text,
+        "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+        "updated_at" timestamp with time zone DEFAULT now() NOT NULL
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS "career_feedback_submission_student_unique" ON "career_feedback" ("submission_id", "student_id");
+      CREATE INDEX IF NOT EXISTS "career_feedback_submission_idx" ON "career_feedback" ("submission_id");
+      CREATE INDEX IF NOT EXISTS "career_feedback_student_idx" ON "career_feedback" ("student_id");
+    `);
+    feedbackTableEnsured = true;
+  } catch (err) {
+    logger.warn(
+      { error: err instanceof Error ? err.message : String(err) },
+      "ensureFeedbackTable notice",
+    );
+  }
 }
 
 export function serializeSubmission(
@@ -508,6 +561,123 @@ router.post(
     res.status(202).json(accepted);
   },
 );
+
+router.get("/submissions/:id/feedback", async (req, res) => {
+  const userId = getSignedInUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Sign in required." });
+    return;
+  }
+
+  const id = parseSubmissionId(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "Submission ID must be a valid UUID." });
+    return;
+  }
+
+  await ensureFeedbackTable();
+
+  const owned = await getOwnedStudentAndSubmission(userId, id);
+  if (!owned) {
+    res.status(404).json({ error: "Submission not found or does not belong to the signed-in student." });
+    return;
+  }
+
+  const [row] = await db
+    .select({
+      id: careerFeedbackTable.id,
+      submissionId: careerFeedbackTable.submissionId,
+      rating: careerFeedbackTable.rating,
+      comment: careerFeedbackTable.comment,
+      createdAt: careerFeedbackTable.createdAt,
+      updatedAt: careerFeedbackTable.updatedAt,
+    })
+    .from(careerFeedbackTable)
+    .where(
+      and(
+        eq(careerFeedbackTable.submissionId, id),
+        eq(careerFeedbackTable.studentId, owned.studentId),
+      ),
+    )
+    .limit(1);
+
+  if (!row) {
+    res.json({ feedback: null });
+    return;
+  }
+
+  res.json({
+    feedback: {
+      id: row.id,
+      submissionId: row.submissionId,
+      rating: row.rating,
+      comment: row.comment,
+      createdAt: row.createdAt.toISOString(),
+      updatedAt: row.updatedAt.toISOString(),
+    },
+  });
+});
+
+router.post("/submissions/:id/feedback", async (req, res) => {
+  const userId = getSignedInUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "Sign in required." });
+    return;
+  }
+
+  const id = parseSubmissionId(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "Submission ID must be a valid UUID." });
+    return;
+  }
+
+  await ensureFeedbackTable();
+
+  const owned = await getOwnedStudentAndSubmission(userId, id);
+  if (!owned) {
+    res.status(404).json({ error: "Submission not found or does not belong to the signed-in student." });
+    return;
+  }
+
+  const validation = validateFeedbackInput(req.body);
+  if (!validation.ok) {
+    res.status(validation.status).json({ error: validation.message });
+    return;
+  }
+  const { rating, comment } = validation.data;
+
+  const now = new Date();
+  const [saved] = await db
+    .insert(careerFeedbackTable)
+    .values({
+      submissionId: id,
+      studentId: owned.studentId,
+      rating,
+      comment,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [careerFeedbackTable.submissionId, careerFeedbackTable.studentId],
+      set: {
+        rating,
+        comment,
+        updatedAt: now,
+      },
+    })
+    .returning();
+
+  res.json({
+    feedback: {
+      id: saved.id,
+      submissionId: saved.submissionId,
+      rating: saved.rating,
+      comment: saved.comment,
+      createdAt: saved.createdAt.toISOString(),
+      updatedAt: saved.updatedAt.toISOString(),
+    },
+  });
+});
 
 router.get("/dashboard", async (req, res) => {
   const userId = getSignedInUserId(req);

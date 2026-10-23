@@ -200,3 +200,33 @@ export const submissionRateLimitsTable = pgTable(
   },
   (table) => [index("submission_rate_limits_window_idx").on(table.windowStart)],
 );
+
+export const careerFeedbackTable = pgTable(
+  "career_feedback",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    submissionId: uuid("submission_id")
+      .notNull()
+      .references(() => careerSubmissionsTable.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => studentsTable.id, { onDelete: "cascade" }),
+    rating: smallint("rating").notNull(),
+    comment: text("comment"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("career_feedback_submission_student_unique").on(
+      table.submissionId,
+      table.studentId,
+    ),
+    index("career_feedback_submission_idx").on(table.submissionId),
+    index("career_feedback_student_idx").on(table.studentId),
+  ],
+);
+

@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { useClerk, useUser } from "@clerk/react";
 import { ArrowLeft, CircleCheck, Clock3, LogOut, RefreshCw, ShieldAlert } from "lucide-react";
 import { ReportDetail } from "./ReportDetail";
+import { ReportFeedback } from "@/components/report/ReportFeedback";
 import { Brand, PageFrame } from "@/components/Brand";
 import { resolveStudentReport } from "@/lib/previewIsolation";
 import { syncSubmissionStorageOnStatusCheck } from "@/lib/assessmentNavigation";
@@ -70,12 +71,13 @@ export default function StudentStatus() {
               </div>
             </div>
             <ReportDetail report={activeReport} strategy={activeStrategy} />
+            {result?.id && <ReportFeedback submissionId={result.id} />}
           </div>
         ) : query.error && (query.error as { status?: number }).status === 404 ? <section className="empty-state">
           <span className="eyebrow">YOUR DISCOVERY</span><h1>No assessment found yet.</h1>
           <p>Complete the 13-question discovery to see your personal report here.</p>
           <Link
-            href="/?start=true"
+            href="/assessment"
             className="button button-primary"
             data-testid="link-start-assessment"
             onClick={() => {

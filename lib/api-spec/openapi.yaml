@@ -151,6 +151,61 @@ paths:
           description: Submission not found or does not belong to the signed-in student
         "409":
           description: Only failed submissions can be retried
+  /submissions/{id}/feedback:
+    get:
+      operationId: getCareerFeedback
+      tags: [career-discovery]
+      summary: Get the student's saved feedback for this submission
+      description: Returns the rating and optional comment for the student's completed report.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Saved feedback or null if none submitted yet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CareerFeedbackResponse"
+        "401":
+          description: Sign in required
+        "404":
+          description: Submission not found or does not belong to the signed-in student
+    post:
+      operationId: submitCareerFeedback
+      tags: [career-discovery]
+      summary: Submit or update feedback for a completed report
+      description: Saves or updates the 1-5 star rating and optional comment.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CareerFeedbackInput"
+      responses:
+        "200":
+          description: Feedback saved or updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CareerFeedbackResponse"
+        "400":
+          description: Invalid rating or oversized comment
+        "401":
+          description: Sign in required
+        "404":
+          description: Submission not found or does not belong to the signed-in student
   /result/{id}:
     get:
       operationId: getCareerResult
@@ -1262,3 +1317,56 @@ components:
           yearOptions,
           batchOptions,
         ]
+    CareerFeedbackInput:
+      type: object
+      required:
+        - rating
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Star rating from 1 (Not useful) to 5 (Extremely useful)
+        comment:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Optional improvement feedback, max 500 characters
+    CareerFeedback:
+      type: object
+      required:
+        - id
+        - submissionId
+        - rating
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        submissionId:
+          type: string
+          format: uuid
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CareerFeedbackResponse:
+      type: object
+      required:
+        - feedback
+      properties:
+        feedback:
+          anyOf:
+            - $ref: "#/components/schemas/CareerFeedback"
+            - type: "null"
+

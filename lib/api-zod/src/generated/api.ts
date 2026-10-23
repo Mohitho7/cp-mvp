@@ -1449,6 +1449,65 @@ export const RetryCareerSubmissionParams = zod.object({
 
 
 /**
+ * Returns the rating and optional comment for the student's completed report.
+ * @summary Get the student's saved feedback for this submission
+ */
+export const GetCareerFeedbackParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const getCareerFeedbackResponseFeedbackOneRatingMax = 5;
+
+
+
+export const GetCareerFeedbackResponse = zod.object({
+  "feedback": zod.union([zod.object({
+  "id": zod.string().uuid(),
+  "submissionId": zod.string().uuid(),
+  "rating": zod.number().min(1).max(getCareerFeedbackResponseFeedbackOneRatingMax),
+  "comment": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),zod.null()])
+})
+
+
+/**
+ * Saves or updates the 1-5 star rating and optional comment.
+ * @summary Submit or update feedback for a completed report
+ */
+export const SubmitCareerFeedbackParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const submitCareerFeedbackBodyRatingMax = 5;
+
+export const submitCareerFeedbackBodyCommentMax = 500;
+
+
+
+export const SubmitCareerFeedbackBody = zod.object({
+  "rating": zod.number().min(1).max(submitCareerFeedbackBodyRatingMax).describe('Star rating from 1 (Not useful) to 5 (Extremely useful)'),
+  "comment": zod.string().max(submitCareerFeedbackBodyCommentMax).nullish().describe('Optional improvement feedback, max 500 characters')
+})
+
+export const submitCareerFeedbackResponseFeedbackOneRatingMax = 5;
+
+
+
+export const SubmitCareerFeedbackResponse = zod.object({
+  "feedback": zod.union([zod.object({
+  "id": zod.string().uuid(),
+  "submissionId": zod.string().uuid(),
+  "rating": zod.number().min(1).max(submitCareerFeedbackResponseFeedbackOneRatingMax),
+  "comment": zod.string().nullish(),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+}),zod.null()])
+})
+
+
+/**
  * Compatibility alias for GET /submissions/{id}. Students can read only their own report.
  * @summary Get the signed-in student's submission status and report
  */

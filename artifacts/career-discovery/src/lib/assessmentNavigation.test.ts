@@ -53,27 +53,35 @@ function sampleDraft(overrides: Partial<AssessmentDraft> = {}): AssessmentDraft 
 }
 
 describe("Assessment Navigation — Start Request Detection", () => {
-  it("detects ?start=true as an assessment start request", () => {
-    assert.equal(isAssessmentStartRequested("?start=true"), true);
-    assert.equal(isAssessmentStartRequested("start=true"), true);
-  });
-
-  it("detects ?start=assessment and ?quiz=true", () => {
-    assert.equal(isAssessmentStartRequested("?start=assessment"), true);
-    assert.equal(isAssessmentStartRequested("?quiz=true"), true);
-  });
-
   it("detects /assessment route as an assessment start request", () => {
     assert.equal(isAssessmentStartRequested("", "/assessment"), true);
+    assert.equal(isAssessmentStartRequested("?start=true", "/assessment"), true);
   });
 
-  it("returns false for standard home visit without start query parameter", () => {
+  it("legacy query parameter ?start=true at root (/) does NOT start assessment", () => {
+    assert.equal(isAssessmentStartRequested("?start=true", "/"), false);
+    assert.equal(isAssessmentStartRequested("start=true", "/"), false);
+    assert.equal(isAssessmentStartRequested("?start=assessment", "/"), false);
+    assert.equal(isAssessmentStartRequested("?quiz=true", "/"), false);
+  });
+
+  it("returns false for standard home visit without query parameter", () => {
     assert.equal(isAssessmentStartRequested("", "/"), false);
     assert.equal(isAssessmentStartRequested("?ref=google", "/"), false);
   });
 });
 
-describe("Assessment Navigation — Home Redirect Loop Prevention", () => {
+describe("Assessment Navigation — Home Route Always Shows Landing Page", () => {
+  it("signed-out visitor on normal home route renders discovery", () => {
+    const decision = resolveHomeNavigation({
+      isSignedIn: false,
+      submissionId: null,
+      search: "",
+      pathname: "/",
+    });
+    assert.equal(decision.action, "render_discovery");
+  });
+
   it("signed-in user with no submission lands on discovery without redirect", () => {
     const decision = resolveHomeNavigation({
       isSignedIn: true,
@@ -84,18 +92,27 @@ describe("Assessment Navigation — Home Redirect Loop Prevention", () => {
     assert.equal(decision.action, "render_discovery");
   });
 
-  it("signed-in user with existing completed report redirects to /student/status on normal visit", () => {
+  it("signed-in user with existing completed report STILL sees the homepage at /", () => {
     const decision = resolveHomeNavigation({
       isSignedIn: true,
       submissionId: "submission-uuid-1234",
       search: "",
       pathname: "/",
     });
-    assert.equal(decision.action, "redirect_status");
-    assert.equal(decision.redirectPath, "/student/status");
+    assert.equal(decision.action, "render_discovery");
   });
 
-  it("signed-in user clicking 'Start the assessment' (?start=true) NEVER redirects back to /student/status even if a stale submissionId exists", () => {
+  it("signed-in user with a draft visiting / sees the homepage without redirect", () => {
+    const decision = resolveHomeNavigation({
+      isSignedIn: true,
+      submissionId: null,
+      search: "",
+      pathname: "/",
+    });
+    assert.equal(decision.action, "render_discovery");
+  });
+
+  it("visiting / with legacy ?start=true still renders discovery without redirect", () => {
     const decision = resolveHomeNavigation({
       isSignedIn: true,
       submissionId: "stale-submission-id",
@@ -104,40 +121,10 @@ describe("Assessment Navigation — Home Redirect Loop Prevention", () => {
     });
     assert.equal(decision.action, "render_discovery");
   });
-
-  it("signed-in user visiting /assessment route directly NEVER redirects back to /student/status", () => {
-    const decision = resolveHomeNavigation({
-      isSignedIn: true,
-      submissionId: "stale-submission-id",
-      search: "",
-      pathname: "/assessment",
-    });
-    assert.equal(decision.action, "render_discovery");
-  });
-
-  it("signed-out visitor on normal home route renders discovery", () => {
-    const decision = resolveHomeNavigation({
-      isSignedIn: false,
-      submissionId: null,
-      search: "",
-      pathname: "/",
-    });
-    assert.equal(decision.action, "render_discovery");
-  });
 });
 
 describe("Assessment Navigation — Screen and Question Initialization", () => {
-  it("new user with no draft clicking 'Start the assessment' starts directly at Question 1 (index 0)", () => {
-    const state = resolveAssessmentInitialState({
-      isStarting: true,
-      draft: null,
-    });
-    assert.equal(state.screen, "quiz");
-    assert.equal(state.currentQ, 0);
-    assert.equal(state.hasSavedAnswers, false);
-  });
-
-  it("normal homepage visit with no draft opens intro hero screen", () => {
+  it("normal homepage visit (/) with no draft opens intro hero screen", () => {
     const state = resolveAssessmentInitialState({
       isStarting: false,
       draft: null,
@@ -147,7 +134,27 @@ describe("Assessment Navigation — Screen and Question Initialization", () => {
     assert.equal(state.hasSavedAnswers, false);
   });
 
-  it("existing draft with saved answers preserves draft progress and marks hasSavedAnswers", () => {
+  it("normal homepage visit (/) still opens the landing page when a quiz draft exists", () => {
+    const draft = sampleDraft({ currentQ: 4 });
+    const state = resolveAssessmentInitialState({
+      isStarting: false,
+      draft,
+    });
+    assert.equal(state.screen, "intro");
+    assert.equal(state.hasSavedAnswers, true);
+  });
+
+  it("opening /assessment with no draft starts a new quiz at Question 1 (index 0)", () => {
+    const state = resolveAssessmentInitialState({
+      isStarting: true,
+      draft: null,
+    });
+    assert.equal(state.screen, "quiz");
+    assert.equal(state.currentQ, 0);
+    assert.equal(state.hasSavedAnswers, false);
+  });
+
+  it("opening /assessment with a saved draft restores the saved question and answers", () => {
     const draft = sampleDraft({ currentQ: 3 });
     const state = resolveAssessmentInitialState({
       isStarting: true,
@@ -158,7 +165,19 @@ describe("Assessment Navigation — Screen and Question Initialization", () => {
     assert.equal(state.hasSavedAnswers, true);
   });
 
-  it("existing draft on result screen preserves result screen and marks hasSavedAnswers", () => {
+  it("refreshing the assessment route preserves progress", () => {
+    const draft = sampleDraft({ currentQ: 5 });
+    // On refresh of /assessment, isStarting remains true and draft is read from storage
+    const state = resolveAssessmentInitialState({
+      isStarting: true,
+      draft,
+    });
+    assert.equal(state.screen, "quiz");
+    assert.equal(state.currentQ, 5);
+    assert.equal(state.hasSavedAnswers, true);
+  });
+
+  it("existing draft on result screen preserves result screen on /assessment", () => {
     const draft = sampleDraft({ screen: "result", currentQ: 12 });
     const state = resolveAssessmentInitialState({
       isStarting: true,

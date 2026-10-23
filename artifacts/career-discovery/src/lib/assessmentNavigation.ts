@@ -3,12 +3,20 @@ import type { AssessmentDraft, DraftStorage } from "./assessmentDraft";
 export const SUBMISSION_STORAGE_KEY = "careerDiscoverySubmissionId";
 
 /**
- * Determines whether the user has explicitly requested to start or enter the assessment,
- * via query parameter (?start=true, ?start=assessment, ?quiz=true) or route (/assessment).
+ * Determines whether the user has explicitly requested to start or enter the assessment.
+ * The /assessment route is the explicit entry point.
+ * At the root URL (/), legacy query parameters like ?start=true must NOT bypass the landing page.
  */
-export function isAssessmentStartRequested(search: string = "", pathname: string = ""): boolean {
-  if (pathname === "/assessment" || pathname.endsWith("/assessment")) {
-    return true;
+export function isAssessmentStartRequested(search: string = "", pathname?: string): boolean {
+  if (pathname !== undefined) {
+    const cleanPath = pathname.trim().replace(/\/$/, "");
+    if (cleanPath === "/assessment" || cleanPath.endsWith("/assessment")) {
+      return true;
+    }
+    // Visiting root (/) or home must always open the landing page; legacy query params do not bypass it.
+    if (cleanPath === "" || cleanPath === "/") {
+      return false;
+    }
   }
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
   return (
@@ -32,24 +40,15 @@ export interface HomeNavigationDecision {
 
 /**
  * Determines the navigation outcome when visiting the home route.
- * Prevents redirect loops: if the user explicitly requests starting the assessment,
- * they stay on the assessment flow rather than bouncing back to /student/status.
+ * Root URL (/) always displays the Career Pathfinder landing page first.
+ * Never automatically redirects signed-in users with a report to /student/status.
  */
 export function resolveHomeNavigation({
-  isSignedIn,
-  submissionId,
-  search = "",
-  pathname = "",
+  isSignedIn: _isSignedIn,
+  submissionId: _submissionId,
+  search: _search = "",
+  pathname: _pathname = "/",
 }: HomeNavigationParams): HomeNavigationDecision {
-  const isStarting = isAssessmentStartRequested(search, pathname);
-
-  if (!isStarting && isSignedIn && submissionId) {
-    return {
-      action: "redirect_status",
-      redirectPath: "/student/status",
-    };
-  }
-
   return {
     action: "render_discovery",
   };
@@ -68,8 +67,9 @@ export interface AssessmentInitialState {
 
 /**
  * Resolves the initial screen and question index for CareerDiscovery.
- * When a fresh start is requested, initializes directly to Question 1 (index 0).
- * When saved draft answers exist, preserves them and signals that resumption choice should be offered.
+ * When isStarting is false (e.g. visiting /), always opens the intro landing page (screen: "intro").
+ * When isStarting is true (visiting /assessment), resumes saved draft question and answers if present,
+ * or starts at Question 1 (index 0) if new.
  */
 export function resolveAssessmentInitialState({
   isStarting,
@@ -98,7 +98,7 @@ export function resolveAssessmentInitialState({
   }
 
   return {
-    screen: draft?.screen ?? "intro",
+    screen: "intro",
     currentQ: draft?.currentQ ?? 0,
     hasSavedAnswers,
   };

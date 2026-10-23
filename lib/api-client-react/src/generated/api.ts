@@ -20,6 +20,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CareerFeedbackInput,
+  CareerFeedbackResponse,
   CareerSubmissionAccepted,
   CareerSubmissionInput,
   CareerSubmissionResult,
@@ -487,6 +489,157 @@ export const useRetryCareerSubmission = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getRetryCareerSubmissionMutationOptions(options));
+    }
+
+export const getGetCareerFeedbackUrl = (id: string,) => {
+
+
+
+
+  return `/api/submissions/${id}/feedback`
+}
+
+/**
+ * Returns the rating and optional comment for the student's completed report.
+ * @summary Get the student's saved feedback for this submission
+ */
+export const getCareerFeedback = async (id: string, options?: RequestInit): Promise<CareerFeedbackResponse> => {
+
+  return customFetch<CareerFeedbackResponse>(getGetCareerFeedbackUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCareerFeedbackQueryKey = (id: string,) => {
+    return [
+    `/api/submissions/${id}/feedback`
+    ] as const;
+    }
+
+
+export const getGetCareerFeedbackQueryOptions = <TData = Awaited<ReturnType<typeof getCareerFeedback>>, TError = ErrorType<void>>(id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCareerFeedback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCareerFeedbackQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCareerFeedback>>> = ({ signal }) => getCareerFeedback(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCareerFeedback>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCareerFeedbackQueryResult = NonNullable<Awaited<ReturnType<typeof getCareerFeedback>>>
+export type GetCareerFeedbackQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the student's saved feedback for this submission
+ */
+
+export function useGetCareerFeedback<TData = Awaited<ReturnType<typeof getCareerFeedback>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCareerFeedback>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCareerFeedbackQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSubmitCareerFeedbackUrl = (id: string,) => {
+
+
+
+
+  return `/api/submissions/${id}/feedback`
+}
+
+/**
+ * Saves or updates the 1-5 star rating and optional comment.
+ * @summary Submit or update feedback for a completed report
+ */
+export const submitCareerFeedback = async (id: string,
+    careerFeedbackInput: CareerFeedbackInput, options?: RequestInit): Promise<CareerFeedbackResponse> => {
+
+  return customFetch<CareerFeedbackResponse>(getSubmitCareerFeedbackUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      careerFeedbackInput,)
+  }
+);}
+
+
+
+
+export const getSubmitCareerFeedbackMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitCareerFeedback>>, TError,{id: string;data: BodyType<CareerFeedbackInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof submitCareerFeedback>>, TError,{id: string;data: BodyType<CareerFeedbackInput>}, TContext> => {
+
+const mutationKey = ['submitCareerFeedback'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof submitCareerFeedback>>, {id: string;data: BodyType<CareerFeedbackInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  submitCareerFeedback(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SubmitCareerFeedbackMutationResult = NonNullable<Awaited<ReturnType<typeof submitCareerFeedback>>>
+    export type SubmitCareerFeedbackMutationBody = BodyType<CareerFeedbackInput>
+    export type SubmitCareerFeedbackMutationError = ErrorType<void>
+
+    /**
+ * @summary Submit or update feedback for a completed report
+ */
+export const useSubmitCareerFeedback = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitCareerFeedback>>, TError,{id: string;data: BodyType<CareerFeedbackInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof submitCareerFeedback>>,
+        TError,
+        {id: string;data: BodyType<CareerFeedbackInput>},
+        TContext
+      > => {
+      return useMutation(getSubmitCareerFeedbackMutationOptions(options));
     }
 
 export const getGetCareerResultUrl = (id: string,) => {

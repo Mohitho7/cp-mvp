@@ -230,3 +230,39 @@ export const careerStrategiesTable = pgTable(
     index("career_strategies_submission_idx").on(table.submissionId),
   ],
 );
+
+/**
+ * Persisted student report feedback (1-5 star rating and optional comment).
+ *
+ * Enforces one feedback record per student/submission pair (uniqueIndex).
+ * Edits update the existing record rather than creating duplicates.
+ */
+export const careerFeedbackTable = pgTable(
+  "career_feedback",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    submissionId: uuid("submission_id")
+      .notNull()
+      .references(() => careerSubmissionsTable.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => studentsTable.id, { onDelete: "cascade" }),
+    rating: smallint("rating").notNull(),
+    comment: text("comment"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("career_feedback_submission_student_unique").on(
+      table.submissionId,
+      table.studentId,
+    ),
+    index("career_feedback_submission_idx").on(table.submissionId),
+    index("career_feedback_student_idx").on(table.studentId),
+  ],
+);
+
