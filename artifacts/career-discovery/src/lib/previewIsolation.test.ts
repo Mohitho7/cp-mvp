@@ -93,7 +93,7 @@ describe("normal student report access and query isolation (resolveStudentReport
 
     assert.equal(resolved.isPreview, false);
     assert.equal(resolved.report?.profile.summary, "Authentic student personal database report.");
-    assert.equal(resolved.report?.longTermOptions[0].title, "Data Analyst");
+    assert.equal((resolved.report as CareerReport)?.longTermOptions[0].title, "Data Analyst");
   });
 
   it("ignores ?preview=canonical when ordinary students manipulate query parameters", () => {
@@ -108,7 +108,7 @@ describe("normal student report access and query isolation (resolveStudentReport
     // Must NOT substitute REPRESENTATIVE_CANONICAL_REPORT!
     assert.equal(resolved.isPreview, false);
     assert.equal(resolved.report?.profile.summary, "Authentic student personal database report.");
-    assert.equal(resolved.report?.longTermOptions[0].title, "Data Analyst");
+    assert.equal((resolved.report as CareerReport)?.longTermOptions[0].title, "Data Analyst");
     assert.notEqual(
       resolved.report,
       REPRESENTATIVE_CANONICAL_REPORT,
