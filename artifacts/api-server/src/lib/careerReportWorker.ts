@@ -37,17 +37,33 @@ import { createReportProvider } from "./ai/aiProvider";
 import { toStrategyRecord } from "./strategyRecord";
 import { describeDatabaseCause, describeGenerationError, describeProviderError, nextAttemptNumber } from "./generationAttempts";
 import { logger } from "./logger";
+import { globalWorkerRateLimiter } from "./workerRateLimiter";
+import { operationalMetrics } from "./operationalMetrics";
 
 const MAX_OUTPUT_TOKENS = 8192;
 const MAX_ATTEMPTS = 3;
 const POLL_INTERVAL_MS = 1_500;
-const STALE_JOB_MS = 15 * 60 * 1_000;
+const STALE_JOB_MS = Math.max(
+  60_000,
+  parseInt(process.env.REPORT_WORKER_STALE_MS || "600000", 10) || 600_000,
+);
 
-let isRunning = false;
+let activeJobsCount = 0;
 let workerStarted = false;
-let workerTimer: NodeJS.Timeout | null = null;
+let isShuttingDown = false;
+let pollTimer: NodeJS.Timeout | null = null;
+let staleRecoveryTimer: NodeJS.Timeout | null = null;
+const shutdownWaiters = new Set<() => void>();
 
-interface ClaimedSubmission {
+export function getActiveJobsCount(): number {
+  return activeJobsCount;
+}
+
+export function isWorkerRunning(): boolean {
+  return workerStarted && !isShuttingDown;
+}
+
+export interface ClaimedSubmission {
   id: string;
   attemptCount: number;
   /**
@@ -62,6 +78,7 @@ interface ClaimedSubmission {
   batch: string;
   studentContext: StudentContext;
   institutionName: string;
+  enqueuedAt?: Date;
 }
 
 /** Claimed submission plus its deterministic entry strategy. */
@@ -256,7 +273,7 @@ export function parseReportContent(content: string): CareerReport {
   return careerReportSchema.parse(unwrapCandidate);
 }
 
-async function recoverStaleJobs(): Promise<void> {
+export async function recoverStaleJobs(): Promise<void> {
   const staleBefore = new Date(Date.now() - STALE_JOB_MS);
 
   await db
@@ -293,6 +310,25 @@ async function recoverStaleJobs(): Promise<void> {
     );
 }
 
+async function touchJobHeartbeat(submissionId: string): Promise<void> {
+  try {
+    await db
+      .update(careerSubmissionsTable)
+      .set({
+        processingStartedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(careerSubmissionsTable.id, submissionId),
+          eq(careerSubmissionsTable.status, "processing"),
+        ),
+      );
+  } catch {
+    // Non-fatal heartbeat warning
+  }
+}
+
 async function claimNextSubmission(): Promise<ClaimedSubmission | null> {
   return db.transaction(async (tx) => {
     const [candidate] = await tx
@@ -301,6 +337,7 @@ async function claimNextSubmission(): Promise<ClaimedSubmission | null> {
         studentId: careerSubmissionsTable.studentId,
         answers: careerSubmissionsTable.answers,
         attemptCount: careerSubmissionsTable.attemptCount,
+        createdAt: careerSubmissionsTable.createdAt,
       })
       .from(careerSubmissionsTable)
       .where(
@@ -384,6 +421,7 @@ async function claimNextSubmission(): Promise<ClaimedSubmission | null> {
         availableHoursPerWeek: student.availableHoursPerWeek,
       },
       institutionName: student.institutionName,
+      enqueuedAt: candidate.createdAt,
     };
   });
 }
@@ -393,14 +431,30 @@ async function saveFailure(
   error: unknown,
 ): Promise<void> {
   const terminal = job.attemptCount >= MAX_ATTEMPTS;
-  const retryDelayMs =
-    job.attemptCount === 1 ? 30_000 : job.attemptCount === 2 ? 120_000 : 0;
   const described = describeGenerationError(error);
-  // Temporary diagnostic: for provider transport errors only, log the
-  // sanitized server error body (truncated) plus HTTP status. Never prompts,
-  // answers, reports, or request payloads — describeProviderError returns
-  // nulls for anything that is not an ApiError.
   const providerDetail = describeProviderError(error);
+  const errorMsg = error instanceof Error ? error.message : String(error);
+  const is429 = providerDetail.providerErrorStatus === 429 || /429|resource_exhausted|rate limit/i.test(errorMsg);
+
+  // Exponential backoff with jitter to avoid retry storms
+  const jitterMs = Math.floor(Math.random() * 2500);
+  let retryDelayMs = 0;
+  if (!terminal) {
+    if (job.attemptCount === 1) {
+      retryDelayMs = 30_000 + jitterMs;
+    } else if (job.attemptCount === 2) {
+      retryDelayMs = 120_000 + jitterMs;
+    }
+    if (is429) {
+      retryDelayMs = Math.max(retryDelayMs, 35_000 + jitterMs);
+    }
+  }
+
+  if (terminal) {
+    operationalMetrics.recordTerminalFailure(described.errorType);
+  } else {
+    operationalMetrics.recordRetryAttempt(described.errorType);
+  }
 
   await db
     .update(careerSubmissionsTable)
@@ -429,6 +483,7 @@ async function saveFailure(
         ? { providerErrorStatus: providerDetail.providerErrorStatus }
         : {}),
       terminal,
+      retryDelayMs,
     },
     "Career report generation attempt failed",
   );
@@ -458,6 +513,10 @@ async function generateReport(job: ClaimedSubmission): Promise<void> {
   const parts = buildReportParts(reportJob);
   let inputTokens = 0;
   let outputTokens = 0;
+  const startTime = Date.now();
+
+  operationalMetrics.recordAiRequestStart();
+  const releasePermit = await globalWorkerRateLimiter.acquirePermit();
 
   try {
     const generation = await provider.generateStructuredReport({
@@ -467,8 +526,20 @@ async function generateReport(job: ClaimedSubmission): Promise<void> {
       jsonSchema: careerReportJsonSchema,
       maxTokens: MAX_OUTPUT_TOKENS,
     });
+    releasePermit();
+
     inputTokens = generation.inputTokens;
     outputTokens = generation.outputTokens;
+    const durationMs = Date.now() - startTime;
+    const queueWaitMs = job.enqueuedAt ? Date.now() - job.enqueuedAt.getTime() : undefined;
+
+    operationalMetrics.recordAiSuccess({
+      model: provider.model,
+      inputTokens,
+      outputTokens,
+      durationMs,
+      queueWaitMs,
+    });
 
     const content = generation.content;
     if (!content) {
@@ -560,6 +631,16 @@ async function generateReport(job: ClaimedSubmission): Promise<void> {
         .where(eq(careerSubmissionsTable.id, job.id));
     });
   } catch (error) {
+    releasePermit();
+    const providerDetail = describeProviderError(error);
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    const is429 = providerDetail.providerErrorStatus === 429 || /429|resource_exhausted|rate limit/i.test(errorMsg);
+
+    if (is429) {
+      globalWorkerRateLimiter.reportRateLimit();
+    }
+    operationalMetrics.recordAiError(error, providerDetail.providerErrorStatus ?? (is429 ? 429 : undefined));
+
     await db.insert(careerGenerationAttemptsTable).values({
       submissionId: job.id,
       attempt: job.attemptNumber,
@@ -573,11 +654,12 @@ async function generateReport(job: ClaimedSubmission): Promise<void> {
   }
 }
 
-async function processNextSubmission(): Promise<boolean> {
-  const job = await claimNextSubmission();
-  if (!job) {
-    return false;
-  }
+async function processClaimedJob(job: ClaimedSubmission): Promise<void> {
+  // Heartbeat updates processingStartedAt every 20s so long generations are never marked stale
+  const heartbeat = setInterval(() => {
+    void touchJobHeartbeat(job.id);
+  }, 20_000);
+  heartbeat.unref();
 
   try {
     await generateReport(job);
@@ -587,39 +669,72 @@ async function processNextSubmission(): Promise<boolean> {
     );
   } catch (error) {
     await saveFailure(job, error);
+  } finally {
+    clearInterval(heartbeat);
   }
-
-  return true;
 }
 
-async function drainQueue(): Promise<void> {
-  if (isRunning) {
+let isDispatching = false;
+let dispatchQueued = false;
+
+async function dispatchAvailableJobs(): Promise<void> {
+  if (isShuttingDown || !workerStarted) {
     return;
   }
-  isRunning = true;
+  if (isDispatching) {
+    dispatchQueued = true;
+    return;
+  }
+  isDispatching = true;
 
   try {
-    await recoverStaleJobs();
-    while (await processNextSubmission()) {
-      // Keep the queue durable and process one row at a time per API instance.
-    }
-  } catch (error) {
-    // Temporary diagnostic: log only the underlying driver error (code +
-    // sanitized message). The outer wrapper message embeds SQL text and
-    // parameter values and must never be logged. Loop, guard, and retry
-    // behavior are unchanged.
-    const described = describeGenerationError(error);
-    const dbCause = describeDatabaseCause(error);
-    logger.error(
-      {
-        errorType: described.errorType,
-        ...(dbCause.dbErrorCode ? { dbErrorCode: dbCause.dbErrorCode } : {}),
-        ...(dbCause.dbErrorMessage ? { dbErrorMessage: dbCause.dbErrorMessage } : {}),
-      },
-      "Career report queue poll failed",
-    );
+    do {
+      dispatchQueued = false;
+      const maxConcurrency = globalWorkerRateLimiter.getConcurrencyLimit();
+
+      while (!isShuttingDown && activeJobsCount < maxConcurrency) {
+        let job: ClaimedSubmission | null = null;
+        try {
+          job = await claimNextSubmission();
+        } catch (claimErr) {
+          const described = describeGenerationError(claimErr);
+          const dbCause = describeDatabaseCause(claimErr);
+          logger.error(
+            {
+              errorType: described.errorType,
+              ...(dbCause.dbErrorCode ? { dbErrorCode: dbCause.dbErrorCode } : {}),
+              ...(dbCause.dbErrorMessage ? { dbErrorMessage: dbCause.dbErrorMessage } : {}),
+            },
+            "Failed to claim next submission from queue",
+          );
+          break;
+        }
+
+        if (!job) {
+          break; // No pending due submissions right now
+        }
+
+        activeJobsCount++;
+        const currentJob = job;
+
+        void (async () => {
+          try {
+            await processClaimedJob(currentJob);
+          } finally {
+            activeJobsCount = Math.max(0, activeJobsCount - 1);
+            if (activeJobsCount === 0 && isShuttingDown) {
+              for (const resolve of shutdownWaiters) resolve();
+              shutdownWaiters.clear();
+            }
+            if (!isShuttingDown) {
+              void dispatchAvailableJobs();
+            }
+          }
+        })();
+      }
+    } while (dispatchQueued && !isShuttingDown && activeJobsCount < globalWorkerRateLimiter.getConcurrencyLimit());
   } finally {
-    isRunning = false;
+    isDispatching = false;
   }
 }
 
@@ -628,25 +743,63 @@ export function startCareerReportWorker(): void {
     return;
   }
   workerStarted = true;
+  isShuttingDown = false;
 
   // Validate the configured AI provider up front so a misconfigured server
   // fails fast with a clear error instead of dequeuing work it cannot do.
   const provider = createReportProvider();
 
-  void drainQueue();
-  workerTimer = setInterval(() => void drainQueue(), POLL_INTERVAL_MS);
-  workerTimer.unref();
+  // Run initial stale recovery, then dispatch any pending jobs
+  void recoverStaleJobs();
+  void dispatchAvailableJobs();
+
+  pollTimer = setInterval(() => void dispatchAvailableJobs(), POLL_INTERVAL_MS);
+  pollTimer.unref();
+
+  staleRecoveryTimer = setInterval(() => void recoverStaleJobs(), 60_000);
+  staleRecoveryTimer.unref();
 
   logger.info(
-    { provider: provider.provider, model: provider.model },
+    {
+      provider: provider.provider,
+      model: provider.model,
+      concurrency: globalWorkerRateLimiter.getConcurrencyLimit(),
+      rpm: globalWorkerRateLimiter.getRpmLimit(),
+    },
     "Career report worker started",
   );
 }
 
-export async function closeCareerReportWorker(): Promise<void> {
-  if (workerTimer) {
-    clearInterval(workerTimer);
-    workerTimer = null;
+export async function stopCareerReportWorker(timeoutMs: number = 30_000): Promise<void> {
+  if (!workerStarted || isShuttingDown) {
+    return;
   }
+  isShuttingDown = true;
+  logger.info({ activeJobs: activeJobsCount }, "Stopping career report worker, waiting for in-flight jobs...");
+
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+  if (staleRecoveryTimer) {
+    clearInterval(staleRecoveryTimer);
+    staleRecoveryTimer = null;
+  }
+
+  if (activeJobsCount > 0) {
+    await Promise.race([
+      new Promise<void>((resolve) => {
+        shutdownWaiters.add(resolve);
+      }),
+      new Promise<void>((resolve) => setTimeout(resolve, timeoutMs)),
+    ]);
+  }
+
+  workerStarted = false;
+  logger.info("Career report worker stopped cleanly");
+}
+
+export async function closeCareerReportWorker(): Promise<void> {
+  await stopCareerReportWorker();
   await pool.end();
 }

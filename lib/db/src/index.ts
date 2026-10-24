@@ -10,7 +10,32 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const poolMax = Math.max(
+  1,
+  parseInt(process.env.DB_POOL_MAX || "10", 10) || 10,
+);
+const poolMin = Math.max(
+  0,
+  parseInt(process.env.DB_POOL_MIN || "0", 10) || 0,
+);
+
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: poolMax,
+  min: poolMin,
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 30_000,
+});
+
+export function getPoolStats() {
+  return {
+    total: pool.totalCount,
+    idle: pool.idleCount,
+    waiting: pool.waitingCount,
+    max: poolMax,
+    min: poolMin,
+  };
+}
 
 // Idle pooled clients can die at any time (server-side idle timeout, e.g. the
 // Neon pooler reaping idle connections, or transient network drops). pg

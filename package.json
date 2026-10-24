@@ -6,7 +6,9 @@
     "preinstall": "node -e \"const fs = require('fs'); ['package-lock.json', 'yarn.lock'].forEach(f => { try { fs.unlinkSync(f); } catch {} }); const ua = process.env.npm_config_user_agent || ''; if (ua && !ua.startsWith('pnpm/')) { console.error('Use pnpm instead'); process.exit(1); }\"",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
+    "start:worker": "pnpm --filter @workspace/api-server run start:worker",
+    "dev:worker": "pnpm --filter @workspace/api-server run dev:worker"
   },
   "private": true,
   "devDependencies": {

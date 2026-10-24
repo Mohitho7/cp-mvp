@@ -11,7 +11,7 @@
  * failure follows the existing worker retry path for the selected provider.
  */
 
-export type AIProviderName = "openai" | "gemini" | "groq";
+export type AIProviderName = "openai" | "gemini" | "groq" | "mock";
 
 export const AI_PROVIDER_DEFAULT: AIProviderName = "openai";
 
@@ -57,18 +57,23 @@ export interface ProviderEnv {
 
 /** Resolves and validates the configured provider name. */
 export function resolveProviderName(raw: string | undefined): AIProviderName {
-  const normalized = (raw ?? "").trim().toLowerCase();
+  const normalized = (raw ?? "").trim().toLowerCase().replace(/^["']|["']$/g, "");
   if (normalized === "") return AI_PROVIDER_DEFAULT;
-  if (normalized === "openai" || normalized === "gemini" || normalized === "groq") {
+  if (
+    normalized === "openai" ||
+    normalized === "gemini" ||
+    normalized === "groq" ||
+    normalized === "mock"
+  ) {
     return normalized;
   }
   throw new Error(
-    `AI_PROVIDER "${raw}" is not supported. Use one of: openai, gemini, groq.`,
+    `AI_PROVIDER "${raw}" is not supported. Use one of: openai, gemini, groq, mock.`,
   );
 }
 
 function requiredKey(env: ProviderEnv, name: "OPENAI_API_KEY" | "GEMINI_API_KEY" | "GROQ_API_KEY", provider: AIProviderName): string {
-  const value = env[name]?.trim() ?? "";
+  const value = (env[name] ?? "").trim().replace(/^["']|["']$/g, "");
   if (!value) {
     throw new Error(`${name} is required to generate career reports with the ${provider} provider.`);
   }
@@ -76,7 +81,7 @@ function requiredKey(env: ProviderEnv, name: "OPENAI_API_KEY" | "GEMINI_API_KEY"
 }
 
 function modelOr(envValue: string | undefined, fallback: string): string {
-  const value = envValue?.trim() ?? "";
+  const value = (envValue ?? "").trim().replace(/^["']|["']$/g, "");
   return value === "" ? fallback : value;
 }
 
@@ -85,10 +90,16 @@ function modelOr(envValue: string | undefined, fallback: string): string {
 import { createOpenAIProvider } from "./openaiProvider";
 import { createGeminiProvider } from "./geminiProvider";
 import { createGroqProvider } from "./groqProvider";
+import { createMockReportProvider } from "./mockProvider";
 
 /** Creates the configured provider. Throws a clear error when misconfigured. */
 export function createReportProvider(env: ProviderEnv = process.env): AIReportProvider {
   const provider = resolveProviderName(env.AI_PROVIDER);
+  if (provider === "mock") {
+    return createMockReportProvider({
+      model: modelOr(env.GEMINI_MODEL, "mock-deterministic-v1"),
+    });
+  }
   if (provider === "gemini") {
     return createGeminiProvider({
       apiKey: requiredKey(env, "GEMINI_API_KEY", provider),

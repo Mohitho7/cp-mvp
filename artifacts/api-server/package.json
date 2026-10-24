@@ -7,6 +7,8 @@
     "dev": "pnpm run build && pnpm run start",
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
+    "start:worker": "node --enable-source-maps ./dist/worker.mjs",
+    "dev:worker": "pnpm run build && pnpm run start:worker",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
